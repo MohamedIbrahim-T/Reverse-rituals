@@ -87,6 +87,31 @@ const webhookHandler = async (req, res) => {
 
         await order.save();
         console.log('✅ Paid via webhook:', order._id);
+
+        // ✅ SEND EMAIL FROM WEBHOOK
+        try {
+          const emailModule = require('../config/email');
+          const sendOrderEmail = emailModule.sendOrderEmail;
+          const User = require('../models/User');
+          
+          const user = order.user ? await User.findById(order.user) : null;
+          const email = user?.email || order.shippingAddress?.email || '';
+
+          await sendOrderEmail({
+            orderId: order._id.toString().slice(-8),
+            customerName: order.shippingAddress.fullName,
+            address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
+            email,
+            phone: order.shippingAddress.phone,
+            altPhone: order.shippingAddress.altPhone,
+            items: order.orderItems,
+            total: order.totalPrice,
+            estimatedDelivery: order.estimatedDelivery,
+          });
+          console.log('📧 Email sent via webhook to:', email);
+        } catch (emailErr) {
+          console.log('📧 Webhook email error:', emailErr.message);
+        }
       }
     }
 
