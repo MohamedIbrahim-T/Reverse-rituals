@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const Order = require('../models/Order');
+
 const {
   addOrderItems,
   getOrderById,
@@ -8,78 +11,91 @@ const {
   getOrders,
   updateOrderToDelivered,
   updateOrderStatus,
+  markOrderAsPaid,
   deleteOrder,
   createPaymentForOrder,
 } = require('../controllers/orderController');
+
 const { protect, admin, optionalProtect } = require('../middleware/auth');
 
-// Test endpoint FIRST - POST /api/orders/test-email
-router.post('/test-email', (req, res) => {
-  const nodemailer = require('nodemailer');
-  
-  const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST || 'smtp.gmail.com',
-    port: process.env.MAIL_PORT || 587,
-    secure: false,
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
-    },
-  });
 
-  const testOrderDetails = {
-    orderId: 'TEST123',
-    customerName: 'Test Customer',
-    address: '123 Test Street, Mumbai, Maharashtra - 400001',
-    items: [
-      { name: 'Hair Oil', qty: 2, price: 500 },
-      { name: 'Shampoo', qty: 1, price: 350 }
-    ],
-    total: 1350,
-    paymentMethod: 'Razorpay',
-    phone: '9876543210'
-  };
+// ✅ NORMAL ROUTES
+router.get('/myorders', protect, getMyOrders);
+router.post('/verify', verifyPayment);
+router.put('/fix-paid/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
 
-  const htmlContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h1 style="color: #064e3b;">Test Order Email</h1>
-      <p>This is a test email from Reverse Rituals.</p>
-      <p><strong>Order ID:</strong> ${testOrderDetails.orderId}</p>
-      <p><strong>Customer:</strong> ${testOrderDetails.customerName}</p>
-      <p><strong>Total:</strong> ₹${testOrderDetails.total}</p>
-    </div>
-  `;
+    order.isPaid = true;
+    order.paidAt = new Date();
+    await order.save();
 
-  const mailOptions = {
-    from: process.env.MAIL_FROM || 'reverserituals@gmail.com',
-    to: process.env.ADMIN_NOTIFY_EMAIL || 'reverserituals@gmail.com',
-    subject: 'Test Email - Reverse Rituals',
-    html: htmlContent,
-  };
-
-  transporter.sendMail(mailOptions)
-    .then(info => {
-      console.log('Test email sent:', info.messageId);
-      res.json({ success: true, messageId: info.messageId });
-    })
-    .catch(error => {
-      console.error('Test email error:', error.message);
-      res.status(500).json({ success: false, error: error.message });
-    });
+    res.json({ message: 'Order marked as paid', order });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
+router.post('/:id/pay', optionalProtect, createPaymentForOrder);
+router.put('/:id/deliver', protect, admin, updateOrderToDelivered);
+router.put('/:id/status', protect, admin, updateOrderStatus);
+router.put('/:id/mark-paid', protect, admin, markOrderAsPaid);
 
-router.route('/myorders').get(protect, getMyOrders);
+router.get('/:id', protect, getOrderById);
+router.delete('/:id', protect, admin, deleteOrder);
 
-// More specific routes first
-router.route('/:id/pay').post(optionalProtect, createPaymentForOrder);
-router.route('/:id/deliver').put(protect, admin, updateOrderToDelivered);
-router.route('/:id/status').put(protect, admin, updateOrderStatus);
-router.route('/:id').get(protect, getOrderById).delete(protect, admin, deleteOrder);
 
-router.route('/')
-  .post(optionalProtect, addOrderItems)
-  .get(protect, admin, getOrders);
 
-router.route('/verify').post(verifyPayment);
+router.post('/', optionalProtect, addOrderItems);
+router.get('/', protect, admin, getOrders);
+
+
+
+// Export webhook handler for index.js
+const webhookHandler = async (req, res) => {
+  try {
+    const signature = req.headers['x-razorpay-signature'];
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    const expected = crypto
+      .createHmac('sha256', secret)
+      .update(req.body.toString())
+      .digest('hex');
+
+    if (signature !== expected) {
+      console.log('❌ Invalid webhook signature');
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
+
+    const payload = JSON.parse(req.body.toString());
+
+    if (payload.event === 'payment.captured') {
+      const payment = payload.payload.payment.entity;
+
+      const order = await Order.findOne({
+        'paymentResult.razorpay_order_id': payment.order_id,
+      });
+
+      if (order && !order.isPaid) {
+        order.isPaid = true;
+        order.paidAt = new Date();
+        order.paymentResult = {
+          ...order.paymentResult,
+          id: payment.id,
+          status: 'PAID',
+        };
+
+        await order.save();
+        console.log('✅ Paid via webhook:', order._id);
+      }
+    }
+
+    res.json({ status: 'ok' });
+  } catch (err) {
+    console.error('Webhook error:', err.message);
+    res.status(500).json({ error: 'Webhook failed' });
+  }
+};
 
 module.exports = router;
+module.exports.webhook = webhookHandler;

@@ -116,118 +116,83 @@ const AdminPage = () => {
     }
   };
 
-  const downloadInvoice = (order) => {
+  const downloadInvoice = async (order) => {
+    const html2pdf = (await import('html2pdf.js')).default;
+    
     const printContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Invoice - Order #${order._id.toString().slice(-8).toUpperCase()}</title>
-  <style>
-    @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: #fff; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #064e3b; }
-    .company { font-size: 28px; font-weight: bold; color: #064e3b; }
-    .invoice-title { font-size: 24px; color: #333; font-weight: bold; }
-    .order-info { display: flex; justify-content: space-between; margin-bottom: 30px; }
-    .order-info-box { background: #f9fafb; padding: 15px; border-radius: 8px; width: 48%; }
-    .order-info-box h4 { margin: 0 0 10px; color: #064e3b; font-size: 14px; text-transform: uppercase; }
-    .order-info-box p { margin: 5px 0; font-size: 13px; color: #333; }
-    .customer-section { background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-    .customer-section h4 { margin: 0 0 15px; color: #064e3b; font-size: 14px; text-transform: uppercase; }
-    .customer-section p { margin: 5px 0; font-size: 13px; color: #333; }
-    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .items-table th { background: #064e3b; color: white; padding: 12px; text-align: left; font-size: 13px; }
-    .items-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-    .items-table tr:last-child td { border-bottom: 2px solid #064e3b; }
-    .total-section { text-align: right; padding: 20px; background: #f0fdf4; border-radius: 8px; }
-    .total-section .total-amount { font-size: 24px; font-weight: bold; color: #064e3b; }
-    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; padding-top: 20px; border-top: 1px solid #eee; }
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-    .status-paid { background: #dcfce7; color: #166534; }
-    .status-unpaid { background: #fee2e2; color: #991b1b; }
-    @media print {
-      .no-print { display: none; }
-      body { padding: 0; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="company">🌿 Reverse Rituals</div>
-    <div class="invoice-title">INVOICE</div>
-  </div>
-  
-  <div class="order-info">
-    <div class="order-info-box">
-      <h4>Order Details</h4>
-      <p><strong>Order ID:</strong> ${order._id.toString().slice(-8).toUpperCase()}</p>
-      <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-      <p><strong>Status:</strong> <span class="status-badge ${order.isPaid ? 'status-paid' : 'status-unpaid'}">${order.isPaid ? 'PAID' : 'UNPAID'}</span></p>
+  <div style="font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: #fff;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #064e3b;">
+      <div style="font-size: 28px; font-weight: bold; color: #064e3b;">Reverse Rituals</div>
+      <div style="font-size: 24px; color: #333; font-weight: bold;">INVOICE</div>
     </div>
-    <div class="order-info-box">
-      <h4>Payment Info</h4>
-      <p><strong>Method:</strong> ${order.paymentMethod || 'Razorpay'}</p>
-      <p><strong>Payment ID:</strong> ${order.paymentResult?.razorpay_payment_id || 'N/A'}</p>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+      <div style="background: #f9fafb; padding: 15px; border-radius: 8px; width: 48%;">
+        <h4 style="margin: 0 0 10px; color: #064e3b; font-size: 14px; text-transform: uppercase;">Order Details</h4>
+        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Order ID:</strong> ${order._id.toString().slice(-8).toUpperCase()}</p>
+        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Status:</strong> <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: ${order.isPaid ? '#dcfce7' : '#fee2e2'}; color: ${order.isPaid ? '#166534' : '#991b1b'};">${order.isPaid ? 'PAID' : 'UNPAID'}</span></p>
+      </div>
+      <div style="background: #f9fafb; padding: 15px; border-radius: 8px; width: 48%;">
+        <h4 style="margin: 0 0 10px; color: #064e3b; font-size: 14px; text-transform: uppercase;">Payment Info</h4>
+        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Method:</strong> ${order.paymentMethod || 'Razorpay'}</p>
+        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Payment ID:</strong> ${order.paymentResult?.razorpay_payment_id || 'N/A'}</p>
+      </div>
     </div>
-  </div>
 
-  <div class="customer-section">
-    <h4>Customer Details</h4>
-    <p><strong>Name:</strong> ${order.shippingAddress.fullName}</p>
-    <p><strong>Address:</strong> ${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}</p>
-    <p><strong>Phone:</strong> ${order.shippingAddress.phone}${order.shippingAddress.altPhone ? ', ' + order.shippingAddress.altPhone : ''}</p>
-    <p><strong>Email:</strong> ${order.shippingAddress.email || 'N/A'}</p>
-  </div>
+    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+      <h4 style="margin: 0 0 15px; color: #064e3b; font-size: 14px; text-transform: uppercase;">Customer Details</h4>
+      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Name:</strong> ${order.shippingAddress?.fullName || 'N/A'}</p>
+      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Address:</strong> ${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</p>
+      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Phone:</strong> ${order.shippingAddress?.phone || 'N/A'}${order.shippingAddress?.altPhone ? ', ' + order.shippingAddress.altPhone : ''}</p>
+      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Email:</strong> ${order.shippingAddress?.email || 'N/A'}</p>
+    </div>
 
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th>Product</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${order.orderItems.map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${item.qty}</td>
-        <td>₹${item.price}</td>
-        <td>₹${item.price * item.qty}</td>
-      </tr>
-      `).join('')}
-    </tbody>
-  </table>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <thead>
+        <tr>
+          <th style="background: #064e3b; color: white; padding: 12px; text-align: left; font-size: 13px;">Product</th>
+          <th style="background: #064e3b; color: white; padding: 12px; text-align: left; font-size: 13px;">Qty</th>
+          <th style="background: #064e3b; color: white; padding: 12px; text-align: left; font-size: 13px;">Price</th>
+          <th style="background: #064e3b; color: white; padding: 12px; text-align: left; font-size: 13px;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${order.orderItems.map(item => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px;">${item.name}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px;">${item.qty}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px;">₹${item.price}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px;">₹${item.price * item.qty}</td>
+        </tr>
+        `).join('')}
+      </tbody>
+    </table>
 
-  <div class="total-section">
-    <p style="margin: 0; font-size: 14px; color: #666;">Grand Total</p>
-    <p class="total-amount">₹${order.totalPrice}</p>
-  </div>
+    <div style="text-align: right; padding: 20px; background: #f0fdf4; border-radius: 8px;">
+      <p style="margin: 0; font-size: 14px; color: #666;">Grand Total</p>
+      <p style="font-size: 24px; font-weight: bold; color: #064e3b;">₹${order.totalPrice}</p>
+    </div>
 
-  <div class="footer">
-    <p>Thank you for your order! 🌿</p>
-    <p>Reverse Rituals - Natural Hair Care Products</p>
-    <p>support@reverserituals.com</p>
-  </div>
-  
-  <div class="no-print" style="margin-top: 30px; text-align: center;">
-    <button onclick="window.print()" style="padding: 12px 24px; background: #064e3b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
-      🖨️ Print / Save as PDF
-    </button>
-  </div>
-</body>
-</html>`;
+    <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px; padding-top: 20px; border-top: 1px solid #eee;">
+      <p>Thank you for your order!</p>
+      <p>Reverse Rituals - Natural Hair Care Products</p>
+      <p>support@reverserituals.com</p>
+    </div>
+  </div>`;
 
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.print();
+    const element = document.createElement('div');
+    element.innerHTML = printContent;
+    
+    const opt = {
+      margin: 10,
+      filename: `invoice-${order._id.toString().slice(-8).toUpperCase()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+    
+    html2pdf().set(opt).from(element).save();
   };
 
   const handleDeleteProduct = async (id) => {
@@ -706,34 +671,31 @@ const AdminPage = () => {
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-red-100 text-red-600 rounded-full text-xs sm:text-sm font-bold">Unpaid</span>
                         )}
                         
-                        {/* Order Status - Click to change */}
-                        {!order.isDelivered ? (
-                          <div className="relative">
-                            {order.isPaid ? (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeliver(order._id); }}
-                                className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-100 text-blue-600 rounded-full text-xs sm:text-sm font-bold hover:bg-blue-200 transition-all"
-                              >
-                                Shipped
-                              </button>
-                            ) : (
-                              <span className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm font-bold">Processing</span>
-                            )}
-                          </div>
-                        ) : (
+                        {order.isDelivered ? (
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-purple-100 text-purple-600 rounded-full text-xs sm:text-sm font-bold">Delivered</span>
-                        )}
-                        
-                        {/* Reset to Processing if needed */}
-                        {!order.isPaid && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleResetStatus(order._id); }}
-                            className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-200 text-gray-600 rounded-full text-xs sm:text-sm font-bold hover:bg-gray-300"
-                            title="Reset to Processing"
+                        ) : (
+                          <select
+                            value={order.isPaid ? 'Shipped' : 'Processing'}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              const newStatus = e.target.value;
+                              if (newStatus === 'Delivered') handleDeliver(order._id);
+                              else if (newStatus === 'Processing') handleResetStatus(order._id);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold cursor-pointer ${
+                              order.isPaid ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                            }`}
                           >
-                            ↺
-                          </button>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                          </select>
                         )}
+                        {order.estimatedDelivery && !order.isDelivered && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
+                            Est: {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </span>
                         )}
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order._id); }}
@@ -789,6 +751,7 @@ const AdminPage = () => {
                   </AnimatePresence>
                 </motion.div>
               ))}
+              
               {filteredOrders.length === 0 && (
                 <div className="text-center py-16 bg-white rounded-[2rem] border border-[#064e3b]/5">
                   <ShoppingBag size={48} className="mx-auto text-[#064e3b]/20 mb-4" />

@@ -369,10 +369,12 @@ const CheckoutPage = () => {
           setIsProcessing(true);
           try {
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+            console.log('Verifying payment for order:', order._id);
 
             const verifyRes = await axios.post(`${API_URL}/api/orders/verify`, { ...response, orderId: order._id });
+            console.log('Verify response:', verifyRes.data);
 
-            if (verifyRes.data.message === "Payment verified successfully") {
+            if (verifyRes.data.message === "Payment verified successfully" || verifyRes.data.order?.isPaid) {
               toast.success('Payment Successful!');
               clearCart();
               localStorage.removeItem('repay_order');
@@ -385,9 +387,13 @@ const CheckoutPage = () => {
               }));
               setPaymentSuccess(true);
               return;
+            } else {
+              console.log('Verify failed:', verifyRes.data.message);
+              toast.error(verifyRes.data.message || 'Verification failed');
             }
           } catch (err) {
-            toast.error('Payment verification failed');
+            console.error('Verify error:', err);
+            toast.error('Payment verification failed: ' + (err.response?.data?.message || err.message));
             setIsProcessing(false);
           }
         },

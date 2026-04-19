@@ -137,11 +137,6 @@ const handleBuyAgain = (order) => {
                         Delivered
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                        Shipped
-                      </span>
-                    )}
-                    {order.estimatedDelivery && !order.isDelivered && order.isPaid && (
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                         Est: {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                       </span>

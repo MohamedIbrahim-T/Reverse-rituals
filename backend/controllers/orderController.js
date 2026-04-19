@@ -163,80 +163,78 @@ const createPayLinkForOrder = async (req, res) => {
 // @route   POST /api/orders/verify
 // @access  Public
 const verifyPayment = async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderId
+  } = req.body;
 
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-    return res.status(400).json({ message: 'Missing required fields' });
+  if (!orderId) {
+    return res.status(400).json({ message: 'Missing orderId' });
   }
 
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
 
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    .update(body.toString())
-    .digest("hex");
+  if (order.isPaid) {
+    return res.json({ message: 'Already paid', order });
+  }
 
-  const isAuthentic = expectedSignature === razorpay_signature;
+  try {
+    // ✅ 1. VERIFY SIGNATURE (STRICT)
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
 
-  if (isAuthentic) {
-    const order = await Order.findById(orderId);
-
-    if (order) {
-      order.isPaid = true;
-      order.paidAt = Date.now();
-      order.paymentResult = {
-        id: razorpay_payment_id,
-        status: 'PAID',
-        update_time: new Date().toISOString(),
-        email_address: order.shippingAddress.email,
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-      };
-
-      const updatedOrder = await order.save();
-
-      // Get user email if logged in
-      let userEmail = updatedOrder.shippingAddress.email || '';
-      if (updatedOrder.user) {
-        const user = await User.findById(updatedOrder.user);
-        if (user && user.email) {
-          userEmail = user.email;
-        }
-      }
-
-      const orderDetails = {
-        orderId: updatedOrder._id.toString().slice(-8).toUpperCase(),
-        customerName: updatedOrder.shippingAddress.fullName,
-        address: `${updatedOrder.shippingAddress.address}, ${updatedOrder.shippingAddress.city}, ${updatedOrder.shippingAddress.state} - ${updatedOrder.shippingAddress.zipCode}`,
-        email: userEmail,
-        phone: updatedOrder.shippingAddress.phone || '',
-        altPhone: updatedOrder.shippingAddress.altPhone || '',
-        items: updatedOrder.orderItems.map(item => ({
-          name: item.name,
-          qty: item.qty,
-          price: item.price,
-          image: item.image || ''
-        })),
-        total: updatedOrder.totalPrice,
-        paymentMethod: updatedOrder.paymentMethod,
-        estimatedDelivery: updatedOrder.estimatedDelivery,
-      };
-
-      // Send email in background (non-blocking)
-      console.log('Sending order confirmation email for:', orderDetails.orderId, 'to:', userEmail);
-      sendOrderEmail(orderDetails).then(result => {
-        console.log('Email send result:', result);
-      }).catch(err => {
-        console.log('Email send error:', err.message);
-      });
-
-      res.json({ message: "Payment verified successfully", order: updatedOrder });
-    } else {
-      res.status(404).json({ message: 'Order not found' });
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: 'Invalid signature' });
     }
-  } else {
-    res.status(400).json({ message: "Invalid signature" });
+
+    // ✅ 2. VERIFY WITH RAZORPAY API
+    const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+    if (payment.status !== 'captured') {
+      return res.status(400).json({ message: 'Payment not captured' });
+    }
+
+    // ✅ 3. MARK PAID
+    order.isPaid = true;
+    order.paidAt = new Date();
+    order.paymentResult = {
+      id: razorpay_payment_id,
+      status: 'PAID',
+      razorpay_order_id,
+    };
+
+    const updatedOrder = await order.save();
+
+    console.log('✅ Paid via verify:', updatedOrder._id);
+
+    // ✅ 4. SEND EMAIL (ONLY ONCE)
+    try {
+      const user = order.user ? await User.findById(order.user) : null;
+
+      const email = user?.email || order.shippingAddress?.email || '';
+
+      await sendOrderEmail({
+        orderId: updatedOrder._id.toString().slice(-8),
+        customerName: order.shippingAddress.fullName,
+        email,
+        total: order.totalPrice,
+      });
+    } catch (err) {
+      console.log('Email error:', err.message);
+    }
+
+    res.json({ message: 'Payment verified successfully', order: updatedOrder });
+
+  } catch (error) {
+    console.error('Verify error:', error.message);
+    res.status(500).json({ message: 'Verification failed' });
   }
 };
 
@@ -361,16 +359,6 @@ const updateOrderToDelivered = async (req, res) => {
     res.status(404).json({ message: 'Order not found' });
   }
 };
-      }
-    } catch (emailErr) {
-      console.log('Delivery email error:', emailErr.message);
-    }
-    
-res.json(updatedOrder);
-  } else {
-    res.status(404).json({ message: 'Order not found' });
-  }
-};
 
 // @desc    Update order status
 // @route   PUT /api/orders/:id/status
@@ -389,6 +377,28 @@ const updateOrderStatus = async (req, res) => {
       order.isDelivered = true;
       order.deliveredAt = Date.now();
     }
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+  } else {
+    res.status(404).json({ message: 'Order not found' });
+  }
+};
+
+// @desc    Mark order as paid manually
+// @route   PUT /api/orders/:id/mark-paid
+// @access  Private/Admin
+const markOrderAsPaid = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (order) {
+    order.isPaid = true;
+    order.paidAt = Date.now();
+    order.paymentResult = {
+      id: `manual_${Date.now()}`,
+      status: 'PAID',
+      update_time: new Date().toISOString(),
+      email_address: order.shippingAddress?.email || '',
+    };
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
@@ -418,6 +428,7 @@ module.exports = {
   getOrders,
   updateOrderToDelivered,
   updateOrderStatus,
+  markOrderAsPaid,
   deleteOrder,
   createPaymentForOrder,
 };

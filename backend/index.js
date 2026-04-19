@@ -9,22 +9,24 @@ const orderRoutes = require('./routes/orderRoutes');
 connectDB();
 
 const app = express();
-
 const morgan = require('morgan');
-app.use(morgan('dev'));
 
-app.use(cors(
-  {
-    
-  }
-));
+app.use(morgan('dev'));
+app.use(cors({}));
+
+// ✅ Webhook needs RAW BODY before JSON parsing
+const webhookHandler = require('./routes/orderRoutes').webhook;
+app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), webhookHandler);
+
+// Normal JSON parsing
 app.use(express.json());
 
+// Routes
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 
-// Pincode Proxy to avoid CORS
+// Pincode Proxy
 const axios = require('axios');
 app.get('/api/pincode/:code', async (req, res) => {
   try {
