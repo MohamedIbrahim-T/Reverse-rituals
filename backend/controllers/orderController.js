@@ -215,19 +215,30 @@ const verifyPayment = async (req, res) => {
     console.log('✅ Paid via verify:', updatedOrder._id);
 
     // ✅ 4. SEND EMAIL (ONLY ONCE)
+    console.log('📧 Trying to send email for order:', updatedOrder._id);
     try {
       const user = order.user ? await User.findById(order.user) : null;
-
       const email = user?.email || order.shippingAddress?.email || '';
+      console.log('📧 Customer email:', email);
 
-      await sendOrderEmail({
+      if (!email) {
+        console.log('📧 No customer email, skipping user email');
+      }
+
+      const result = await sendOrderEmail({
         orderId: updatedOrder._id.toString().slice(-8),
         customerName: order.shippingAddress.fullName,
+        address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
         email,
+        phone: order.shippingAddress.phone,
+        altPhone: order.shippingAddress.altPhone,
+        items: order.orderItems,
         total: order.totalPrice,
+        estimatedDelivery: order.estimatedDelivery,
       });
+      console.log('📧 Email result:', result);
     } catch (err) {
-      console.log('Email error:', err.message);
+      console.log('📧 Email error:', err.message);
     }
 
     res.json({ message: 'Payment verified successfully', order: updatedOrder });
