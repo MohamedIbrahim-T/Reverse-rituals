@@ -80,6 +80,26 @@ const handleBuyAgain = (order) => {
     navigate('/cart', { state: { message: 'Items added to cart!' } });
   };
 
+  const handlePayNow = (order) => {
+    if (!order.orderItems || order.orderItems.length === 0) {
+      toast.error('No items in this order');
+      return;
+    }
+    
+    const newItems = order.orderItems.map(item => ({
+      _id: item.product,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      qty: item.qty || 1
+    }));
+    
+    localStorage.setItem('cartItems', JSON.stringify(newItems));
+    localStorage.setItem('repay_order', order._id);
+    window.dispatchEvent(new Event('storage'));
+    navigate('/checkout');
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-[#fdfbf7] pt-24 flex items-center justify-center">
       <div className="w-12 h-12 border-4 border-[#c5a059] border-t-transparent rounded-full animate-spin"></div>
@@ -136,11 +156,11 @@ const handleBuyAgain = (order) => {
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
                         Delivered
                       </span>
-                    ) : (
+                    ) : order.isPaid ? (
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                        Est: {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        Delivery: {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -187,13 +207,13 @@ const handleBuyAgain = (order) => {
                             </p>
                           </div>
                         </div>
-                        {order.estimatedDelivery && !order.isDelivered && (
+                        {order.estimatedDelivery && !order.isDelivered && order.isPaid && (
                           <div className="flex items-center gap-4">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#c5a059]/10 text-[#c5a059]">
                               <Package size={16} />
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Expected</p>
+                              <p className="text-xs text-gray-500">Delivery Date</p>
                               <p className="text-xs font-medium text-[#c5a059]">
                                 {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                               </p>
