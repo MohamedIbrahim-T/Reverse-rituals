@@ -116,9 +116,223 @@ const AdminPage = () => {
     }
   };
 
+const downloadThermalBill = async (order) => {
+    const html2pdf = (await import('html2pdf.js')).default;
+
+    const thermal = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+    </head>
+    <body style="margin:0;padding:20px;font-family:monospace;font-size:12px;color:#000000;width:4in;background:#fff;">
+      <div style="width:3.6in;margin:0 auto;color:#000000;">
+        <!-- HEADER -->
+        <div style="text-align:center;border-bottom:1px dashed #000000;padding-bottom:10px;margin-bottom:10px;">
+          <div style="font-size:16px;font-weight:bold;color:#000000;">REVERSE RITUALS</div>
+          <div style="font-size:11px;color:#000000;">Natural Hair Care Products</div>
+        </div>
+        
+        <!-- ORDER INFO -->
+        <div style="margin-bottom:10px;color:#000000;">
+          <div><b>Order:</b> #${order._id.toString().slice(-8).toUpperCase()}</div>
+          <div><b>Date:</b> ${new Date(order.createdAt).toLocaleDateString('en-IN')} ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+        
+        <div style="border-top:1px dashed #000000;border-bottom:1px dashed #000000;padding:8px 0;margin:8px 0;">
+          <div style="font-weight:bold;color:#000000;">DELIVER TO:</div>
+        </div>
+        
+        <!-- CUSTOMER -->
+        <div style="margin-bottom:10px;color:#000000;">
+          <div style="font-weight:bold;">${order.shippingAddress.fullName}</div>
+          <div>${order.shippingAddress.address}</div>
+          <div>${order.shippingAddress.city}, ${order.shippingAddress.state}</div>
+          <div>PIN: ${order.shippingAddress.zipCode}</div>
+          <div>Phone: ${order.shippingAddress.phone}</div>
+          ${order.shippingAddress.altPhone ? `<div>Alt Phone: ${order.shippingAddress.altPhone}</div>` : ''}
+        </div>
+        
+        <div style="border-top:1px dashed #000000;padding:8px 0;margin:8px 0;">
+          <div style="font-weight:bold;color:#000000;">ITEMS (${order.orderItems.length}):</div>
+        </div>
+        
+        <!-- ITEMS (NO PRICE) -->
+        <div style="margin-bottom:10px;color:#000000;">
+          ${order.orderItems.map(item => `
+            <div style="display:flex;justify-content:space-between;padding:3px 0;">
+              <span>${item.name}</span>
+              <span>x${item.qty}</span>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="border-top:1px dashed #000000;margin:10px 0;padding-top:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:bold;color:#000000;">
+            <span>Total Items:</span>
+            <span>${order.orderItems.reduce((sum, item) => sum + item.qty, 0)}</span>
+          </div>
+        </div>
+        
+        <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;">
+          <div>Thank you for your order!</div>
+          <div>support@reverserituals.com</div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const element = document.createElement('div');
+    element.innerHTML = thermal;
+
+    const opt = {
+      margin: 0,
+      filename: `bill-${order._id.toString().slice(-8).toUpperCase()}.pdf`,
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  };
+
+  const downloadAllThermalBills = async () => {
+    const html2pdf = (await import('html2pdf.js')).default;
+
+    let filtered = orders;
+
+    if (exportDate) {
+      filtered = orders.filter(
+        o => new Date(o.createdAt).toDateString() === new Date(exportDate).toDateString()
+      );
+    } else if (exportFromDate && exportToDate) {
+      const from = new Date(exportFromDate);
+      const to = new Date(exportToDate);
+      to.setHours(23, 59, 59, 999);
+      filtered = orders.filter(o => new Date(o.createdAt) >= from && new Date(o.createdAt) <= to);
+    }
+
+    if (filtered.length === 0) {
+      toast.error('No orders found');
+      return;
+    }
+
+    let allBills = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:20px;font-family:monospace;font-size:12px;color:#000000;background:#fff;">`;
+
+    filtered.forEach(order => {
+      allBills += `
+      <div style="width:3.6in;min-height:5in;margin:0 auto;page-break-after:always;padding-bottom:25px;color:#000000;">
+        
+        <div style="text-align:center;border-bottom:1px dashed #000000;padding-bottom:10px;margin-bottom:10px;">
+          <div style="font-size:16px;font-weight:bold;color:#000000;">REVERSE RITUALS</div>
+          <div style="font-size:11px;color:#000000;">Natural Hair Care Products</div>
+        </div>
+        
+        <div style="margin-bottom:8px;color:#000000;">
+          <b>Order:</b> #${order._id.toString().slice(-8).toUpperCase()} | <b>Date:</b> ${new Date(order.createdAt).toLocaleDateString('en-IN')}
+        </div>
+        
+        <div style="border-top:1px dashed #000000;border-bottom:1px dashed #000000;padding:6px 0;margin:6px 0;">
+          <b style="color:#000000;">DELIVER TO:</b>
+        </div>
+        
+        <div style="margin-bottom:8px;font-size:11px;color:#000000;">
+          <b>${order.shippingAddress.fullName}</b><br/>
+          ${order.shippingAddress.address}<br/>
+          ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
+          📞 ${order.shippingAddress.phone}
+          ${order.shippingAddress.altPhone ? `<br/>Alt: ${order.shippingAddress.altPhone}` : ''}
+        </div>
+        
+        <div style="border-top:1px dashed #000000;padding:6px 0;margin:6px 0;">
+          <b style="color:#000000;">ITEMS (${order.orderItems.length}):</b>
+        </div>
+        
+        ${order.orderItems.map(item => `
+          <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#000000;">
+            <span>${item.name}</span>
+            <span>x${item.qty}</span>
+          </div>
+        `).join('')}
+        
+        <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:6px;font-size:11px;color:#000000;">
+          <b>Total Items:</b> ${order.orderItems.reduce((sum, item) => sum + item.qty, 0)}
+        </div>
+        
+        <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;color:#000000;">
+          Thank you! | support@reverserituals.com
+        </div>
+      </div>`;
+    });
+
+    allBills += '</body></html>';
+
+    const element = document.createElement('div');
+    element.innerHTML = allBills;
+
+    const opt = {
+      margin: 0,
+      filename: `bills-${new Date().toISOString().slice(0, 10)}.pdf`,
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(element).save();
+    toast.success(`${filtered.length} bills generated`);
+  };
+
+  const handleBulkStatusChange = async (status) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+      let filtered = orders;
+
+      if (exportDate) {
+        filtered = orders.filter(
+          o => new Date(o.createdAt).toDateString() === new Date(exportDate).toDateString()
+        );
+      } else if (exportFromDate && exportToDate) {
+        const from = new Date(exportFromDate);
+        const to = new Date(exportToDate);
+        to.setHours(23, 59, 59, 999);
+        filtered = orders.filter(
+          o => new Date(o.createdAt) >= from && new Date(o.createdAt) <= to
+        );
+      }
+
+      if (filtered.length === 0) {
+        toast.error('No orders for selected date');
+        return;
+      }
+
+      await Promise.all(
+        filtered.map(order => {
+          if (status === 'Delivered') {
+            return axios.put(`${API_URL}/api/orders/${order._id}/deliver`, {}, {
+              headers: { Authorization: `Bearer ${user.token}` }
+            });
+          } else {
+            return axios.put(
+              `${API_URL}/api/orders/${order._id}/status`,
+              { status: 'Processing' },
+              { headers: { Authorization: `Bearer ${user.token}` } }
+            );
+          }
+        })
+      );
+
+      toast.success(`Updated ${filtered.length} orders`);
+      fetchData();
+    } catch (error) {
+      toast.error('Bulk update failed');
+    }
+  };
+
   const downloadInvoice = async (order) => {
     const html2pdf = (await import('html2pdf.js')).default;
-    
+
     const printContent = `
   <div style="font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: #fff;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #064e3b;">
@@ -183,15 +397,19 @@ const AdminPage = () => {
 
     const element = document.createElement('div');
     element.innerHTML = printContent;
-    
+
     const opt = {
-      margin: 10,
-      filename: `invoice-${order._id.toString().slice(-8).toUpperCase()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      margin: 0,
+      filename: `label-${order._id}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: {
+        unit: 'in',
+        format: [4, 10], // IMPORTANT: bigger height → no blank cut issue
+        orientation: 'portrait'
+      },
+      pagebreak: { mode: ['css', 'legacy'] }
     };
-    
+
     html2pdf().set(opt).from(element).save();
   };
 
@@ -212,13 +430,13 @@ const AdminPage = () => {
 
   const exportOrdersToExcel = () => {
     let filtered = orders;
-    
+
     // Filter by single date
     if (exportDate) {
       const selectedDate = new Date(exportDate).toDateString();
       filtered = orders.filter(order => new Date(order.createdAt).toDateString() === selectedDate);
     }
-    
+
     // Filter by date range
     if (exportFromDate && exportToDate) {
       const fromDate = new Date(exportFromDate);
@@ -236,7 +454,7 @@ const AdminPage = () => {
     }
 
     const csvContent = [
-      ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment Status', 'Delivery Status'],
+      ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status'],
       ...filtered.map(order => [
         order._id.toString().slice(-8).toUpperCase(),
         new Date(order.createdAt).toLocaleDateString('en-IN'),
@@ -252,7 +470,7 @@ const AdminPage = () => {
         order.orderItems.map(item => `${item.name} (x${item.qty})`).join(', '),
         order.totalPrice,
         order.isPaid ? 'Paid' : 'Unpaid',
-        order.isDelivered ? 'Delivered' : 'Pending',
+        order.isDelivered ? 'Delivered' : (order.isPaid ? 'Shipped' : 'Processing'),
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -573,72 +791,104 @@ const AdminPage = () => {
             </div>
           )}
 
-{activeTab === 'orders' && (
+          {activeTab === 'orders' && (
             <div>
               {/* Export Section */}
               <div className="bg-white rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileSpreadsheet size={20} className="text-[#064e3b]" />
-                  <span className="font-bold text-[#064e3b]">Export Orders</span>
-                </div>
-                <div className="flex flex-col lg:flex-row gap-4">
-                  {/* Single Date */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-[#064e3b]/60">Single Date:</span>
-                      <input
-                        type="date"
-                        value={exportDate}
-                        onChange={(e) => { setExportDate(e.target.value); setExportFromDate(''); setExportToDate(''); }}
-                        className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="hidden lg:block w-px h-10 bg-[#064e3b]/10"></div>
-                  
-                  {/* Date Range */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-[#064e3b]/60">From:</span>
-                      <input
-                        type="date"
-                        value={exportFromDate}
-                        onChange={(e) => { setExportFromDate(e.target.value); setExportDate(''); }}
-                        className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-[#064e3b]/60">To:</span>
-                      <input
-                        type="date"
-                        value={exportToDate}
-                        onChange={(e) => { setExportToDate(e.target.value); setExportDate(''); }}
-                        className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="hidden lg:block w-px h-10 bg-[#064e3b]/10"></div>
-                  
-                  {/* Export Button */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={exportOrdersToExcel}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#064e3b] text-white rounded-lg font-bold text-sm hover:bg-[#064e3b]/90"
-                    >
-                      <Download size={16} /> Export CSV
-                    </button>
+                    <FileSpreadsheet size={20} className="text-[#064e3b]" />
+                    <span className="font-bold text-[#064e3b]">Filter & Export</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     {(exportDate || exportFromDate || exportToDate) && (
-                      <button
-                        onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); }}
-                        className="px-3 py-2 text-[#064e3b]/40 text-sm hover:text-[#064e3b]"
-                      >
-                        Clear
-                      </button>
+                      <span className="text-xs text-[#c5a059] font-medium">
+                        {filteredOrders.length} orders found
+                      </span>
                     )}
+                    <button
+                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); }}
+                      className="px-3 py-1.5 text-xs text-[#064e3b]/40 hover:text-[#064e3b] border border-[#064e3b]/10 rounded-lg"
+                    >
+                      Clear Filters
+                    </button>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Single Date */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#064e3b]/60">Single Date</label>
+                    <input
+                      type="date"
+                      value={exportDate}
+                      onChange={(e) => { setExportDate(e.target.value); setExportFromDate(''); setExportToDate(''); }}
+                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
+                    />
+                  </div>
+
+                  {/* From Date */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#064e3b]/60">From Date</label>
+                    <input
+                      type="date"
+                      value={exportFromDate}
+                      onChange={(e) => { setExportFromDate(e.target.value); setExportDate(''); }}
+                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
+                    />
+                  </div>
+
+                  {/* To Date */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#064e3b]/60">To Date</label>
+                    <input
+                      type="date"
+                      value={exportToDate}
+                      onChange={(e) => { setExportToDate(e.target.value); setExportDate(''); }}
+                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-medium text-[#064e3b]/60">Actions</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={exportOrdersToExcel}
+                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-[#064e3b] text-white rounded-lg text-sm font-medium hover:bg-[#064e3b]/90"
+                      >
+                        <Download size={14} /> CSV
+                      </button>
+                      <button
+                        onClick={downloadAllThermalBills}
+                        className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-[#c5a059] text-white rounded-lg text-sm font-medium hover:bg-[#c5a059]/90"
+                      >
+                        PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bulk Actions */}
+                {(exportDate || (exportFromDate && exportToDate)) && (
+                  <div className="mt-4 pt-4 border-t border-[#064e3b]/10">
+                    <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleBulkStatusChange('Processing')}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600 text-white rounded-lg text-xs font-medium hover:bg-yellow-700"
+                      >
+                        Mark Processing
+                      </button>
+                      <button
+                        onClick={() => handleBulkStatusChange('Delivered')}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700"
+                      >
+                        Mark Delivered
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {filteredOrders.map((order) => (
@@ -664,33 +914,21 @@ const AdminPage = () => {
                         <p className="font-black text-[#c5a059] text-sm sm:text-lg">₹{order.totalPrice}</p>
                         <p className="text-[#064e3b]/40 text-xs sm:text-sm">{order.orderItems.length} items</p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                         {order.isPaid ? (
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-green-100 text-green-600 rounded-full text-xs sm:text-sm font-bold">Paid</span>
                         ) : (
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-red-100 text-red-600 rounded-full text-xs sm:text-sm font-bold">Unpaid</span>
                         )}
-                        
                         {order.isDelivered ? (
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-purple-100 text-purple-600 rounded-full text-xs sm:text-sm font-bold">Delivered</span>
+                        ) : order.isPaid ? (
+                          <span
+                            onClick={(e) => { e.stopPropagation(); handleDeliver(order._id); }}
+                            className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-100 text-blue-600 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:bg-blue-200"
+                          >Shipped</span>
                         ) : (
-                          <select
-                            value={order.isPaid ? 'Shipped' : 'Processing'}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              const newStatus = e.target.value;
-                              if (newStatus === 'Delivered') handleDeliver(order._id);
-                              else if (newStatus === 'Processing') handleResetStatus(order._id);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold cursor-pointer ${
-                              order.isPaid ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-                            }`}
-                          >
-                            <option value="Processing">Processing</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                          </select>
+                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-yellow-100 text-yellow-600 rounded-full text-xs sm:text-sm font-bold">Processing</span>
                         )}
                         {order.estimatedDelivery && !order.isDelivered && (
                           <span className="px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
@@ -712,12 +950,12 @@ const AdminPage = () => {
                     {expandedOrder === order._id && (
                       <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="border-t border-[#064e3b]/5">
                         <div className="p-5 lg:p-6 bg-[#fdfbf7]/50">
-                          <div className="flex justify-end mb-4">
+                          <div className="flex justify-end gap-2 mb-4">
                             <button
-                              onClick={() => downloadInvoice(order)}
-                              className="flex items-center gap-2 px-4 py-2 bg-[#064e3b] text-white rounded-lg font-bold text-sm hover:bg-[#064e3b]/90"
+                              onClick={() => downloadThermalBill(order)}
+                              className="flex items-center gap-2 px-4 py-2 bg-[#c5a059] text-white rounded-lg font-bold text-sm hover:bg-[#c5a059]/90"
                             >
-                              <Download size={16} /> Download Bill
+                              <Download size={16} /> Thermal
                             </button>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -726,7 +964,7 @@ const AdminPage = () => {
                               <div className="space-y-2 text-[#064e3b]">
                                 <p className="font-bold">{order.shippingAddress.fullName}</p>
                                 <p className="text-sm">{order.shippingAddress.address}</p>
-                                <p className="text-sm">{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
+                                <p className="text-sm">{order.shippingAddress.city}, {order.shippingAddress.zipCode}</p>
                                 <p className="text-sm">{order.shippingAddress.country}</p>
                               </div>
                             </div>
@@ -751,7 +989,7 @@ const AdminPage = () => {
                   </AnimatePresence>
                 </motion.div>
               ))}
-              
+
               {filteredOrders.length === 0 && (
                 <div className="text-center py-16 bg-white rounded-[2rem] border border-[#064e3b]/5">
                   <ShoppingBag size={48} className="mx-auto text-[#064e3b]/20 mb-4" />

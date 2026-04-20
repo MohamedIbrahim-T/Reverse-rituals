@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Package, Truck, CheckCircle, MapPin, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Package, Truck, CheckCircle, MapPin, ShoppingBag, ArrowRight, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -18,12 +18,23 @@ const OrdersPage = () => {
       return;
     }
 
-    if (!user.token) {
-      setLoading(false);
-      return;
-    }
-
     const fetchOrders = async () => {
+      // Check for latest order in localStorage first
+      const latestOrderStr = localStorage.getItem('latestOrder');
+      let latestOrder = null;
+      if (latestOrderStr) {
+        try {
+          latestOrder = JSON.parse(latestOrderStr);
+        } catch (e) {
+          console.log('Error parsing latest order:', e);
+        }
+      }
+
+      if (!user.token) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const config = {
           headers: {
@@ -32,10 +43,21 @@ const OrdersPage = () => {
         };
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
         const { data } = await axios.get(`${API_URL}/api/orders/myorders`, config);
-        setOrders(data);
+        
+        // Merge with any localStorage order (avoid duplicates)
+        if (latestOrder) {
+          const merged = [latestOrder, ...data.filter(o => o._id !== latestOrder._id)];
+          setOrders(merged);
+        } else {
+          setOrders(data);
+        }
         setLoading(false);
       } catch (error) {
         console.error('Error fetching orders:', error);
+        // Still show the latestOrder if API fails
+        if (latestOrder) {
+          setOrders([latestOrder]);
+        }
         setLoading(false);
       }
     };
@@ -213,7 +235,7 @@ const handleBuyAgain = (order) => {
                               <Package size={16} />
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Delivery Date</p>
+                              <p className="text-xs text-gray-500">Expected</p>
                               <p className="text-xs font-medium text-[#c5a059]">
                                 {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                               </p>

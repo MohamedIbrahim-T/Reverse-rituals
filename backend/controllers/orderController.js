@@ -20,7 +20,7 @@ try {
 // @route   POST /api/orders
 // @access  Public (Guest Checkout) or Private
 const addOrderItems = async (req, res) => {
-  const { orderItems, shippingAddress, paymentMethod } = req.body;
+  const { orderItems, shippingAddress, paymentMethod, shippingCharge } = req.body;
 
   if (!orderItems || orderItems.length === 0) {
     res.status(400).json({ message: 'No order items' });
@@ -74,7 +74,7 @@ const addOrderItems = async (req, res) => {
       });
     }
 
-    const totalPrice = itemsPrice;
+    const totalPrice = itemsPrice + (shippingCharge || 0);
 
     const options = {
       amount: Math.round(totalPrice * 100),
@@ -99,7 +99,7 @@ const addOrderItems = async (req, res) => {
       shippingAddress,
       paymentMethod,
       itemsPrice,
-      shippingPrice: 0,
+      shippingPrice: shippingCharge || 0,
       totalPrice,
       estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
       paymentResult: {
@@ -180,7 +180,9 @@ const verifyPayment = async (req, res) => {
   }
 
   if (order.isPaid) {
-    return res.json({ message: 'Already paid', order });
+    // Fetch fresh order
+    const freshOrder = await Order.findById(orderId);
+    return res.json({ message: 'Already paid', order: freshOrder });
   }
 
   try {
@@ -214,7 +216,7 @@ const verifyPayment = async (req, res) => {
 
     console.log('✅ Paid via verify:', updatedOrder._id);
 
-    // ✅ 4. SEND EMAIL (ONLY ONCE)
+    // ✅ SEND EMAIL (ONLY ONCE)
     console.log('📧 Trying to send email for order:', updatedOrder._id);
     try {
       const user = order.user ? await User.findById(order.user) : null;
@@ -433,13 +435,14 @@ const deleteOrder = async (req, res) => {
 
 module.exports = {
   addOrderItems,
-  getOrderById,
-  getMyOrders,
+  createPayLinkForOrder,
   verifyPayment,
+  getOrderById,
+  createPaymentForOrder,
+  getMyOrders,
   getOrders,
   updateOrderToDelivered,
   updateOrderStatus,
   markOrderAsPaid,
   deleteOrder,
-  createPaymentForOrder,
 };

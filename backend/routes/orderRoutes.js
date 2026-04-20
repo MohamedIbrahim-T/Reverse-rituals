@@ -53,6 +53,8 @@ router.get('/', protect, admin, getOrders);
 
 // Export webhook handler for index.js
 const webhookHandler = async (req, res) => {
+  console.log('🔔 Webhook received:', req.body?.event);
+  
   try {
     const signature = req.headers['x-razorpay-signature'];
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -71,22 +73,27 @@ const webhookHandler = async (req, res) => {
 
     if (payload.event === 'payment.captured') {
       const payment = payload.payload.payment.entity;
+      console.log('🔔 Payment captured, razorpay order_id:', payment.order_id);
 
       const order = await Order.findOne({
         'paymentResult.razorpay_order_id': payment.order_id,
       });
+      
+      console.log('🔔 Order found:', order ? order._id : 'NOT FOUND');
+      console.log('🔔 Order isPaid:', order?.isPaid);
 
-      if (order && !order.isPaid) {
-        order.isPaid = true;
-        order.paidAt = new Date();
-        order.paymentResult = {
-          ...order.paymentResult,
-          id: payment.id,
-          status: 'PAID',
-        };
-
-        await order.save();
-        console.log('✅ Paid via webhook:', order._id);
+      if (order) {
+        if (!order.isPaid) {
+          order.isPaid = true;
+          order.paidAt = new Date();
+          order.paymentResult = {
+            ...order.paymentResult,
+            id: payment.id,
+            status: 'PAID',
+          };
+          await order.save();
+          console.log('✅ Paid via webhook:', order._id);
+        }
 
         // ✅ SEND EMAIL FROM WEBHOOK
         try {

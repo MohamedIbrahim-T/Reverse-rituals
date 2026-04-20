@@ -116,16 +116,17 @@ const CartPage = () => {
                 </div>
                 <div className="flex justify-between items-center text-[#064e3b]/60">
                   <span>Shipping</span>
-                  <span className="text-green-600 font-black">
-                    FREE
+                  <span className="text-[#c5a059] font-medium text-sm">
+                    Calculated at checkout
                   </span>
                 </div>
 
-                {cartTotal < 99 && (
-                  <p className="text-[10px] text-[#c5a059] font-black uppercase tracking-widest">
-                    Add ₹{99 - cartTotal} more for FREE shipping
-                  </p>
-                )}
+                <div className="p-3 bg-[#fdfbf7] rounded-xl text-xs text-[#064e3b]/60 space-y-1">
+                  <p className="font-bold text-[#064e3b]">Shipping Charges:</p>
+                  <p>• Tamil Nadu: FREE</p>
+                  <p>• Karnataka, AP, Telangana: ₹49</p>
+                  <p>• Other States: ₹99</p>
+                </div>
 
               </div>
 

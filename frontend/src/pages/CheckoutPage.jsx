@@ -126,7 +126,21 @@ const CheckoutPage = () => {
   };
 
   const displayItems = cartItems;
-  const finalTotal = cartTotal;
+
+  const getShippingCharge = (state) => {
+    if (!state) return 0;
+    const freeStates = ['tamil nadu', 'tn'];
+    const extra49States = ['karnataka', 'andhra pradesh', 'telangana'];
+    
+    const lowerState = state.toLowerCase().trim();
+    
+    if (freeStates.includes(lowerState)) return 0;
+    if (extra49States.includes(lowerState)) return 49;
+    return 99;
+  };
+
+  const shippingCharge = getShippingCharge(formData.state);
+  const finalTotal = cartTotal + shippingCharge;
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -288,19 +302,7 @@ const CheckoutPage = () => {
     }
   }, [authLoading, user, navigate]);
 
-  useEffect(() => {
-    if (!alertShownRef.current) {
-      alertShownRef.current = true;
-      toast.warning(
-        <div className="text-left">
-          <p className="font-bold text-lg mb-1">⚠️ IMPORTANT!</p>
-          <p className="text-sm">DO NOT press BACK or leave this page until payment is complete!</p>
-          <p className="text-sm mt-1">Your order will be processed automatically once payment succeeds.</p>
-        </div>,
-        { autoClose: false, closeOnClick: false }
-      );
-    }
-  }, []);
+  
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -389,7 +391,8 @@ const CheckoutPage = () => {
           altPhone: formData.altPhone || '',
           email: user?.email || ''
         },
-        paymentMethod: 'Razorpay'
+        paymentMethod: 'Razorpay',
+        shippingCharge: shippingCharge
       };
       const { data } = await axios.post(`${API_URL}/api/orders`, orderData, orderConfig);
       order = data.order;
@@ -621,24 +624,29 @@ const CheckoutPage = () => {
                 <div className="space-y-3 pt-4 border-t border-[#064e3b]/10">
                   <div className="flex justify-between text-[#064e3b]/60">
                     <span>Subtotal</span>
-                    <span className="font-bold">₹{finalTotal}</span>
+                    <span className="font-bold">₹{cartTotal}</span>
                   </div>
                   <div className="flex justify-between text-[#064e3b]/60">
                     <span className="flex items-center gap-2"><Truck size={14} /> Shipping</span>
-                    <span className="text-green-600 font-black">
-                      FREE
+                    <span className={`font-black ${shippingCharge === 0 ? 'text-green-600' : ''}`}>
+                      {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
                     </span>
                   </div>
-
-                  {finalTotal < 99 && (
-                    <p className="text-[10px] text-[#c5a059] font-black uppercase tracking-widest">
-                      Add ₹{99 - finalTotal} more for FREE shipping
+                  {shippingCharge > 0 && formData.state && (
+                    <p className="text-[10px] text-[#c5a059] font-medium">
+                      Shipping to {formData.state}: {shippingCharge === 49 ? '₹49 (AP/Telangana/Karnataka)' : '₹99 (Other states)'}
                     </p>
+                  )}
+                  {shippingCharge === 0 && formData.state && (
+                    <p className="text-[10px] text-green-600 font-medium">Free shipping for Tamil Nadu!</p>
+                  )}
+                  {!formData.state && (
+                    <p className="text-[10px] text-[#c5a059] font-medium">Select state to see shipping charges</p>
                   )}
 
                   <div className="flex justify-between pt-3 border-t border-[#064e3b]/10">
                     <span className="font-bold text-[#064e3b]">Total</span>
-                    <span className="text-xl font-black text-[#c5a059]">₹{finalTotal}</span>
+                    <span className="text-xl font-black text-[#c5a059]">₹{finalTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
