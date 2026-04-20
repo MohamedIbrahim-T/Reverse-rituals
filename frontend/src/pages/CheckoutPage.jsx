@@ -75,6 +75,8 @@ const CheckoutPage = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const alertShownRef = React.useRef(false);
 
   // If user has saved address in DB, show button
   const hasSavedAddress = savedAddressFromDB?.address;
@@ -287,6 +289,45 @@ const CheckoutPage = () => {
   }, [authLoading, user, navigate]);
 
   useEffect(() => {
+    if (!alertShownRef.current) {
+      alertShownRef.current = true;
+      toast.warning(
+        <div className="text-left">
+          <p className="font-bold text-lg mb-1">⚠️ IMPORTANT!</p>
+          <p className="text-sm">DO NOT press BACK or leave this page until payment is complete!</p>
+          <p className="text-sm mt-1">Your order will be processed automatically once payment succeeds.</p>
+        </div>,
+        { autoClose: false, closeOnClick: false }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isProcessing) {
+        e.preventDefault();
+        e.returnValue = 'Payment in progress! Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isProcessing]);
+
+  useEffect(() => {
+    if (isProcessing) {
+      const handlePopState = (e) => {
+        e.preventDefault();
+        window.history.pushState(null, '', window.location.href);
+        toast.warning('Please complete the payment first before leaving the page!');
+      };
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, [isProcessing]);
+
+  useEffect(() => {
     // If cart is empty, redirect to cart
     if (cartItems.length === 0 && !isCheckingAuth) {
       navigate('/cart');
@@ -303,7 +344,6 @@ const CheckoutPage = () => {
     });
   };
 
-  const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   // Redirect to orders page after successful payment
