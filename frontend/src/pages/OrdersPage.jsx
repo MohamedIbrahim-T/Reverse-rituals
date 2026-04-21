@@ -17,7 +17,7 @@ const OrdersPage = () => {
       if (!user && localStorage.getItem('userInfo')) {
         return;
       }
-      
+
       if (!user) {
         navigate('/login');
         return;
@@ -46,7 +46,7 @@ const OrdersPage = () => {
         };
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
         const { data } = await axios.get(`${API_URL}/api/orders/myorders`, config);
-        
+
         if (latestOrder) {
           const merged = [latestOrder, ...data.filter(o => o._id !== latestOrder._id)];
           setOrders(merged);
@@ -83,7 +83,7 @@ const OrdersPage = () => {
         return 'bg-green-500 text-white';
       case 'Shipped':
         return 'bg-blue-500 text-white';
-      case 'Packing':
+      case 'Packing & Processing':
         return 'bg-yellow-500 text-white';
       default:
         return 'bg-yellow-100 text-yellow-600';
@@ -95,14 +95,14 @@ const OrdersPage = () => {
       toast.error('No items in this order');
       return;
     }
-    
+
     const existingCart = JSON.parse(localStorage.getItem('cartItems') || '[]');
     const newItems = [...existingCart];
-    
+
     order.orderItems.forEach(item => {
       const itemId = item.product;
       const existingItem = newItems.find(x => x._id === itemId);
-      
+
       if (existingItem) {
         existingItem.qty += item.qty || 1;
       } else {
@@ -115,7 +115,7 @@ const OrdersPage = () => {
         });
       }
     });
-    
+
     localStorage.setItem('cartItems', JSON.stringify(newItems));
     window.dispatchEvent(new Event('storage'));
     navigate('/cart', { state: { message: 'Items added to cart!' } });
@@ -126,7 +126,7 @@ const OrdersPage = () => {
       toast.error('No items in this order');
       return;
     }
-    
+
     const newItems = order.orderItems.map(item => ({
       _id: item.product,
       name: item.name,
@@ -134,7 +134,7 @@ const OrdersPage = () => {
       image: item.image,
       qty: item.qty || 1
     }));
-    
+
     localStorage.setItem('cartItems', JSON.stringify(newItems));
     localStorage.setItem('repay_order', order._id);
     window.dispatchEvent(new Event('storage'));
@@ -198,9 +198,9 @@ const OrdersPage = () => {
                       <span className="text-xs font-semibold text-gray-400 uppercase">Order #{order._id.slice(-8).toUpperCase()}</span>
                       <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(status)}`}>
+                    {/* <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(status)}`}>
                       {status}
-                    </span>
+                    </span> */}
                   </div>
 
                   <div className="p-6">
@@ -221,27 +221,27 @@ const OrdersPage = () => {
                             </div>
                             <span className={`text-[10px] mt-1 ${order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Paid</span>
                           </div>
-                          
+
                           <div className={`h-0.5 w-8 ${order.isPaid ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
-                          
+
                           <div className="flex flex-col items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Packing', 'Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Packing & Processing', 'Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                               <Package size={14} />
                             </div>
-                            <span className={`text-[10px] mt-1 ${['Packing', 'Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing</span>
+                            <span className={`text-[10px] mt-1 ${['Packing & Processing', 'Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing & Processing</span>
                           </div>
-                          
+
                           <div className={`h-0.5 w-8 ${['Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
-                           
+
                           <div className="flex flex-col items-center">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                               <Truck size={14} />
                             </div>
                             <span className={`text-[10px] mt-1 ${['Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Shipped</span>
                           </div>
-                          
+
                           <div className={`h-0.5 w-8 ${status === 'Delivered' ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
-                           
+
                           <div className="flex flex-col items-center">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${status === 'Delivered' ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                               <CheckCircle size={14} />
@@ -275,7 +275,7 @@ const OrdersPage = () => {
 
                         {order.estimatedDelivery && status !== 'Delivered' && order.isPaid && (
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-500">Expected Delivery:</span>
+                            <span className="text-gray-500">Expected Delivery Date:</span>
                             <span className="font-medium text-[#c5a059]">
                               {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </span>

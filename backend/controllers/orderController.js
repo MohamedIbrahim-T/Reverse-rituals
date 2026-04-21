@@ -101,7 +101,7 @@ const addOrderItems = async (req, res) => {
       itemsPrice,
       shippingPrice: shippingCharge || 0,
       totalPrice,
-      status: 'Packing',
+      status: 'Packing & Processing',
       estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
       paymentResult: {
         razorpay_order_id: razorpayOrder.id,

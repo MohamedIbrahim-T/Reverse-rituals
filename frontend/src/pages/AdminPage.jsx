@@ -104,16 +104,16 @@ const AdminPage = () => {
     }
   };
 
-  const handlePacking = async (id) => {
+  const handlePacking & Processing = async (id) => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Packing' }, {
+      await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Packing & Processing' }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      toast.success('Order marked as Packing!');
+      toast.success('Order marked as Packing & Processing!');
       fetchData();
     } catch (error) {
-      console.error('Packing error:', error.response?.data || error.message);
+      console.error('Packing & Processing error:', error.response?.data || error.message);
       toast.error(error.response?.data?.message || 'Failed to update status');
     }
   };
@@ -489,7 +489,7 @@ const downloadThermalBill = async (order) => {
         order.orderItems.map(item => `${item.name} (x${item.qty})`).join(', '),
         order.totalPrice,
         order.isPaid ? 'Paid' : 'Unpaid',
-        order.isDelivered ? 'Delivered' : (order.isPaid ? 'Shipped' : 'Packing'),
+        order.isDelivered ? 'Delivered' : (order.isPaid ? 'Shipped' : 'Packing & Processing'),
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -913,10 +913,10 @@ const downloadThermalBill = async (order) => {
                     <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => handleBulkStatusChange('Packing')}
+                        onClick={() => handleBulkStatusChange('Packing & Processing')}
                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600"
                       >
-                        Packing
+                        Packing & Processing
                       </button>
                       <button
                         onClick={() => handleBulkStatusChange('Shipped')}
@@ -970,8 +970,8 @@ const downloadThermalBill = async (order) => {
                             const newStatus = e.target.value;
                             if (newStatus === 'Delivered') {
                               handleDeliver(order._id);
-                            } else if (newStatus === 'Packing') {
-                              handlePacking(order._id);
+                            } else if (newStatus === 'Packing & Processing') {
+                              handlePacking & Processing(order._id);
                             } else if (newStatus === 'Shipped') {
                               handleShipping(order._id);
                             }
@@ -979,12 +979,12 @@ const downloadThermalBill = async (order) => {
                           className={`px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold cursor-pointer border-0 ${
                             (order.status || 'Pending') === 'Delivered' ? 'bg-green-500 text-white' :
                             (order.status || 'Pending') === 'Shipped' ? 'bg-blue-500 text-white' :
-                            (order.status || 'Pending') === 'Packing' ? 'bg-yellow-500 text-white' :
+                            (order.status || 'Pending') === 'Packing & Processing' ? 'bg-yellow-500 text-white' :
                             'bg-yellow-100 text-yellow-600'
                           }`}
                         >
                           <option value="Pending">Pending</option>
-                          <option value="Packing">Packing</option>
+                          <option value="Packing & Processing">Packing & Processing</option>
                           <option value="Shipped">Shipped</option>
                           <option value="Delivered">Delivered</option>
                         </select>
