@@ -39,6 +39,7 @@ const orderSchema = new mongoose.Schema({
   paidAt: { type: Date },
   isDelivered: { type: Boolean, required: true, default: false },
   deliveredAt: { type: Date },
+  status: { type: String, default: 'Pending' },
   estimatedDelivery: { type: Date },
   user: {
     type: mongoose.Schema.Types.ObjectId,

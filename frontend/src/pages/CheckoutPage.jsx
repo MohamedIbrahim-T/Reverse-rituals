@@ -634,7 +634,7 @@ const CheckoutPage = () => {
                   </div>
                   {shippingCharge > 0 && formData.state && (
                     <p className="text-[10px] text-[#c5a059] font-medium">
-                      Shipping charges for {formData.state}: {shippingCharge === 49 ? '₹49 ' : '₹99 (Other states)'}
+                      Shipping charges for {formData.state}: {shippingCharge === 49 ? '₹49 ' : '₹99 '}
                     </p>
                   )}
                   {shippingCharge === 0 && formData.state && (

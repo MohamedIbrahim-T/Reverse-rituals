@@ -101,6 +101,7 @@ const addOrderItems = async (req, res) => {
       itemsPrice,
       shippingPrice: shippingCharge || 0,
       totalPrice,
+      status: 'Packing',
       estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
       paymentResult: {
         razorpay_order_id: razorpayOrder.id,
@@ -345,7 +346,22 @@ const createPaymentForOrder = async (req, res) => {
 // @access  Private
 const getMyOrders = async (req, res) => {
   const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
-  res.json(orders);
+  
+  const ordersWithStatus = orders.map(order => {
+    const orderObj = order.toObject();
+    if (!orderObj.status) {
+      if (orderObj.isDelivered) {
+        orderObj.status = 'Delivered';
+      } else if (orderObj.isPaid) {
+        orderObj.status = 'Shipped';
+      } else {
+        orderObj.status = 'Pending';
+      }
+    }
+    return orderObj;
+  });
+  
+  res.json(ordersWithStatus);
 };
 
 // @desc    Get all orders
@@ -353,7 +369,23 @@ const getMyOrders = async (req, res) => {
 // @access  Private/Admin
 const getOrders = async (req, res) => {
   const orders = await Order.find({}).sort({ createdAt: -1 });
-  res.json(orders);
+  
+  // Add status field to orders that don't have it (for display only)
+  const ordersWithStatus = orders.map(order => {
+    const orderObj = order.toObject();
+    if (!orderObj.status) {
+      if (orderObj.isDelivered) {
+        orderObj.status = 'Delivered';
+      } else if (orderObj.isPaid) {
+        orderObj.status = 'Shipped';
+      } else {
+        orderObj.status = 'Pending';
+      }
+    }
+    return orderObj;
+  });
+  
+  res.json(ordersWithStatus);
 };
 
 // @desc    Update order to delivered
@@ -365,6 +397,7 @@ const updateOrderToDelivered = async (req, res) => {
   if (order) {
     order.isDelivered = true;
     order.deliveredAt = Date.now();
+    order.status = 'Delivered';
 
     const updatedOrder = await order.save();
     res.json(updatedOrder);
@@ -378,17 +411,17 @@ const updateOrderToDelivered = async (req, res) => {
 // @access  Private/Admin
 const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
+  
   const order = await Order.findById(req.params.id);
 
   if (order) {
-    if (status === 'Packing' || status === 'Processing') {
-      order.isDelivered = false;
-      order.deliveredAt = null;
-    } else if (status === 'Shipped') {
-      order.isDelivered = false;
-    } else if (status === 'Delivered') {
+    order.status = status;
+    if (status === 'Delivered') {
       order.isDelivered = true;
       order.deliveredAt = Date.now();
+    } else {
+      order.isDelivered = false;
+      order.deliveredAt = null;
     }
     const updatedOrder = await order.save();
     res.json(updatedOrder);

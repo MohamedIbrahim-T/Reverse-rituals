@@ -84,7 +84,8 @@ const AdminPage = () => {
       toast.success('Order marked as delivered!');
       fetchData();
     } catch (error) {
-      toast.error('Update failed');
+      console.error('Deliver error:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Update failed');
     }
   };
 
@@ -103,7 +104,21 @@ const AdminPage = () => {
     }
   };
 
-  const handleShipped = async (id) => {
+  const handlePacking = async (id) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Packing' }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      toast.success('Order marked as Packing!');
+      fetchData();
+    } catch (error) {
+      console.error('Packing error:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    }
+  };
+
+  const handleShipping = async (id) => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Shipped' }, {
@@ -112,7 +127,8 @@ const AdminPage = () => {
       toast.success('Order marked as Shipped!');
       fetchData();
     } catch (error) {
-      toast.error('Failed to update status');
+      console.error('Shipping error:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to update status');
     }
   };
 
@@ -319,7 +335,7 @@ const downloadThermalBill = async (order) => {
           } else {
             return axios.put(
               `${API_URL}/api/orders/${order._id}/status`,
-              { status: 'Processing' },
+              { status: status },
               { headers: { Authorization: `Bearer ${user.token}` } }
             );
           }
@@ -530,10 +546,29 @@ const downloadThermalBill = async (order) => {
   const deliveredOrders = orders.filter(o => o.isDelivered).length;
   const lowStockProducts = products.filter(p => p.countInStock < 5).length;
 
-  const filteredOrders = orders.filter(order =>
-    order.shippingAddress.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order._id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOrders = orders.filter(order => {
+    // Search filter
+    const matchesSearch = 
+      order.shippingAddress.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order._id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Date filter - single date
+    if (exportDate) {
+      const matchesDate = new Date(order.createdAt).toDateString() === new Date(exportDate).toDateString();
+      return matchesSearch && matchesDate;
+    }
+    
+    // Date filter - date range
+    if (exportFromDate && exportToDate) {
+      const from = new Date(exportFromDate);
+      const to = new Date(exportToDate);
+      to.setHours(23, 59, 59, 999);
+      const matchesDateRange = new Date(order.createdAt) >= from && new Date(order.createdAt) <= to;
+      return matchesSearch && matchesDateRange;
+    }
+    
+    return matchesSearch;
+  });
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -878,16 +913,22 @@ const downloadThermalBill = async (order) => {
                     <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
                     <div className="flex flex-wrap gap-2">
                       <button
+                        onClick={() => handleBulkStatusChange('Packing')}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-xs font-medium hover:bg-yellow-600"
+                      >
+                        Packing
+                      </button>
+                      <button
                         onClick={() => handleBulkStatusChange('Shipped')}
                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700"
                       >
-                        Mark Shipped
+                        Shipping
                       </button>
                       <button
                         onClick={() => handleBulkStatusChange('Delivered')}
                         className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700"
                       >
-                        Mark Delivered
+                        Delivered
                       </button>
                     </div>
                   </div>
@@ -923,17 +964,31 @@ const downloadThermalBill = async (order) => {
                         ) : (
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-red-100 text-red-600 rounded-full text-xs sm:text-sm font-bold">Unpaid</span>
                         )}
-                        {order.isDelivered ? (
-                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-green-500 text-white rounded-full text-xs sm:text-sm font-bold">Delivered</span>
-                        ) : order.isPaid ? (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleShipped(order._id); }}
-                            className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-100 text-blue-600 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:bg-blue-200"
-                          >Shipped</button>
-                        ) : (
-                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-yellow-100 text-yellow-600 rounded-full text-xs sm:text-sm font-bold">Pending</span>
-                        )}
-                        {order.estimatedDelivery && !order.isDelivered && (
+                        <select
+                          value={order.status || 'Pending'}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            if (newStatus === 'Delivered') {
+                              handleDeliver(order._id);
+                            } else if (newStatus === 'Packing') {
+                              handlePacking(order._id);
+                            } else if (newStatus === 'Shipped') {
+                              handleShipping(order._id);
+                            }
+                          }}
+                          className={`px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold cursor-pointer border-0 ${
+                            (order.status || 'Pending') === 'Delivered' ? 'bg-green-500 text-white' :
+                            (order.status || 'Pending') === 'Shipped' ? 'bg-blue-500 text-white' :
+                            (order.status || 'Pending') === 'Packing' ? 'bg-yellow-500 text-white' :
+                            'bg-yellow-100 text-yellow-600'
+                          }`}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Packing">Packing</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                        {order.estimatedDelivery && (order.status || 'Pending') !== 'Delivered' && (
                           <span className="px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
                             Est: {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                           </span>

@@ -37,17 +37,17 @@ router.put('/fix-paid/:id', async (req, res) => {
   }
 });
 router.post('/:id/pay', optionalProtect, createPaymentForOrder);
-router.put('/:id/deliver', protect, admin, updateOrderToDelivered);
-router.put('/:id/status', protect, admin, updateOrderStatus);
-router.put('/:id/mark-paid', protect, admin, markOrderAsPaid);
+router.put('/:id/deliver', protect, updateOrderToDelivered);
+router.put('/:id/status', protect, updateOrderStatus);
+router.put('/:id/mark-paid', protect, markOrderAsPaid);
 
 router.get('/:id', protect, getOrderById);
-router.delete('/:id', protect, admin, deleteOrder);
+router.delete('/:id', protect, deleteOrder);
 
 
 
 router.post('/', optionalProtect, addOrderItems);
-router.get('/', protect, admin, getOrders);
+router.get('/', protect, getOrders);
 
 
 
