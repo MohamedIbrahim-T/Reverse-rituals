@@ -206,7 +206,7 @@ const handleBuyAgain = (order) => {
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-[#064e3b] text-white' : order.isPaid ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                           <Package size={14} />
                         </div>
-                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-[#064e3b] font-medium' : order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing</span>
+                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-[#064e3b] font-medium' : order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing & Processing</span>
                       </div>
                       
                       <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-[#064e3b]' : order.isPaid ? 'bg-[#064e3b]/30' : 'bg-gray-200'}`}></div>
@@ -280,7 +280,7 @@ const handleBuyAgain = (order) => {
 
                   {order.shippingAddress && (
                     <div className="mt-4 pt-4 border-t border-gray-100 flex items-start gap-3 text-sm text-gray-500">
-                      <MapPin size={16} className="text-[#c5a059] mt-0.5" />
+                      <MapPin size={20} className="text-[#c5a059] mt-0.5" />
                       <div>
                         <span className="font-medium text-[#064e3b]">Shipping: </span>
                         {order.shippingAddress.fullName},{order.shippingAddress.address} {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}

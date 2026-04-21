@@ -131,9 +131,9 @@ const CheckoutPage = () => {
     if (!state) return 0;
     const freeStates = ['tamil nadu', 'tn'];
     const extra49States = ['karnataka', 'andhra pradesh', 'telangana'];
-    
+
     const lowerState = state.toLowerCase().trim();
-    
+
     if (freeStates.includes(lowerState)) return 0;
     if (extra49States.includes(lowerState)) return 49;
     return 99;
@@ -302,7 +302,7 @@ const CheckoutPage = () => {
     }
   }, [authLoading, user, navigate]);
 
-  
+
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -634,7 +634,7 @@ const CheckoutPage = () => {
                   </div>
                   {shippingCharge > 0 && formData.state && (
                     <p className="text-[10px] text-[#c5a059] font-medium">
-                      Shipping to {formData.state}: {shippingCharge === 49 ? '₹49 (AP/Telangana/Karnataka)' : '₹99 (Other states)'}
+                      Shipping charges for {formData.state}: {shippingCharge === 49 ? '₹49 ' : '₹99 (Other states)'}
                     </p>
                   )}
                   {shippingCharge === 0 && formData.state && (
