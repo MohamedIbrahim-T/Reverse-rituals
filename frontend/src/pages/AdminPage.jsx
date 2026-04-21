@@ -103,16 +103,16 @@ const AdminPage = () => {
     }
   };
 
-  const handleResetStatus = async (id) => {
+  const handleShipped = async (id) => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Processing' }, {
+      await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Shipped' }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
-      toast.success('Order reset to Processing');
+      toast.success('Order marked as Shipped!');
       fetchData();
     } catch (error) {
-      toast.error('Failed to reset status');
+      toast.error('Failed to update status');
     }
   };
 
@@ -213,14 +213,17 @@ const downloadThermalBill = async (order) => {
       filtered = orders.filter(o => new Date(o.createdAt) >= from && new Date(o.createdAt) <= to);
     }
 
-    if (filtered.length === 0) {
-      toast.error('No orders found');
+    // Filter only PAID orders
+    const paidOrders = filtered.filter(o => o.isPaid);
+
+    if (paidOrders.length === 0) {
+      toast.error('No PAID orders found for selected date');
       return;
     }
 
     let allBills = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:20px;font-family:monospace;font-size:12px;color:#000000;background:#fff;">`;
 
-    filtered.forEach(order => {
+    paidOrders.forEach(order => {
       allBills += `
       <div style="width:3.6in;min-height:5in;margin:0 auto;page-break-after:always;padding-bottom:25px;color:#000000;">
         
@@ -280,7 +283,7 @@ const downloadThermalBill = async (order) => {
     };
 
     html2pdf().set(opt).from(element).save();
-    toast.success(`${filtered.length} bills generated`);
+    toast.success(`${paidOrders.length} PAID bills generated`);
   };
 
   const handleBulkStatusChange = async (status) => {
@@ -470,7 +473,7 @@ const downloadThermalBill = async (order) => {
         order.orderItems.map(item => `${item.name} (x${item.qty})`).join(', '),
         order.totalPrice,
         order.isPaid ? 'Paid' : 'Unpaid',
-        order.isDelivered ? 'Delivered' : (order.isPaid ? 'Shipped' : 'Processing'),
+        order.isDelivered ? 'Delivered' : (order.isPaid ? 'Shipped' : 'Packing'),
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -875,10 +878,10 @@ const downloadThermalBill = async (order) => {
                     <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => handleBulkStatusChange('Processing')}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600 text-white rounded-lg text-xs font-medium hover:bg-yellow-700"
+                        onClick={() => handleBulkStatusChange('Shipped')}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700"
                       >
-                        Mark Processing
+                        Mark Shipped
                       </button>
                       <button
                         onClick={() => handleBulkStatusChange('Delivered')}
@@ -921,14 +924,14 @@ const downloadThermalBill = async (order) => {
                           <span className="px-2 sm:px-4 py-1 sm:py-2 bg-red-100 text-red-600 rounded-full text-xs sm:text-sm font-bold">Unpaid</span>
                         )}
                         {order.isDelivered ? (
-                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-purple-100 text-purple-600 rounded-full text-xs sm:text-sm font-bold">Delivered</span>
+                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-green-500 text-white rounded-full text-xs sm:text-sm font-bold">Delivered</span>
                         ) : order.isPaid ? (
-                          <span
-                            onClick={(e) => { e.stopPropagation(); handleDeliver(order._id); }}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleShipped(order._id); }}
                             className="px-2 sm:px-4 py-1 sm:py-2 bg-blue-100 text-blue-600 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:bg-blue-200"
-                          >Shipped</span>
+                          >Shipped</button>
                         ) : (
-                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-yellow-100 text-yellow-600 rounded-full text-xs sm:text-sm font-bold">Processing</span>
+                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-yellow-100 text-yellow-600 rounded-full text-xs sm:text-sm font-bold">Pending</span>
                         )}
                         {order.estimatedDelivery && !order.isDelivered && (
                           <span className="px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">

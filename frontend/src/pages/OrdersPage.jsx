@@ -170,23 +170,67 @@ const handleBuyAgain = (order) => {
                     <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    {!order.isPaid ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                        Processing
-                      </span>
-                    ) : order.isDelivered ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                    {order.isDelivered ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                         Delivered
                       </span>
                     ) : order.isPaid ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                        Delivery: {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        Packed & Ready to Ship
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                        Payment Pending
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <div className="p-6">
+                  {/* Timeline */}
+                  <div className="mb-6">
+                    <p className="text-xs font-medium text-gray-400 mb-3">Order Status</p>
+                    <div className="flex items-center justify-between">
+                      {/* Placed */}
+                      <div className="flex flex-col items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                          <CheckCircle size={14} />
+                        </div>
+                        <span className={`text-[10px] mt-1 ${order.isPaid ? 'text-green-600 font-medium' : 'text-gray-400'}`}>Paid</span>
+                      </div>
+                      
+                      <div className={`h-0.5 w-8 ${order.isPaid ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                      
+                      {/* Packing */}
+                      <div className="flex flex-col items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid && !order.isDelivered ? 'bg-[#064e3b] text-white' : order.isDelivered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                          <Package size={14} />
+                        </div>
+                        <span className={`text-[10px] mt-1 ${order.isPaid && !order.isDelivered ? 'text-[#064e3b] font-medium' : order.isDelivered ? 'text-green-600' : 'text-gray-400'}`}>Packing</span>
+                      </div>
+                      
+                      <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-green-500' : order.isPaid ? 'bg-[#064e3b]/30' : 'bg-gray-200'}`}></div>
+                      
+                      {/* Shipped */}
+                      <div className="flex flex-col items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                          <Truck size={14} />
+                        </div>
+                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-green-600 font-medium' : 'text-gray-400'}`}>Shipped</span>
+                      </div>
+                      
+                      <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                      
+                      {/* Delivered */}
+                      <div className="flex flex-col items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                          <CheckCircle size={14} />
+                        </div>
+                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-green-600 font-medium' : 'text-gray-400'}`}>Delivered</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row gap-6">
                     <Link to={`/product/${order.orderItems[0]?.product}`} className="flex gap-2 overflow-x-auto sm:flex-col sm:overflow-visible sm:w-24">
                       {order.orderItems.slice(0, 3).map((item, i) => (
@@ -208,41 +252,14 @@ const handleBuyAgain = (order) => {
                         <p className="text-sm text-gray-500">{order.orderItems.length} item(s)</p>
                       </div>
 
-                      <div className="flex flex-wrap gap-6 text-sm">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            <CheckCircle size={16} />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Payment</p>
-                            <p className={`text-xs font-medium ${order.isPaid ? 'text-green-600' : 'text-gray-400'}`}>{order.isPaid ? 'Done' : 'Pending'}</p>
-                          </div>
+                      {order.estimatedDelivery && !order.isDelivered && order.isPaid && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-gray-500">Expected Delivery:</span>
+                          <span className="font-medium text-[#c5a059]">
+                            {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-[#064e3b]/10 text-[#064e3b]' : 'bg-gray-200 text-gray-400'}`}>
-                            <Truck size={16} />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Delivery</p>
-                            <p className={`text-xs font-medium ${order.isDelivered ? 'text-[#064e3b]' : 'text-gray-400'}`}>
-                              {order.isDelivered ? `Shipped ${order.deliveredAt ? new Date(order.deliveredAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}` : 'Processing'}
-                            </p>
-                          </div>
-                        </div>
-                        {order.estimatedDelivery && !order.isDelivered && order.isPaid && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#c5a059]/10 text-[#c5a059]">
-                              <Package size={16} />
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Expected</p>
-                              <p className="text-xs font-medium text-[#c5a059]">
-                                {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      )}
 
                       <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
                         <div className="text-sm text-gray-500">

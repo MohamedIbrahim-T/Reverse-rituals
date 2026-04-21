@@ -381,7 +381,7 @@ const updateOrderStatus = async (req, res) => {
   const order = await Order.findById(req.params.id);
 
   if (order) {
-    if (status === 'Processing') {
+    if (status === 'Packing' || status === 'Processing') {
       order.isDelivered = false;
       order.deliveredAt = null;
     } else if (status === 'Shipped') {
