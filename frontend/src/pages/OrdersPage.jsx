@@ -169,7 +169,7 @@ const handleBuyAgain = (order) => {
                     <span className="text-xs font-semibold text-gray-400 uppercase">Order #{order._id.slice(-8).toUpperCase()}</span>
                     <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  {/* <div className="flex items-center gap-3">
                     {order.isDelivered ? (
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                         Delivered
@@ -183,7 +183,7 @@ const handleBuyAgain = (order) => {
                         Payment Pending
                       </span>
                     )}
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="p-6">
@@ -193,40 +193,40 @@ const handleBuyAgain = (order) => {
                     <div className="flex items-center justify-between">
                       {/* Placed */}
                       <div className="flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                           <CheckCircle size={14} />
                         </div>
-                        <span className={`text-[10px] mt-1 ${order.isPaid ? 'text-green-600 font-medium' : 'text-gray-400'}`}>Paid</span>
+                        <span className={`text-[10px] mt-1 ${order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Paid</span>
                       </div>
                       
-                      <div className={`h-0.5 w-8 ${order.isPaid ? 'bg-green-500' : 'bg-gray-200'}`}></div>
+                      <div className={`h-0.5 w-8 ${order.isPaid ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
                       
                       {/* Packing */}
                       <div className="flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid && !order.isDelivered ? 'bg-[#064e3b] text-white' : order.isDelivered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-[#064e3b] text-white' : order.isPaid ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                           <Package size={14} />
                         </div>
-                        <span className={`text-[10px] mt-1 ${order.isPaid && !order.isDelivered ? 'text-[#064e3b] font-medium' : order.isDelivered ? 'text-green-600' : 'text-gray-400'}`}>Packing</span>
+                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-[#064e3b] font-medium' : order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing</span>
                       </div>
                       
-                      <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-green-500' : order.isPaid ? 'bg-[#064e3b]/30' : 'bg-gray-200'}`}></div>
-                      
+                      <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-[#064e3b]' : order.isPaid ? 'bg-[#064e3b]/30' : 'bg-gray-200'}`}></div>
+                       
                       {/* Shipped */}
                       <div className="flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                           <Truck size={14} />
                         </div>
-                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-green-600 font-medium' : 'text-gray-400'}`}>Shipped</span>
+                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Shipped</span>
                       </div>
                       
-                      <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-green-500' : 'bg-gray-200'}`}></div>
-                      
+                      <div className={`h-0.5 w-8 ${order.isDelivered ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
+                       
                       {/* Delivered */}
                       <div className="flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isDelivered ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
                           <CheckCircle size={14} />
                         </div>
-                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-green-600 font-medium' : 'text-gray-400'}`}>Delivered</span>
+                        <span className={`text-[10px] mt-1 ${order.isDelivered ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Delivered</span>
                       </div>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ const handleBuyAgain = (order) => {
 
                       {order.estimatedDelivery && !order.isDelivered && order.isPaid && (
                         <div className="flex items-center gap-2 text-sm">
-                          <span className="text-gray-500">Expected Delivery:</span>
+                          <span className="text-gray-500">Expected Delivery Date:</span>
                           <span className="font-medium text-[#c5a059]">
                             {new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </span>
@@ -283,7 +283,7 @@ const handleBuyAgain = (order) => {
                       <MapPin size={16} className="text-[#c5a059] mt-0.5" />
                       <div>
                         <span className="font-medium text-[#064e3b]">Shipping: </span>
-                        {order.shippingAddress.fullName}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}
+                        {order.shippingAddress.fullName},{order.shippingAddress.address} {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}
                       </div>
                     </div>
                   )}
