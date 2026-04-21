@@ -417,18 +417,28 @@ const VideoShowcase = () => {
                             }}
                             className="w-full max-w-sm md:max-w-lg group cursor-pointer rounded-xl md:rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-[#c5a059]/40 transition"
                         >
-                            <div className="aspect-video relative">
+                            <div className="aspect-video relative bg-gradient-to-br from-[#064e3b]/30 to-[#c5a059]/30">
                                 <video
                                     src={video.thumbnail}
                                     className="w-full h-full object-cover"
-                                    poster=""
+                                    playsInline
+                                    preload="auto"
                                     muted
-                                    preload="metadata"
+                                    loop
                                 />
-                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition flex items-center justify-center">
-                                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition">
-                                        <Play size={20} md:size={24} className="text-white ml-0.5" fill="white" />
+                                <div 
+                                  className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition flex items-center justify-center cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedVideo(video);
+                                    setShowVideo(true);
+                                  }}
+                                >
+                                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition">
+                                        <Play size={24} className="text-white ml-1" fill="white" />
                                     </div>
+                                </div>
+                                <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded text-white text-xs">
+                                    {video.duration}
                                 </div>
                             </div>
                             <div className="p-3 md:p-4">

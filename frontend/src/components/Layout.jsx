@@ -1,16 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ChevronUp } from 'lucide-react';
 
 const Layout = () => {
   const { pathname } = useLocation();
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="flex flex-col min-h-screen text-[#1a1a1a] overflow-x-hidden">
@@ -20,6 +34,16 @@ const Layout = () => {
       </main>
       <Footer />
       
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 md:bottom-28 right-6 z-50 w-12 h-12 bg-[#c5a059] rounded-full flex items-center justify-center shadow-lg hover:bg-[#064e3b] transition-all hover:scale-110 animate-fade-in"
+        >
+          <ChevronUp size={24} className="text-white" />
+        </button>
+      )}
+
       {/* WhatsApp Floating Button */}
       <a
         href="https://wa.me/917358422064"

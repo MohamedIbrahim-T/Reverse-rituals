@@ -13,12 +13,16 @@ const OrdersPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
     const fetchOrders = async () => {
+      if (!user && localStorage.getItem('userInfo')) {
+        return;
+      }
+      
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
       const latestOrderStr = localStorage.getItem('latestOrder');
       let latestOrder = null;
       if (latestOrderStr) {
@@ -59,7 +63,11 @@ const OrdersPage = () => {
       }
     };
 
-    fetchOrders();
+    const timer = setTimeout(() => {
+      fetchOrders();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [user, navigate]);
 
   const getOrderStatus = (order) => {
@@ -139,6 +147,14 @@ const OrdersPage = () => {
     </div>
   );
 
+  if (!user && localStorage.getItem('userInfo')) {
+    return (
+      <div className="min-h-screen bg-[#fdfbf7] pt-24 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#c5a059] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fdfbf7] pt-24 pb-16 px-4">
       <div className="max-w-4xl mx-auto">
@@ -182,55 +198,59 @@ const OrdersPage = () => {
                       <span className="text-xs font-semibold text-gray-400 uppercase">Order #{order._id.slice(-8).toUpperCase()}</span>
                       <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     </div>
-                    {/* <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(status)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(status)}`}>
                       {status}
-                    </span> */}
+                    </span>
                   </div>
 
                   <div className="p-6">
-                    {/* Timeline */}
-                    <div className="mb-6">
-                      <p className="text-xs font-medium text-gray-400 mb-3">Order Status</p>
-                      <div className="flex items-center justify-between">
-                        {/* Placed/Paid */}
-                        <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            <CheckCircle size={14} />
+                    {!order.isPaid ? (
+                      <div className="text-center py-4">
+                        <span className="inline-block px-4 py-2 rounded-full text-sm font-bold bg-red-100 text-red-600">
+                          Payment Pending
+                        </span>
+                        <p className="text-sm text-gray-500 mt-2">Please complete your payment to track order status</p>
+                      </div>
+                    ) : (
+                      <div className="mb-6">
+                        <p className="text-xs font-medium text-gray-400 mb-3">Order Status</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col items-center">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${order.isPaid ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              <CheckCircle size={14} />
+                            </div>
+                            <span className={`text-[10px] mt-1 ${order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Paid</span>
                           </div>
-                          <span className={`text-[10px] mt-1 ${order.isPaid ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Paid</span>
-                        </div>
-                        
-                        <div className={`h-0.5 w-8 ${order.isPaid ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
-                        
-                        {/* Packing */}
-                        <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Packing', 'Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            <Package size={14} />
+                          
+                          <div className={`h-0.5 w-8 ${order.isPaid ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
+                          
+                          <div className="flex flex-col items-center">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Packing', 'Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              <Package size={14} />
+                            </div>
+                            <span className={`text-[10px] mt-1 ${['Packing', 'Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing</span>
                           </div>
-                          <span className={`text-[10px] mt-1 ${['Packing', 'Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Packing & Processing</span>
-                        </div>
-                        
-                        <div className={`h-0.5 w-8 ${['Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b]' : order.isPaid ? 'bg-[#064e3b]/30' : 'bg-gray-200'}`}></div>
-                         
-                        {/* Shipped */}
-                        <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            <Truck size={14} />
+                          
+                          <div className={`h-0.5 w-8 ${['Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
+                           
+                          <div className="flex flex-col items-center">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${['Shipped', 'Delivered'].includes(status) ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              <Truck size={14} />
+                            </div>
+                            <span className={`text-[10px] mt-1 ${['Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Shipped</span>
                           </div>
-                          <span className={`text-[10px] mt-1 ${['Shipped', 'Delivered'].includes(status) ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Shipped</span>
-                        </div>
-                        
-                        <div className={`h-0.5 w-8 ${status === 'Delivered' ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
-                         
-                        {/* Delivered */}
-                        <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${status === 'Delivered' ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            <CheckCircle size={14} />
+                          
+                          <div className={`h-0.5 w-8 ${status === 'Delivered' ? 'bg-[#064e3b]' : 'bg-gray-200'}`}></div>
+                           
+                          <div className="flex flex-col items-center">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${status === 'Delivered' ? 'bg-[#064e3b] text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              <CheckCircle size={14} />
+                            </div>
+                            <span className={`text-[10px] mt-1 ${status === 'Delivered' ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Delivered</span>
                           </div>
-                          <span className={`text-[10px] mt-1 ${status === 'Delivered' ? 'text-[#064e3b] font-medium' : 'text-gray-400'}`}>Delivered</span>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row gap-6">
                       <div className="flex gap-2 overflow-x-auto sm:flex-col sm:overflow-visible sm:w-24">
