@@ -104,7 +104,7 @@ const AdminPage = () => {
     }
   };
 
-  const handlePacking & Processing = async (id) => {
+  const handlePacking = async (id) => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       await axios.put(`${API_URL}/api/orders/${id}/status`, { status: 'Packing & Processing' }, {
@@ -113,7 +113,7 @@ const AdminPage = () => {
       toast.success('Order marked as Packing & Processing!');
       fetchData();
     } catch (error) {
-      console.error('Packing & Processing error:', error.response?.data || error.message);
+      console.error('Packing error:', error.response?.data || error.message);
       toast.error(error.response?.data?.message || 'Failed to update status');
     }
   };
@@ -971,7 +971,7 @@ const downloadThermalBill = async (order) => {
                             if (newStatus === 'Delivered') {
                               handleDeliver(order._id);
                             } else if (newStatus === 'Packing & Processing') {
-                              handlePacking & Processing(order._id);
+                              handlePacking(order._id);
                             } else if (newStatus === 'Shipped') {
                               handleShipping(order._id);
                             }
