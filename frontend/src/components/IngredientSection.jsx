@@ -103,13 +103,13 @@ const ProductShowcase = () => {
     useEffect(() => {
         // Store original overflow value
         const originalOverflow = document.body.style.overflow;
-        
+
         if (selected) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = originalOverflow || '';
         }
-        
+
         return () => {
             document.body.style.overflow = originalOverflow || '';
         };
@@ -371,13 +371,13 @@ const VideoShowcase = () => {
 
     useEffect(() => {
         const originalOverflow = document.body.style.overflow;
-        
+
         if (showVideo) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = originalOverflow || '';
         }
-        
+
         return () => {
             document.body.style.overflow = originalOverflow || '';
         };
@@ -388,6 +388,7 @@ const VideoShowcase = () => {
             id: 1,
             title: "How to Apply",
             thumbnail: "/video.mp4",
+            poster: "/video.png",
             duration: "1:30"
         }
     ];
@@ -400,7 +401,7 @@ const VideoShowcase = () => {
                         Tutorial
                     </span>
                     <h3 className="text-xl md:text-3xl font-bold text-white">
-                        How to <span className="text-[#c5a059]">Use</span>
+                        How to <span className="text-[#c5a059]"> Prepare & Use</span>
                     </h3>
                 </div>
 
@@ -418,20 +419,17 @@ const VideoShowcase = () => {
                             className="w-full max-w-sm md:max-w-lg group cursor-pointer rounded-xl md:rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-[#c5a059]/40 transition"
                         >
                             <div className="aspect-video relative bg-gradient-to-br from-[#064e3b]/30 to-[#c5a059]/30">
-                                <video
-                                    src={video.thumbnail}
+                                <img
+                                    src={video.poster}
+                                    alt={video.title}
                                     className="w-full h-full object-cover"
-                                    playsInline
-                                    preload="auto"
-                                    muted
-                                    loop
                                 />
-                                <div 
-                                  className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition flex items-center justify-center cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedVideo(video);
-                                    setShowVideo(true);
-                                  }}
+                                <div
+                                    className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition flex items-center justify-center cursor-pointer"
+                                    onClick={() => {
+                                        setSelectedVideo(video);
+                                        setShowVideo(true);
+                                    }}
                                 >
                                     <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition">
                                         <Play size={24} className="text-white ml-1" fill="white" />
