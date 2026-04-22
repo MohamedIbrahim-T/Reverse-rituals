@@ -164,7 +164,7 @@ const AdminPage = () => {
         </div>
         
         <!-- CUSTOMER -->
-        <div style="margin-bottom:3px;color:#000000;font-size:13px;">
+        <div style="margin-bottom:3px;color:#000000;font-size:11px;">
           <div style="font-weight:bold;">${order.shippingAddress.fullName}</div>
           <div>${order.shippingAddress.address}</div>
           <div>${order.shippingAddress.city}, ${order.shippingAddress.state}</div>
@@ -196,9 +196,9 @@ const AdminPage = () => {
         
         <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;">
           <div>Thank you for your order!</div>
-          <div>support@reverserituals.com</div>
+          <div>reverserituals@gmail.com</div>
         </div>
-        <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;">
+        <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;padding-bottom:10px;">
           <div>If the customer not answer the call, please call this number.</div>
           <div>Call : 7358422064</div>
         </div>
