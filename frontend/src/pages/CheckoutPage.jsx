@@ -18,7 +18,7 @@ const CheckoutPage = () => {
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Fetch user profile and load saved address
+  // Fetch user profile and auto-fill user details
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user?.token) {
@@ -32,17 +32,25 @@ const CheckoutPage = () => {
           headers: { Authorization: `Bearer ${user.token}` }
         });
 
+        // Auto-fill name, email, phone from profile (always)
+        setFormData(prev => ({
+          ...prev,
+          fullName: data.name || user.name || prev.fullName,
+          phone: data.phone || prev.phone,
+        }));
+
         // Store saved address for "Use Saved Address" button
         if (data.shippingAddress?.address) {
           setSavedAddressFromDB(data.shippingAddress);
           // Auto-fill form with saved address
           setFormData({
-            fullName: data.shippingAddress.fullName || data.name || '',
+            fullName: data.shippingAddress.fullName || data.name || user.name || '',
             address: data.shippingAddress.address || '',
             state: data.shippingAddress.state || '',
             city: data.shippingAddress.city || '',
             zipCode: data.shippingAddress.zipCode || '',
             phone: data.shippingAddress.phone || data.phone || '',
+            altPhone: data.shippingAddress.altPhone || '',
           });
         }
       } catch (error) {
@@ -503,6 +511,11 @@ const CheckoutPage = () => {
                       <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Full Name</label>
                       <input type="text" required name="fullName" value={formData.fullName} onChange={handleChange}
                         className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="Enter your name" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Email</label>
+                      <input type="email" value={user?.email || ''} readOnly
+                        className="w-full px-5 py-3 bg-[#e8e8e8] border border-[#064e3b]/10 rounded-xl text-[#064e3b]/50 cursor-not-allowed" />
                     </div>
                     <div>
                       <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Phone Number</label>

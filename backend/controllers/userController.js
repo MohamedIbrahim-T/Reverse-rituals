@@ -152,6 +152,7 @@ const getUserProfile = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       isAdmin: user.isAdmin,
       shippingAddress: user.shippingAddress,
     });

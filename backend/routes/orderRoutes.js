@@ -53,9 +53,10 @@ router.get('/', protect, getOrders);
 
 // Export webhook handler for index.js
 const webhookHandler = async (req, res) => {
-  console.log('🔔 Webhook received:', req.body?.event);
-  
   try {
+    const payload = JSON.parse(req.body.toString());
+    console.log('🔔 Webhook received:', payload.event);
+
     const signature = req.headers['x-razorpay-signature'];
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
@@ -69,8 +70,6 @@ const webhookHandler = async (req, res) => {
       return res.status(400).json({ error: 'Invalid signature' });
     }
 
-    const payload = JSON.parse(req.body.toString());
-
     if (payload.event === 'payment.captured') {
       const payment = payload.payload.payment.entity;
       console.log('🔔 Payment captured, razorpay order_id:', payment.order_id);
@@ -83,19 +82,17 @@ const webhookHandler = async (req, res) => {
       console.log('🔔 Order isPaid:', order?.isPaid);
 
       if (order) {
-        if (!order.isPaid) {
-          order.isPaid = true;
-          order.paidAt = new Date();
-          order.paymentResult = {
-            ...order.paymentResult,
-            id: payment.id,
-            status: 'PAID',
-          };
-          await order.save();
-          console.log('✅ Paid via webhook:', order._id);
-        }
+        order.isPaid = true;
+        order.paidAt = new Date();
+        order.paymentResult = {
+          razorpay_order_id: payment.order_id,
+          razorpay_payment_id: payment.id,
+          razorpay_status: payment.status,
+          status: 'PAID',
+        };
+        await order.save();
+        console.log('✅ Paid via webhook:', order._id);
 
-        // ✅ SEND EMAIL FROM WEBHOOK
         try {
           const emailModule = require('../config/email');
           const sendOrderEmail = emailModule.sendOrderEmail;
@@ -104,18 +101,22 @@ const webhookHandler = async (req, res) => {
           const user = order.user ? await User.findById(order.user) : null;
           const email = user?.email || order.shippingAddress?.email || '';
 
-          await sendOrderEmail({
-            orderId: order._id.toString().slice(-8),
-            customerName: order.shippingAddress.fullName,
-            address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
-            email,
-            phone: order.shippingAddress.phone,
-            altPhone: order.shippingAddress.altPhone,
-            items: order.orderItems,
-            total: order.totalPrice,
-            estimatedDelivery: order.estimatedDelivery,
-          });
-          console.log('📧 Email sent via webhook to:', email);
+          if (!email || !email.includes('@') || !email.includes('.')) {
+            console.log('📧 Invalid email, skipping send:', email);
+          } else {
+            await sendOrderEmail({
+              orderId: order._id.toString().slice(-8),
+              customerName: order.shippingAddress.fullName,
+              address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
+              email,
+              phone: order.shippingAddress.phone,
+              altPhone: order.shippingAddress.altPhone,
+              items: order.orderItems,
+              total: order.totalPrice,
+              estimatedDelivery: order.estimatedDelivery,
+            });
+            console.log('📧 Email sent via webhook to:', email);
+          }
         } catch (emailErr) {
           console.log('📧 Webhook email error:', emailErr.message);
         }
