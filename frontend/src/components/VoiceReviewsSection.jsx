@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause, Star } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { motion } from "framer-motion";
 
 const voiceReviews = [
@@ -29,6 +29,7 @@ const VoiceReviewsSection = () => {
     const audio = audioRefs.current[id];
     if (!audio) return;
 
+    // Stop all audios
     Object.values(audioRefs.current).forEach((a) => {
       if (a) {
         a.pause();
@@ -41,7 +42,9 @@ const VoiceReviewsSection = () => {
       return;
     }
 
-    audio.play().then(() => setPlayingId(id)).catch(() => { });
+    audio.play()
+      .then(() => setPlayingId(id))
+      .catch(() => { });
   };
 
   const handleTimeUpdate = (id) => {
@@ -64,8 +67,7 @@ const VoiceReviewsSection = () => {
           What Our Customers Say 🎧
         </h2>
 
-        {/* SCROLL CONTAINER */}
-        <div className="relative scrollbar-hide ">
+        <div className="relative">
 
           {/* Fade Top */}
           <div className="pointer-events-none absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-[#fdfbf7] to-transparent z-10" />
@@ -78,13 +80,16 @@ const VoiceReviewsSection = () => {
             {voiceReviews.map((review) => (
               <motion.div
                 key={review.id}
-                whileHover={{ scale: 1.02 }}
-                className={`snap-start rounded-2xl p-[1px] transition-all ${playingId === review.id
-                  ? "border-[#064e3b] border-1"
-                  : ""
+                className={`snap-start rounded-2xl border box-border overflow-hidden transition-all duration-300 ${playingId === review.id
+                    ? "border-[#064e3b] shadow-[0_0_12px_rgba(6,78,59,0.25)]"
+                    : "border-transparent"
                   }`}
               >
-                <div className="bg-white rounded-2xl p-2 shadow-md scrollbar-hide ">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="bg-white rounded-2xl p-3 shadow-md"
+                >
 
                   <audio
                     ref={(el) => (audioRefs.current[review.id] = el)}
@@ -94,7 +99,7 @@ const VoiceReviewsSection = () => {
                     onEnded={() => setPlayingId(null)}
                   />
 
-                  <div className="flex items-center gap-4 scrollbar-hide ">
+                  <div className="flex items-center gap-4">
 
                     {/* Avatar */}
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#c5a059] to-[#e6d3a3] flex items-center justify-center text-white font-bold text-lg">
@@ -107,22 +112,20 @@ const VoiceReviewsSection = () => {
                         {review.name}
                       </h4>
 
-                      {/* Stars */}
-                      <div className="flex gap-1 mt-1">
-                        {
-                          review.product
-                        }
+                      {/* Product */}
+                      <div className="text-sm text-gray-500 mt-1">
+                        {review.product}
                       </div>
 
                       {/* Player */}
                       <button
                         onClick={() => togglePlay(review.id)}
-                        className={`mt-4 flex items-center gap-3 px-2 py-1 rounded-xl w-full transition-all ${playingId === review.id
-                          ? "bg-[#064e3b] text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
+                        className={`mt-4 flex items-center gap-3 px-3 py-2 rounded-xl w-full transition-all ${playingId === review.id
+                            ? "bg-[#064e3b] text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
                           }`}
                       >
-                        {/* Play Button */}
+                        {/* Play/Pause */}
                         <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20">
                           {playingId === review.id ? (
                             <Pause size={16} />
@@ -131,7 +134,7 @@ const VoiceReviewsSection = () => {
                           )}
                         </div>
 
-                        {/* Progress */}
+                        {/* Progress Bar */}
                         <div className="flex-1 h-2 bg-gray-300 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-[#c5a059] to-[#064e3b]"
@@ -145,9 +148,10 @@ const VoiceReviewsSection = () => {
                     </div>
                   </div>
 
-                </div>
+                </motion.div>
               </motion.div>
             ))}
+
           </div>
         </div>
 
