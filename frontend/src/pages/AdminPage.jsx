@@ -164,7 +164,7 @@ const AdminPage = () => {
         </div>
         
         <!-- CUSTOMER -->
-        <div style="margin-bottom:10px;color:#000000;">
+        <div style="margin-bottom:3px;color:#000000;font-size:13px;">
           <div style="font-weight:bold;">${order.shippingAddress.fullName}</div>
           <div>${order.shippingAddress.address}</div>
           <div>${order.shippingAddress.city}, ${order.shippingAddress.state}</div>
@@ -270,7 +270,7 @@ const AdminPage = () => {
           <b style="color:#000000;">DELIVER TO:</b>
         </div>
         
-        <div style="margin-bottom:8px;font-size:14px;color:#000000;">
+        <div style="margin-bottom:8px;font-size:13px;color:#000000;">
           <b>${order.shippingAddress.fullName}</b><br/>
           ${order.shippingAddress.address}<br/>
           ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
