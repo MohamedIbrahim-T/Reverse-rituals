@@ -25,7 +25,7 @@ const LoginPage = () => {
   };
 
   const validateForm = () => {
-    const newError = "";
+    let newError = "";
     
     if (!email.trim()) {
       newError = "Email is required";
