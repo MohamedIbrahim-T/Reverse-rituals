@@ -11,7 +11,7 @@ const voiceReviews = [
   { id: 6, name: "Gopikrishnan G", audio: "/voice/audio-2.opus", product: "Reverse ritual combo" },
   { id: 7, name: "Santhosh", audio: "/voice/santhosh.mp3", product: "Reverse ritual combo" },
   { id: 8, name: "Periyanayagasamy", audio: "/voice/peri.opus", product: "Reverse ritual combo" },
-  { id: 9, name: "⁠⁠Srinivasan", audio: "/voice/srini25.mp3", product: "Reverse ritual combo" },
+  { id: 9, name: "Srinivasan", audio: "/voice/srini25.mp3", product: "Reverse ritual combo" },
 ];
 
 const VoiceReviewsSection = () => {

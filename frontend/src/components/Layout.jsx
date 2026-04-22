@@ -35,14 +35,14 @@ const Layout = () => {
       <Footer />
       
       {/* Scroll to Top Button */}
-      {showScrollTop && (
+      {/* {showScrollTop && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-24 md:bottom-28 right-6 z-50 w-12 h-12 bg-[#c5a059] rounded-full flex items-center justify-center shadow-lg hover:bg-[#064e3b] transition-all hover:scale-110 animate-fade-in"
         >
           <ChevronUp size={24} className="text-white" />
         </button>
-      )}
+      )} */}
 
       {/* WhatsApp Floating Button */}
       <a
