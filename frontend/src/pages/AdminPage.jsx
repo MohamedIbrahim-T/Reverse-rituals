@@ -29,6 +29,8 @@ const AdminPage = () => {
   const [formData, setFormData] = useState({
     name: '', price: '', description: '', image: '', category: '', countInStock: '',
   });
+  const [actionLoading, setActionLoading] = useState({});
+  const [thermalGenerating, setThermalGenerating] = useState(null);
 
   useEffect(() => {
     if (!user || !user.isAdmin) {
@@ -132,10 +134,12 @@ const AdminPage = () => {
     }
   };
 
-const downloadThermalBill = async (order) => {
-    const html2pdf = (await import('html2pdf.js')).default;
+  const downloadThermalBill = async (order) => {
+    setThermalGenerating(order._id);
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
 
-    const thermal = `
+      const thermal = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -194,23 +198,33 @@ const downloadThermalBill = async (order) => {
           <div>Thank you for your order!</div>
           <div>support@reverserituals.com</div>
         </div>
+        <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;">
+          <div>If the customer not answer the call, please call this number.</div>
+          <div>Call : 7358422064</div>
+        </div>
       </div>
     </body>
     </html>
     `;
 
-    const element = document.createElement('div');
-    element.innerHTML = thermal;
+      const element = document.createElement('div');
+      element.innerHTML = thermal;
 
-    const opt = {
-      margin: 0,
-      filename: `bill-${order._id.toString().slice(-8).toUpperCase()}.pdf`,
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
+      const opt = {
+        margin: 0,
+        filename: `bill-${order._id.toString().slice(-8).toUpperCase()}.pdf`,
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
 
-    html2pdf().set(opt).from(element).save();
+      html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error('Thermal bill error:', err);
+      toast.error('Failed to generate thermal bill');
+    } finally {
+      setThermalGenerating(null);
+    }
   };
 
   const downloadAllThermalBills = async () => {
@@ -256,7 +270,7 @@ const downloadThermalBill = async (order) => {
           <b style="color:#000000;">DELIVER TO:</b>
         </div>
         
-        <div style="margin-bottom:8px;font-size:11px;color:#000000;">
+        <div style="margin-bottom:8px;font-size:14px;color:#000000;">
           <b>${order.shippingAddress.fullName}</b><br/>
           ${order.shippingAddress.address}<br/>
           ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
@@ -280,7 +294,11 @@ const downloadThermalBill = async (order) => {
         </div>
         
         <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;color:#000000;">
-          Thank you! | support@reverserituals.com
+          Thank you! | reverserituals@gmail.com
+        </div>
+        <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;color:#000000;">
+          If the customer not answer the call, please call this number.
+Call : 7358422064
         </div>
       </div>`;
     });
@@ -375,10 +393,10 @@ const downloadThermalBill = async (order) => {
 
     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
       <h4 style="margin: 0 0 15px; color: #064e3b; font-size: 14px; text-transform: uppercase;">Customer Details</h4>
-      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Name:</strong> ${order.shippingAddress?.fullName || 'N/A'}</p>
-      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Address:</strong> ${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</p>
-      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Phone:</strong> ${order.shippingAddress?.phone || 'N/A'}${order.shippingAddress?.altPhone ? ', ' + order.shippingAddress.altPhone : ''}</p>
-      <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Email:</strong> ${order.shippingAddress?.email || 'N/A'}</p>
+      <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Name:</strong> ${order.shippingAddress?.fullName || 'N/A'}</p>
+      <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Address:</strong> ${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</p>
+      <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Phone:</strong> ${order.shippingAddress?.phone || 'N/A'}${order.shippingAddress?.altPhone ? ', ' + order.shippingAddress.altPhone : ''}</p>
+      <p style="margin: 5px 0; font-size: 14px; color: #333;"><strong>Email:</strong> ${order.shippingAddress?.email || 'N/A'}</p>
     </div>
 
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
@@ -410,7 +428,7 @@ const downloadThermalBill = async (order) => {
     <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px; padding-top: 20px; border-top: 1px solid #eee;">
       <p>Thank you for your order!</p>
       <p>Reverse Rituals - Natural Hair Care Products</p>
-      <p>support@reverserituals.com</p>
+      <p>reverserituals@gmail.com</p>
     </div>
   </div>`;
 
@@ -548,16 +566,16 @@ const downloadThermalBill = async (order) => {
 
   const filteredOrders = orders.filter(order => {
     // Search filter
-    const matchesSearch = 
+    const matchesSearch =
       order.shippingAddress.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order._id.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // Date filter - single date
     if (exportDate) {
       const matchesDate = new Date(order.createdAt).toDateString() === new Date(exportDate).toDateString();
       return matchesSearch && matchesDate;
     }
-    
+
     // Date filter - date range
     if (exportFromDate && exportToDate) {
       const from = new Date(exportFromDate);
@@ -566,7 +584,7 @@ const downloadThermalBill = async (order) => {
       const matchesDateRange = new Date(order.createdAt) >= from && new Date(order.createdAt) <= to;
       return matchesSearch && matchesDateRange;
     }
-    
+
     return matchesSearch;
   });
 
@@ -976,12 +994,11 @@ const downloadThermalBill = async (order) => {
                               handleShipping(order._id);
                             }
                           }}
-                          className={`px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold cursor-pointer border-0 ${
-                            (order.status || 'Pending') === 'Delivered' ? 'bg-green-500 text-white' :
+                          className={`px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold cursor-pointer border-0 ${(order.status || 'Pending') === 'Delivered' ? 'bg-green-500 text-white' :
                             (order.status || 'Pending') === 'Shipped' ? 'bg-blue-500 text-white' :
-                            (order.status || 'Pending') === 'Packing & Processing' ? 'bg-yellow-500 text-white' :
-                            'bg-yellow-100 text-yellow-600'
-                          }`}
+                              (order.status || 'Pending') === 'Packing & Processing' ? 'bg-yellow-500 text-white' :
+                                'bg-yellow-100 text-yellow-600'
+                            }`}
                         >
                           <option value="Pending">Pending</option>
                           <option value="Packing & Processing">Packing & Processing</option>
@@ -1011,9 +1028,19 @@ const downloadThermalBill = async (order) => {
                           <div className="flex justify-end gap-2 mb-4">
                             <button
                               onClick={() => downloadThermalBill(order)}
-                              className="flex items-center gap-2 px-4 py-2 bg-[#c5a059] text-white rounded-lg font-bold text-sm hover:bg-[#c5a059]/90"
+                              disabled={thermalGenerating === order._id}
+                              className="flex items-center gap-2 px-4 py-2 bg-[#c5a059] text-white rounded-lg font-bold text-sm hover:bg-[#c5a059]/90 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <Download size={16} /> Thermal
+                              {thermalGenerating === order._id ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <Download size={16} /> Thermal
+                                </>
+                              )}
                             </button>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
