@@ -386,7 +386,7 @@ const VideoShowcase = () => {
     const videos = [
         {
             id: 1,
-            title: "How to Apply",
+            title: "How to Prepare & Use",
             thumbnail: "/video.mp4",
             poster: "/video.png",
             duration: "1:30"
