@@ -4,9 +4,14 @@ import { motion } from "framer-motion";
 
 const voiceReviews = [
   { id: 1, name: "Jagathisan", audio: "/voice/audio-1.opus", product: "Reverse ritual combo" },
-  { id: 2, name: "Gopikrishnan G", audio: "/voice/audio-2.opus", product: "Reverse ritual combo" },
-  { id: 3, name: "Lavanya", audio: "/voice/audio-3.opus", product: "Reverse ritual combo" },
-  { id: 4, name: "Thamizharasan", audio: "/voice/audio-4.opus", product: "Reverse ritual combo" },
+  { id: 2, name: "Lavanya", audio: "/voice/audio-3.opus", product: "Reverse ritual combo" },
+  { id: 3, name: "Srinivasan", audio: "/voice/Srini.opus", product: "Reverse ritual combo" },
+  { id: 4, name: "Saravanavel", audio: "/voice/saravana.opus", product: "Reverse ritual combo" },
+  { id: 5, name: "Thivan", audio: "/voice/thivan.opus", product: "Reverse ritual combo" },
+  { id: 6, name: "Gopikrishnan G", audio: "/voice/audio-2.opus", product: "Reverse ritual combo" },
+  { id: 7, name: "Santhosh", audio: "/voice/santhosh.mp3", product: "Reverse ritual combo" },
+  { id: 8, name: "Periyanayagasamy", audio: "/voice/peri.opus", product: "Reverse ritual combo" },
+  { id: 9, name: "⁠⁠Srinivasan", audio: "/voice/srini25.mp3", product: "Reverse ritual combo" },
 ];
 
 const VoiceReviewsSection = () => {
