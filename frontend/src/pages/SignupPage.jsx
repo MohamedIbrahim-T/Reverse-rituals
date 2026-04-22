@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
@@ -10,6 +10,10 @@ const SignupPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const { user, login } = useAuth();
   const navigate = useNavigate();
@@ -20,8 +24,45 @@ const SignupPage = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
+    }
+    
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
 
     try {
@@ -104,9 +145,20 @@ const SignupPage = () => {
                   className="w-full ml-3 outline-none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required
                 />
+                {name && (
+                  <button
+                    type="button"
+                    onClick={() => setName("")}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -123,9 +175,20 @@ const SignupPage = () => {
                   className="w-full ml-3 outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                 />
+                {email && (
+                  <button
+                    type="button"
+                    onClick={() => setEmail("")}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -137,14 +200,51 @@ const SignupPage = () => {
               <div className="flex items-center border rounded-xl mt-2 px-4 py-3 focus-within:border-[#c5a059]">
                 <Lock className="text-gray-400" size={18} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="w-full ml-3 outline-none"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="text-gray-600 text-sm">
+                Confirm Password
+              </label>
+
+              <div className="flex items-center border rounded-xl mt-2 px-4 py-3 focus-within:border-[#c5a059]">
+                <Lock className="text-gray-400" size={18} />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  className="w-full ml-3 outline-none"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
 
             {/* Button */}

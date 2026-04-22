@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, LogIn, ArrowRight } from "lucide-react";
+import { Mail, Lock, LogIn, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -17,8 +19,31 @@ const LoginPage = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validateForm = () => {
+    const newError = "";
+    
+    if (!email.trim()) {
+      newError = "Email is required";
+    } else if (!validateEmail(email)) {
+      newError = "Please enter a valid email address";
+    } else if (!password) {
+      newError = "Password is required";
+    }
+    
+    setError(newError);
+    return !newError;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
 
     const result = await login(email, password);
@@ -94,8 +119,16 @@ const LoginPage = () => {
                   className="w-full ml-3 outline-none text-[#064e3b]"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                 />
+                {email && (
+                  <button
+                    type="button"
+                    onClick={() => setEmail("")}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
 
@@ -108,15 +141,25 @@ const LoginPage = () => {
               <div className="flex items-center border rounded-xl mt-2 px-4 py-3 focus-within:border-[#c5a059]">
                 <Lock className="text-[#064e3b]/50" size={18} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="w-full ml-3 outline-none"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
+
+            {error && (
+              <p className="text-red-500 text-xs">{error}</p>
+            )}
 
             {/* Forgot */}
             <div className="text-right">
