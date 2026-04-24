@@ -270,8 +270,8 @@ const AdminPage = () => {
           <b style="color:#000000;">DELIVER TO:</b>
         </div>
         
-        <div style="margin-bottom:8px;font-size:13px;color:#000000;">
-          <b>${order.shippingAddress.fullName}</b><br/>
+        <div style="margin-bottom:8px;color:#000000;font-size:14px;">
+          <span>${order.shippingAddress.fullName}</span><br/>
           ${order.shippingAddress.address}<br/>
           ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
           📞 ${order.shippingAddress.phone}
