@@ -93,6 +93,20 @@ const addOrderItems = async (req, res) => {
       }
     }
 
+    const now = new Date();
+    const hours = now.getHours();
+    let estimatedDelivery;
+
+    if (hours === 0) {
+      const nextDay = new Date(now);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(0, 0, 0, 0);
+      estimatedDelivery = new Date(nextDay);
+      estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
+    } else {
+      estimatedDelivery = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+    }
+
     const order = new Order({
       orderItems: orderItemsWithPrices,
       user: req.user ? req.user._id : null,
@@ -102,7 +116,7 @@ const addOrderItems = async (req, res) => {
       shippingPrice: shippingCharge || 0,
       totalPrice,
       status: 'Packing & Processing',
-      estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+      estimatedDelivery: estimatedDelivery,
       paymentResult: {
         razorpay_order_id: razorpayOrder.id,
       },
