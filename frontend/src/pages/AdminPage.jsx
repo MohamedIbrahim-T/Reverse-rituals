@@ -164,7 +164,7 @@ const AdminPage = () => {
         </div>
         
         <!-- CUSTOMER -->
-        <div style="margin-bottom:3px;color:#000000;font-size:11px;">
+        <div style="margin-bottom:3px;color:#000000;font-size:14px;margin-top:0px;">
           <div style="font-weight:bold;">${order.shippingAddress.fullName}</div>
           <div>${order.shippingAddress.address}</div>
           <div>${order.shippingAddress.city}, ${order.shippingAddress.state}</div>
@@ -173,14 +173,14 @@ const AdminPage = () => {
           ${order.shippingAddress.altPhone ? `<div>Alt Phone: ${order.shippingAddress.altPhone}</div>` : ''}
         </div>
         
-        <div style="border-top:1px dashed #000000;padding:8px 0;margin:8px 0;">
+        <div style="border-top:1px dashed #000000;padding:2px 0;margin:2px 0;">
           <div style="font-weight:bold;color:#000000;">ITEMS (${order.orderItems.length}):</div>
         </div>
         
         <!-- ITEMS (NO PRICE) -->
-        <div style="margin-bottom:10px;color:#000000;">
+        <div style="margin-bottom:0px;color:#000000;">
           ${order.orderItems.map(item => `
-            <div style="display:flex;justify-content:space-between;padding:3px 0;">
+            <div style="display:flex;justify-content:space-between;padding:2px 0;">
               <span>${item.name}</span>
               <span>x${item.qty}</span>
             </div>

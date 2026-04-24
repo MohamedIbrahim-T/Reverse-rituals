@@ -469,7 +469,13 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    let { name, value } = e.target;
+    if (name === 'address') {
+      value = value.replace(/(^|\s)([a-z])/g, (match, space, letter) => space + letter.toUpperCase());
+    }
+    setFormData({ ...formData, [name]: value });
+  };
 
   return (
     authLoading || isCheckingAuth ? (
