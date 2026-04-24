@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 
-const WHATSAPP_NUMBER = "919384642040";
+const WHATSAPP_NUMBER = "917358422064";
 
 const Navbar = () => {
   const { user, logout } = useAuth();

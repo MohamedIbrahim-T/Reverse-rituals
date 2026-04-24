@@ -11,9 +11,9 @@ const TermsPage = () => {
           </svg>
           Back to Home
         </Link>
-        
+
         <h1 className="text-4xl font-serif font-black text-[#064e3b] mb-12">Terms of Service</h1>
-        
+
         <div className="space-y-8 text-[#064e3b]/80 leading-relaxed">
           <section>
             <h2 className="text-xl font-bold text-[#064e3b] mb-4">1. Acceptance of Terms</h2>
@@ -44,17 +44,17 @@ const TermsPage = () => {
             <h2 className="text-xl font-bold text-[#064e3b] mb-4">6. Returns, Refunds, and Exchange Policy</h2>
             <div className="space-y-4">
               <p><strong>No Returns - Final Sale:</strong> All sales are final. We do not accept returns or exchanges for any reason unless the product received is damaged, defective, or incorrect.</p>
-              
+
               <p><strong>Video Proof Required for Damaged/Incorrect Products:</strong> If you receive a damaged, defective, or incorrect product, you must provide a video recording of the product opening process as evidence. The video must clearly show:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>The unopened package before opening</li>
                 <li>The seal being broken</li>
                 <li>The product inside showing the damage or issue</li>
               </ul>
-              
+
               <p><strong>Refund Process:</strong> Once we verify the video proof and confirm the issue, we will process a refund to your original payment method within 48 hours. If you prefer a replacement product instead of a refund, we can arrange that as well.</p>
-              
-              <p><strong>How to Report:</strong> Contact us on WhatsApp at +91 93846 42040 with your order details and video proof. We typically respond within 24 hours.</p>
+
+              <p><strong>How to Report:</strong> Contact us on WhatsApp at +91 7358422064 with your order details and video proof. We typically respond within 24 hours.</p>
             </div>
           </section>
 
