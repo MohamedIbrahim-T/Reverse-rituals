@@ -212,7 +212,7 @@ const AdminPage = () => {
 
       const opt = {
         margin: 0,
-        filename: `bill-${order._id.toString().slice(-8).toUpperCase()}.pdf`,
+        filename: `bill-${order._id.toString().slice(-8).toUpperCase()}-${new Date().toISOString().slice(0,10)}.pdf`,
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -308,9 +308,16 @@ Call : 7358422064
     const element = document.createElement('div');
     element.innerHTML = allBills;
 
+    let filenameDate = new Date().toISOString().slice(0, 10);
+    if (exportDate) {
+      filenameDate = new Date(exportDate).toISOString().slice(0, 10);
+    } else if (exportFromDate) {
+      filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
+    }
+
     const opt = {
       margin: 0,
-      filename: `bills-${new Date().toISOString().slice(0, 10)}.pdf`,
+      filename: `bills-${filenameDate}.pdf`,
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
       pagebreak: { mode: ['css', 'legacy'] }
@@ -437,7 +444,7 @@ Call : 7358422064
 
     const opt = {
       margin: 0,
-      filename: `label-${order._id}.pdf`,
+      filename: `label-${order._id}-${new Date().toISOString().slice(0,10)}.pdf`,
       html2canvas: { scale: 2 },
       jsPDF: {
         unit: 'in',
