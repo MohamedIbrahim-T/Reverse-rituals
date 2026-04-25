@@ -566,9 +566,12 @@ Call : 7358422064
     setIsModalOpen(true);
   };
 
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-  const pendingOrders = orders.filter(o => !o.isDelivered).length;
-  const deliveredOrders = orders.filter(o => o.isDelivered).length;
+  const paidOrders = orders.filter(o => o.isPaid);
+  const unpaidOrders = orders.filter(o => !o.isPaid);
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+  const totalOrders = paidOrders.length;
+  const pendingOrders = unpaidOrders.length;
+  const deliveredOrders = paidOrders.filter(o => o.isDelivered).length;
   const lowStockProducts = products.filter(p => p.countInStock < 5).length;
 
   const filteredOrders = orders.filter(order => {
@@ -602,7 +605,7 @@ Call : 7358422064
 
   const navItems = [
     { id: 'dashboard', icon: <Home size={20} />, label: 'Overview' },
-    { id: 'orders', icon: <ShoppingBag size={20} />, label: 'Orders', badge: orders.length },
+    { id: 'orders', icon: <ShoppingBag size={20} />, label: 'Orders', badge: paidOrders.length },
     { id: 'products', icon: <Package size={20} />, label: 'Products', badge: products.length },
     { id: 'customers', icon: <Users size={20} />, label: 'Customers' },
     { id: 'settings', icon: <Settings size={20} />, label: 'Settings' },
@@ -720,8 +723,8 @@ Call : 7358422064
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-10">
             {[
               { title: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}`, icon: <DollarSign size={24} />, color: 'bg-green-500' },
-              { title: 'Total Orders', value: orders.length, icon: <ShoppingBag size={24} />, color: 'bg-blue-500' },
-              { title: 'Pending', value: pendingOrders, icon: <Truck size={24} />, color: 'bg-yellow-500' },
+              { title: 'Total Orders', value: totalOrders, icon: <ShoppingBag size={24} />, color: 'bg-blue-500' },
+              { title: 'Unpaid', value: unpaidOrders.length, icon: <Truck size={24} />, color: 'bg-yellow-500' },
               { title: 'Products', value: products.length, icon: <Package size={24} />, color: 'bg-purple-500' },
             ].map((stat, idx) => (
               <motion.div
@@ -743,8 +746,8 @@ Call : 7358422064
           {/* Quick Actions */}
           <div className="grid grid-cols-3 gap-4 mb-10">
             {[
-              { label: 'Delivered', value: deliveredOrders, color: 'bg-green-500', percent: orders.length ? (deliveredOrders / orders.length) * 100 : 0 },
-              { label: 'Pending', value: pendingOrders, color: 'bg-yellow-500', percent: orders.length ? (pendingOrders / orders.length) * 100 : 0 },
+              { label: 'Delivered', value: deliveredOrders, color: 'bg-green-500', percent: totalOrders ? (deliveredOrders / totalOrders) * 100 : 0 },
+              { label: 'Unpaid', value: pendingOrders, color: 'bg-yellow-500', percent: 100 },
               { label: 'Low Stock', value: lowStockProducts, color: 'bg-red-500', percent: products.length ? (lowStockProducts / products.length) * 100 : 0 },
             ].map((item, idx) => (
               <div key={idx} className="bg-white rounded-[1.5rem] p-5 border border-[#064e3b]/5">
