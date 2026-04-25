@@ -212,7 +212,7 @@ const AdminPage = () => {
 
       const opt = {
         margin: 0,
-        filename: `bill-${order._id.toString().slice(-8).toUpperCase()}-${new Date().toISOString().slice(0,10)}.pdf`,
+        filename: `bill-${order._id.toString().slice(-8).toUpperCase()}-${new Date().toISOString().slice(0, 10)}.pdf`,
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -444,7 +444,7 @@ Call : 7358422064
 
     const opt = {
       margin: 0,
-      filename: `label-${order._id}-${new Date().toISOString().slice(0,10)}.pdf`,
+      filename: `label-${order._id}-${new Date().toISOString().slice(0, 10)}.pdf`,
       html2canvas: { scale: 2 },
       jsPDF: {
         unit: 'in',
@@ -723,7 +723,7 @@ Call : 7358422064
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-10">
             {[
               { title: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}`, icon: <DollarSign size={24} />, color: 'bg-green-500' },
-              { title: 'Total Orders', value: totalOrders, icon: <ShoppingBag size={24} />, color: 'bg-blue-500' },
+              { title: 'Total Orders Paid', value: totalOrders, icon: <ShoppingBag size={24} />, color: 'bg-blue-500' },
               { title: 'Unpaid', value: unpaidOrders.length, icon: <Truck size={24} />, color: 'bg-yellow-500' },
               { title: 'Products', value: products.length, icon: <Package size={24} />, color: 'bg-purple-500' },
             ].map((stat, idx) => (
