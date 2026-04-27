@@ -137,7 +137,7 @@ const CheckoutPage = () => {
 
   const getShippingCharge = (state) => {
     if (!state) return 0;
-    const freeStates = ['tamil nadu', 'tn'];
+    const freeStates = ['tamil nadu', 'tn', 'pondicherry', 'puducherry', 'py'];
     const extra49States = ['karnataka', 'andhra pradesh', 'telangana'];
 
     const lowerState = state.toLowerCase().trim();
