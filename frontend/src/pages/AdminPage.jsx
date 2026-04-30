@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 
 const AdminPage = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [orders, setOrders] = useState([]);
@@ -33,12 +33,14 @@ const AdminPage = () => {
   const [thermalGenerating, setThermalGenerating] = useState(null);
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
-      navigate('/login');
-    } else {
-      fetchData();
+    if (!authLoading) {
+      if (!user || !user.isAdmin) {
+        navigate('/login');
+      } else {
+        fetchData();
+      }
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchData = async () => {
     setLoading(true);

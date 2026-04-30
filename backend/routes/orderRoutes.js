@@ -22,7 +22,7 @@ const { protect, admin, optionalProtect } = require('../middleware/auth');
 // ✅ NORMAL ROUTES
 router.get('/myorders', protect, getMyOrders);
 router.post('/verify', verifyPayment);
-router.put('/fix-paid/:id', async (req, res) => {
+router.put('/fix-paid/:id', protect, admin, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
@@ -37,17 +37,17 @@ router.put('/fix-paid/:id', async (req, res) => {
   }
 });
 router.post('/:id/pay', optionalProtect, createPaymentForOrder);
-router.put('/:id/deliver', protect, updateOrderToDelivered);
-router.put('/:id/status', protect, updateOrderStatus);
-router.put('/:id/mark-paid', protect, markOrderAsPaid);
+router.put('/:id/deliver', protect, admin, updateOrderToDelivered);
+router.put('/:id/status', protect, admin, updateOrderStatus);
+router.put('/:id/mark-paid', protect, admin, markOrderAsPaid);
 
 router.get('/:id', protect, getOrderById);
-router.delete('/:id', protect, deleteOrder);
+router.delete('/:id', protect, admin, deleteOrder);
 
 
 
 router.post('/', optionalProtect, addOrderItems);
-router.get('/', protect, getOrders);
+router.get('/', protect, admin, getOrders);
 
 
 

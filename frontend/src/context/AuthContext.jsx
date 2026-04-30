@@ -10,26 +10,37 @@ export const AuthProvider = ({ children }) => {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('userInfo');
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed && parsed.token) {
-          setUser(parsed);
-          axios.defaults.headers.common['Authorization'] = `Bearer ${parsed.token}`;
+    const checkAuth = async () => {
+      const storedUser = localStorage.getItem('userInfo');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          if (parsed && parsed.token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${parsed.token}`;
+            try {
+              const { data } = await axios.get(`${API_URL}/api/users/profile`);
+              setUser({ ...data, token: parsed.token });
+            } catch (err) {
+              console.error('Failed to fetch user profile:', err);
+              localStorage.removeItem('userInfo');
+              delete axios.defaults.headers.common['Authorization'];
+            }
+          }
+        } catch (e) {
+          localStorage.removeItem('userInfo');
         }
-      } catch (e) {
-        localStorage.removeItem('userInfo');
       }
-    }
-    setLoading(false);
-  }, []);
+      setLoading(false);
+    };
+    checkAuth();
+  }, [API_URL]);
 
   const login = async (email, password) => {
     try {
       const { data } = await axios.post(`${API_URL}/api/users/login`, { email, password });
       setUser(data);
-      localStorage.setItem('userInfo', JSON.stringify(data));
+      // Only store token in local storage
+      localStorage.setItem('userInfo', JSON.stringify({ token: data.token }));
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
       return { success: true };
     } catch (error) {

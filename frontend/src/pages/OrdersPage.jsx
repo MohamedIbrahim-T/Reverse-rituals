@@ -9,14 +9,12 @@ import { toast } from 'react-toastify';
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user && localStorage.getItem('userInfo')) {
-        return;
-      }
+      if (authLoading) return;
 
       if (!user) {
         navigate('/login');
@@ -147,7 +145,7 @@ const OrdersPage = () => {
     </div>
   );
 
-  if (!user && localStorage.getItem('userInfo')) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-[#fdfbf7] pt-24 flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#c5a059] border-t-transparent rounded-full animate-spin"></div>
