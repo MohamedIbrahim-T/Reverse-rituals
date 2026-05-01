@@ -244,6 +244,16 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+// Get all users
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   authUser,
   getUserProfile,
@@ -252,4 +262,5 @@ module.exports = {
   updateUserProfile,
   forgotPassword,
   resetPassword,
+  getAllUsers,
 };

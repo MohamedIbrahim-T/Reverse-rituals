@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 
 const AdminPage = () => {
   const { user, logout, loading: authLoading } = useAuth();
@@ -32,6 +33,43 @@ const AdminPage = () => {
   const [actionLoading, setActionLoading] = useState({});
   const [thermalGenerating, setThermalGenerating] = useState(null);
 
+  const [analyticsStats, setAnalyticsStats] = useState({ 
+    totalVisitors: 0, 
+    loggedInVisitors: 0,
+    guestVisitors: 0,
+    newSignups: 0,
+    paidOrders: 0, 
+    conversionRate: 0
+  });
+  const [customers, setCustomers] = useState([]);
+  const [visitsGraph, setVisitsGraph] = useState([]);
+  const [ordersGraph, setOrdersGraph] = useState([]);
+  const [analyticsFilter, setAnalyticsFilter] = useState('');
+  const [graphDays, setGraphDays] = useState(30);
+
+  const fetchAnalytics = async (filter = '') => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      
+      const statsRes = await axios.get(`${API_URL}/api/analytics/admin/stats?filter=${filter}`, config);
+      const visitsRes = await axios.get(`${API_URL}/api/analytics/admin/visits-graph?days=${graphDays}`, config);
+      const ordersRes = await axios.get(`${API_URL}/api/analytics/admin/orders-graph?days=${graphDays}`, config);
+      
+      setAnalyticsStats(statsRes.data);
+      setVisitsGraph(visitsRes.data);
+      setOrdersGraph(ordersRes.data);
+    } catch (error) {
+      console.error('Failed to fetch analytics', error);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'analytics' && user?.token) {
+      fetchAnalytics(analyticsFilter);
+    }
+  }, [activeTab, analyticsFilter, user?.token, graphDays]);
+
   useEffect(() => {
     if (!authLoading) {
       if (!user || !user.isAdmin) {
@@ -47,7 +85,6 @@ const AdminPage = () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-      // Fetch products from backend only (no frontend fallback)
       let productsRes = { data: [] };
       try {
         productsRes = await axios.get(`${API_URL}/api/products`);
@@ -57,7 +94,6 @@ const AdminPage = () => {
 
       setProducts(productsRes.data || []);
 
-      // Try to get orders if user is logged in
       let ordersRes = { data: [] };
       if (user?.token) {
         try {
@@ -70,10 +106,23 @@ const AdminPage = () => {
       }
       setOrders(ordersRes.data || []);
 
+      let usersRes = { data: [] };
+      if (user?.token && user.isAdmin) {
+        try {
+          usersRes = await axios.get(`${API_URL}/api/users/all`, {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+        } catch (err) {
+          console.log('Users fetch error:', err.message);
+        }
+      }
+      setCustomers(usersRes.data || []);
+
     } catch (error) {
       console.error('Error fetching data:', error);
       setProducts([]);
       setOrders([]);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
@@ -607,6 +656,7 @@ Call : 7358422064
 
   const navItems = [
     { id: 'dashboard', icon: <Home size={20} />, label: 'Overview' },
+    { id: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
     { id: 'orders', icon: <ShoppingBag size={20} />, label: 'Orders', badge: paidOrders.length },
     { id: 'products', icon: <Package size={20} />, label: 'Products', badge: products.length },
     { id: 'customers', icon: <Users size={20} />, label: 'Customers' },
@@ -779,6 +829,7 @@ Call : 7358422064
             <div>
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#064e3b]">
                 {activeTab === 'dashboard' && 'Overview'}
+                {activeTab === 'analytics' && 'Analytics Dashboard'}
                 {activeTab === 'orders' && 'Orders'}
                 {activeTab === 'products' && 'Products'}
                 {activeTab === 'customers' && 'Customers'}
@@ -786,6 +837,7 @@ Call : 7358422064
               </h3>
               <p className="text-[#064e3b]/40 text-sm">
                 {activeTab === 'dashboard' && 'Your store at a glance'}
+                {activeTab === 'analytics' && 'Track visits and conversions'}
                 {activeTab === 'orders' && 'Manage customer orders'}
                 {activeTab === 'products' && 'Manage product inventory'}
                 {activeTab === 'customers' && 'View customer details'}
@@ -854,6 +906,114 @@ Call : 7358422064
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div className="flex gap-2">
+                  <button onClick={() => { setAnalyticsFilter(''); setGraphDays(30); }} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${analyticsFilter === '' ? 'bg-[#064e3b] text-white' : 'bg-white border border-[#064e3b]/10 text-[#064e3b]'}`}>All Time</button>
+                  <button onClick={() => { setAnalyticsFilter('today'); setGraphDays(1); }} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${analyticsFilter === 'today' ? 'bg-[#064e3b] text-white' : 'bg-white border border-[#064e3b]/10 text-[#064e3b]'}`}>Today</button>
+                  <button onClick={() => { setAnalyticsFilter('last7days'); setGraphDays(7); }} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${analyticsFilter === 'last7days' ? 'bg-[#064e3b] text-white' : 'bg-white border border-[#064e3b]/10 text-[#064e3b]'}`}>Last 7 Days</button>
+                  <button onClick={() => { setAnalyticsFilter('last30days'); setGraphDays(30); }} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${analyticsFilter === 'last30days' ? 'bg-[#064e3b] text-white' : 'bg-white border border-[#064e3b]/10 text-[#064e3b]'}`}>Last 30 Days</button>
+                </div>
+                <span className="text-xs font-medium text-[#c5a059] bg-[#c5a059]/10 px-3 py-1 rounded-full">
+                  {analyticsFilter === '' ? 'All Time' : analyticsFilter === 'today' ? 'Today' : analyticsFilter === 'last7days' ? 'Last 7 Days' : 'Last 30 Days'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-6">
+                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
+                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Total Visits</p>
+                  <p className="text-2xl lg:text-3xl font-black text-[#064e3b]">{analyticsStats.totalVisitors}</p>
+                  <p className="text-xs text-[#064e3b]/40 mt-1">All visitors</p>
+                </div>
+                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
+                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Logged In</p>
+                  <p className="text-2xl lg:text-3xl font-black text-purple-600">{analyticsStats.loggedInVisitors}</p>
+                  <p className="text-xs text-[#064e3b]/40 mt-1">Returning users</p>
+                </div>
+                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
+                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Guest</p>
+                  <p className="text-2xl lg:text-3xl font-black text-blue-600">{analyticsStats.guestVisitors}</p>
+                  <p className="text-xs text-[#064e3b]/40 mt-1">New visitors</p>
+                </div>
+                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
+                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">New Signups</p>
+                  <p className="text-2xl lg:text-3xl font-black text-pink-600">{analyticsStats.newSignups}</p>
+                  <p className="text-xs text-[#064e3b]/40 mt-1">Registered users</p>
+                </div>
+                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
+                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Paid Orders</p>
+                  <p className="text-2xl lg:text-3xl font-black text-green-600">{analyticsStats.paidOrders}</p>
+                  <p className="text-xs text-[#064e3b]/40 mt-1">Completed</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[#064e3b]/60 text-sm font-bold">Conversion Rate</p>
+                  <p className="text-[#064e3b] text-xl font-black">{Math.min(analyticsStats.conversionRate, 100)}%</p>
+                </div>
+                <div className="h-3 bg-[#064e3b]/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#064e3b] to-green-500 rounded-full transition-all" style={{ width: `${Math.min(analyticsStats.conversionRate, 100)}%` }}></div>
+                </div>
+                <p className="text-xs text-[#064e3b]/40 mt-2">Visits → Paid Orders</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-[2rem] p-6 border border-[#064e3b]/5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-bold text-[#064e3b]">Daily Visitors</h4>
+                    <div className="flex gap-1">
+                      <button onClick={() => setGraphDays(7)} className={`px-2 py-1 rounded text-xs font-bold ${graphDays === 7 ? 'bg-[#064e3b] text-white' : 'bg-[#064e3b]/10 text-[#064e3b]'}`}>7D</button>
+                      <button onClick={() => setGraphDays(15)} className={`px-2 py-1 rounded text-xs font-bold ${graphDays === 15 ? 'bg-[#064e3b] text-white' : 'bg-[#064e3b]/10 text-[#064e3b]'}`}>15D</button>
+                      <button onClick={() => setGraphDays(30)} className={`px-2 py-1 rounded text-xs font-bold ${graphDays === 30 ? 'bg-[#064e3b] text-white' : 'bg-[#064e3b]/10 text-[#064e3b]'}`}>30D</button>
+                    </div>
+                  </div>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={visitsGraph} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#064e3b" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#064e3b" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+                        <XAxis dataKey="_id" stroke="#064e3b" fontSize={9} tickLine={false} tickFormatter={(v) => graphDays <= 7 ? v.slice(5) : graphDays <= 15 ? v.slice(5, 10) : v.slice(8)} />
+                        <YAxis stroke="#064e3b" fontSize={11} allowDecimals={false} tickLine={false} axisLine={false} />
+                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #eee', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} labelFormatter={(v) => `Date: ${v}`} />
+                        <Area type="monotone" dataKey="count" name="Visitors" stroke="#064e3b" fillOpacity={1} fill="url(#colorCount)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] p-6 border border-[#064e3b]/5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-bold text-[#064e3b]">Daily Orders</h4>
+                    <div className="flex gap-1">
+                      <button onClick={() => setGraphDays(7)} className={`px-2 py-1 rounded text-xs font-bold ${graphDays === 7 ? 'bg-[#064e3b] text-white' : 'bg-[#064e3b]/10 text-[#064e3b]'}`}>7D</button>
+                      <button onClick={() => setGraphDays(15)} className={`px-2 py-1 rounded text-xs font-bold ${graphDays === 15 ? 'bg-[#064e3b] text-white' : 'bg-[#064e3b]/10 text-[#064e3b]'}`}>15D</button>
+                      <button onClick={() => setGraphDays(30)} className={`px-2 py-1 rounded text-xs font-bold ${graphDays === 30 ? 'bg-[#064e3b] text-white' : 'bg-[#064e3b]/10 text-[#064e3b]'}`}>30D</button>
+                    </div>
+                  </div>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={ordersGraph} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                        <XAxis dataKey="_id" stroke="#064e3b" fontSize={10} tickFormatter={(v) => graphDays <= 7 ? v.slice(5) : graphDays <= 15 ? v.slice(5, 10) : v.slice(8)} />
+                        <YAxis stroke="#064e3b" fontSize={11} allowDecimals={false} />
+                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} formatter={(value, name) => [name === 'totalRevenue' ? `₹${(value || 0).toLocaleString()}` : value, name === 'totalRevenue' ? 'Revenue' : 'Orders']} labelFormatter={(v) => `Date: ${v}`} />
+                        <Legend />
+                        <Bar dataKey="count" name="Orders" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1143,47 +1303,58 @@ Call : 7358422064
           )}
 
           {activeTab === 'customers' && (
-            <div className="bg-white rounded-[2rem] border border-[#064e3b]/5 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
-                  <thead className="bg-[#fdfbf7]">
-                    <tr>
-                      <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Customer</th>
-                      <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Orders</th>
-                      <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Total Spent</th>
-                      <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#064e3b]/5">
-                    {orders.reduce((acc, order) => {
-                      const existing = acc.find(c => c.email === order.shippingAddress.email);
-                      if (existing) {
-                        existing.orders += 1;
-                        existing.spent += order.totalPrice;
-                      } else {
-                        acc.push({ email: order.shippingAddress.email, name: order.shippingAddress.fullName, orders: 1, spent: order.totalPrice });
-                      }
-                      return acc;
-                    }, []).slice(0, 10).map((customer, idx) => (
-                      <tr key={idx} className="hover:bg-[#fdfbf7]/50 transition-colors">
-                        <td className="p-5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-[#c5a059] rounded-full flex items-center justify-center text-white font-bold">
-                              {customer.name.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="font-bold text-[#064e3b]">{customer.name}</p>
-                              <p className="text-sm text-[#064e3b]/40">{customer.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-5"><span className="font-bold text-[#064e3b]">{customer.orders}</span></td>
-                        <td className="p-5"><span className="font-bold text-[#c5a059]">₹{customer.spent}</span></td>
-                        <td className="p-5"><span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">Active</span></td>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-[#064e3b]/60">{customers.length} total users</span>
+              </div>
+              <div className="bg-white rounded-[2rem] border border-[#064e3b]/5 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px]">
+                    <thead className="bg-[#fdfbf7]">
+                      <tr>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Customer</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Email</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Phone</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Joined</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Orders</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Total Spent</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-[#064e3b]/5">
+                      {customers.map((customer, idx) => {
+                        const customerOrders = orders.filter(o => o.user === customer._id || o.shippingAddress?.email === customer.email);
+                        const totalSpent = customerOrders.filter(o => o.isPaid).reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+                        return (
+                          <tr key={idx} className="hover:bg-[#fdfbf7]/50 transition-colors">
+                            <td className="p-5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-[#c5a059] rounded-full flex items-center justify-center text-white font-bold">
+                                  {customer.name?.charAt(0)}
+                                </div>
+                                <p className="font-bold text-[#064e3b]">{customer.name}</p>
+                              </div>
+                            </td>
+                            <td className="p-5 text-sm text-[#064e3b]/60">{customer.email}</td>
+                            <td className="p-5 text-sm text-[#064e3b]/60">{customer.shippingAddress?.phone || '-'}</td>
+                            <td className="p-5 text-sm text-[#064e3b]/60">
+                              {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : '-'}
+                            </td>
+                            <td className="p-5"><span className="font-bold text-[#064e3b]">{customerOrders.length}</span></td>
+                            <td className="p-5"><span className="font-bold text-[#c5a059]">₹{totalSpent}</span></td>
+                            <td className="p-5">
+                              {customer.isAdmin ? (
+                                <span className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-xs font-bold">Admin</span>
+                              ) : (
+                                <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">Customer</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

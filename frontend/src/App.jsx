@@ -19,12 +19,15 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 
 
+import VisitTracker from './components/VisitTracker';
+
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <Preloader />
         <BrowserRouter>
+          <VisitTracker />
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />

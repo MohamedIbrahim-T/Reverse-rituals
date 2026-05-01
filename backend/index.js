@@ -25,6 +25,7 @@ app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 // Pincode Proxy
 const axios = require('axios');

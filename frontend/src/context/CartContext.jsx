@@ -4,7 +4,6 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
-    // Initialize from localStorage immediately
     const storedCart = localStorage.getItem('cartItems');
     return storedCart ? JSON.parse(storedCart) : [];
   });
@@ -13,7 +12,6 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Also listen for localStorage changes from other pages
   useEffect(() => {
     const handleStorageChange = () => {
       const storedCart = localStorage.getItem('cartItems');
