@@ -149,9 +149,9 @@ const CartPage = () => {
               <div className="mt-4 pt-4 border-t border-[#064e3b]/10">
                 <p className="text-center text-[#064e3b]/40 text-xs mb-3">Accepting all UPI apps</p>
                 <div className="flex items-center justify-center gap-4">
-                  <img src="/GPAY.jpeg" alt="Google Pay" className="h-8 w-auto" />
-                  <img src="/PAYTYM.jpeg" alt="Paytm" className="h-8 w-auto" />
-                  <img src="/PHONEPE.png" alt="PhonePe" className="h-8 w-auto" />
+                  <img src={new URL('../assets/GPAY.jpeg', import.meta.url).href} alt="Google Pay" className="h-8 w-auto" />
+                  <img src={new URL('../assets/PAYTYM.jpeg', import.meta.url).href} alt="Paytm" className="h-8 w-auto" />
+                  <img src={new URL('../assets/PHONEPE.png', import.meta.url).href} alt="PhonePe" className="h-8 w-auto" />
                 </div>
               </div>
 

@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const ingredients = [
     {
         name: "Rosemary",
-        emoji: "/rosemary.png",
+        emoji: new URL('../assets/rosemary.png', import.meta.url).href,
         angle: 0,
         tagline: "The Growth Catalyst",
         details: `Rosemary Alchemy Water is your main active ingredient for growth.
@@ -23,7 +23,7 @@ Benefits:
     },
     {
         name: "Bhringraj",
-        emoji: "/bhringiraj.png",
+        emoji: new URL('../assets/bhringiraj.png', import.meta.url).href,
         angle: 72,
         tagline: "King of Hair",
         details: `Also known as "King of Hair" in Ayurveda, it works deeply on regrowth.
@@ -39,7 +39,7 @@ Benefits:
     },
     {
         name: "Fenugreek",
-        emoji: "/fenugreek.png",
+        emoji: new URL('../assets/fenugreek.png', import.meta.url).href,
         angle: 144,
         tagline: "The Strengthener",
         details: `Acts as a natural conditioner + strengthening agent.
@@ -55,7 +55,7 @@ Benefits:
     },
     {
         name: "Black Seeds",
-        emoji: "/blackseed.png",
+        emoji: new URL('../assets/blackseed.png', import.meta.url).href,
         angle: 216,
         tagline: "Scalp Healer",
         details: `Provides scalp healing and follicle stimulation.
@@ -71,7 +71,7 @@ Benefits:
     },
     {
         name: "Clove",
-        emoji: "/clove.png",
+        emoji: new URL('../assets/clove.png', import.meta.url).href,
         angle: 288,
         tagline: "Circulation Booster",
         details: `Works as a circulation booster + scalp cleanser.
@@ -174,7 +174,7 @@ const ProductShowcase = () => {
                                             <div className="bg-white/10 md:bg-white/5 border border-white/10 rounded-full px-3 md:px-8 py-1.5 md:py-4 text-[9px] md:text-sm whitespace-nowrap flex items-center gap-2 md:gap-4 shadow-2xl cursor-pointer hover:border-[#c5a059]/40 transition">
 
                                                 <span className="text-base md:text-3xl">
-                                                    <img src={ing.emoji} alt="" className="w-5 md:w-10" />
+                                                    <img src={ing.emoji} alt="" className="w-5 md:w-10" loading="lazy" />
                                                 </span>
 
                                                 <span className="font-black uppercase tracking-widest">
@@ -190,7 +190,7 @@ const ProductShowcase = () => {
 
                         {/* Center Bottle */}
                         <motion.img
-                            src="/ingredient.png"
+                            src={new URL('../assets/ingredient.png', import.meta.url).href}
                             alt="Signature Alchemy Water"
                             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-36 md:w-[480px]"
                             animate={{ y: [0, -20, 0] }}
@@ -325,6 +325,7 @@ const ProductShowcase = () => {
                                         src={ing.emoji}
                                         alt={ing.name}
                                         className="w-full h-full object-contain group-hover:scale-110 transition duration-300"
+                                        loading="lazy"
                                     />
                                 </div>
                                 <h4 className="text-[#064e3b] text-center font-bold text-[10px] uppercase tracking-wide">{ing.name}</h4>
@@ -351,6 +352,7 @@ const ProductShowcase = () => {
                                     src={ing.emoji}
                                     alt={ing.name}
                                     className="w-full h-full object-contain group-hover:scale-110 transition duration-300"
+                                    loading="lazy"
                                 />
                             </div>
                             <h4 className="text-[#064e3b] text-center font-bold text-base uppercase tracking-wide">{ing.name}</h4>
@@ -387,8 +389,8 @@ const VideoShowcase = () => {
         {
             id: 1,
             title: "How to Prepare & Use",
-            thumbnail: "/video.mp4",
-            poster: "/video.png",
+            thumbnail: new URL('../assets/video.mp4', import.meta.url).href,
+            poster: new URL('../assets/video.png', import.meta.url).href,
             duration: "1:30"
         }
     ];

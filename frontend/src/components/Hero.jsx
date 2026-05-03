@@ -37,7 +37,7 @@ const Hero = () => {
     <section
       className="relative w-full h-[780px] md:h-[600px] lg:h-[600px] overflow-hidden bg-[#fdfbf7]"
       style={{
-        backgroundImage: "url('/leaves-bg.png')",
+        backgroundImage: `url(${new URL('../assets/leaves-bg.png', import.meta.url).href})`,
         backgroundSize: "cover",
         backgroundPosition: "center"
       }}
@@ -52,7 +52,7 @@ const Hero = () => {
   <div className="w-[280px] md:w-[350px] lg:w-[420px] relative top-5 md:top-0">
     
     <motion.img
-      src="/ingredient.png"
+      src={new URL('../assets/ingredient.png', import.meta.url).href}
       alt="Hair Growth Product"
      className="w-full object-contain drop-shadow-xl will-change-transform"
       

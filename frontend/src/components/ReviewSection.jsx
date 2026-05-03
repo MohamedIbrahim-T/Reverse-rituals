@@ -7,15 +7,15 @@ import "../index.css"
 import "swiper/css";
 
 const reviews = [
-  { id: 1, image: "/reviews/review-1.PNG" },
-  { id: 2, image: "/reviews/review-2.PNG" },
-  { id: 3, image: "/reviews/review-3.PNG" },
-  { id: 4, image: "/reviews/review-4.PNG" },
-  { id: 5, image: "/reviews/review-5.PNG" },
-  { id: 6, image: "/reviews/review-6.PNG" },
-  { id: 7, image: "/reviews/review-7.PNG" },
-  { id: 8, image: "/reviews/review-8.PNG" },
-  { id: 9, image: "/reviews/review-9.PNG" },
+  { id: 1, image: new URL('../assets/reviews/review-1.PNG', import.meta.url).href },
+  { id: 2, image: new URL('../assets/reviews/review-2.PNG', import.meta.url).href },
+  { id: 3, image: new URL('../assets/reviews/review-3.PNG', import.meta.url).href },
+  { id: 4, image: new URL('../assets/reviews/review-4.PNG', import.meta.url).href },
+  { id: 5, image: new URL('../assets/reviews/review-5.PNG', import.meta.url).href },
+  { id: 6, image: new URL('../assets/reviews/review-6.PNG', import.meta.url).href },
+  { id: 7, image: new URL('../assets/reviews/review-7.PNG', import.meta.url).href },
+  { id: 8, image: new URL('../assets/reviews/review-8.PNG', import.meta.url).href },
+  { id: 9, image: new URL('../assets/reviews/review-9.PNG', import.meta.url).href },
 ];
 
 const ReviewSection = () => {
@@ -64,6 +64,7 @@ const ReviewSection = () => {
                   src={review.image}
                   alt="review"
                   className="w-full h-auto"
+                  loading="lazy"
                 />
               </div>
             </SwiperSlide>

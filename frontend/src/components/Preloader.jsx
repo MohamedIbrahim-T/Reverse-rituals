@@ -39,7 +39,7 @@ const Preloader = () => {
                             className="relative flex flex-col items-center"
                         >
                             <img
-                                src="/rr-logo.png"
+                                src={new URL('../assets/rr-logo.png', import.meta.url).href}
                                 alt="Reverse Rituals"
                                 className="w-24 h-24 md:w-32 md:h-32 object-contain mb-8"
                                 fetchPriority="high"

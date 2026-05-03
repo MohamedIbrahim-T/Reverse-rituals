@@ -3,15 +3,15 @@ import { Play, Pause } from "lucide-react";
 import { motion } from "framer-motion";
 
 const voiceReviews = [
-  { id: 1, name: "Jagathisan", audio: "/voice/audio-1.opus", product: "Reverse ritual combo" },
-  { id: 2, name: "Lavanya", audio: "/voice/audio-3.opus", product: "Reverse ritual combo" },
-  { id: 3, name: "Srinivasan", audio: "/voice/Srini.opus", product: "Reverse ritual combo" },
-  { id: 4, name: "Saravanavel", audio: "/voice/saravana.opus", product: "Reverse ritual combo" },
-  { id: 5, name: "Thivan", audio: "/voice/thivan.opus", product: "Reverse ritual combo" },
-  { id: 6, name: "Gopikrishnan G", audio: "/voice/audio-2.opus", product: "Reverse ritual combo" },
-  { id: 7, name: "Santhosh", audio: "/voice/santhosh.mp3", product: "Reverse ritual combo" },
-  { id: 8, name: "Periyanayagasamy", audio: "/voice/peri.opus", product: "Reverse ritual combo" },
-  { id: 9, name: "Srinivasan", audio: "/voice/srini25.mp3", product: "Reverse ritual combo" },
+  { id: 1, name: "Jagathisan", audio: new URL('../assets/voice/audio-1.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 2, name: "Lavanya", audio: new URL('../assets/voice/audio-3.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 3, name: "Srinivasan", audio: new URL('../assets/voice/Srini.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 4, name: "Saravanavel", audio: new URL('../assets/voice/saravana.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 5, name: "Thivan", audio: new URL('../assets/voice/thivan.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 6, name: "Gopikrishnan G", audio: new URL('../assets/voice/audio-2.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 7, name: "Santhosh", audio: new URL('../assets/voice/santhosh.mp3', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 8, name: "Periyanayagasamy", audio: new URL('../assets/voice/peri.opus', import.meta.url).href, product: "Reverse ritual combo" },
+  { id: 9, name: "Srinivasan", audio: new URL('../assets/voice/srini25.mp3', import.meta.url).href, product: "Reverse ritual combo" },
 ];
 
 const VoiceReviewsSection = () => {
@@ -94,7 +94,7 @@ const VoiceReviewsSection = () => {
                   <audio
                     ref={(el) => (audioRefs.current[review.id] = el)}
                     src={review.audio}
-                    preload="auto"
+                    preload="none"
                     onTimeUpdate={() => handleTimeUpdate(review.id)}
                     onEnded={() => setPlayingId(null)}
                   />

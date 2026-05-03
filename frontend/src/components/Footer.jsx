@@ -8,7 +8,7 @@ const Footer = () => {
         <div>
           <div className="flex items-center gap-3 mb-6">
             <img
-              src="/rr-logo-white.png"
+              src={new URL('../assets/rr-logo-white.png', import.meta.url).href}
               alt="Reverse Rituals"
               className="w-12 h-12 object-contain"
             />

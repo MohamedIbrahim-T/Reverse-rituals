@@ -24,10 +24,7 @@ const AboutSection = () => {
     <section ref={sectionRef} className="py-12 md:py-16 px-4 overflow-hidden relative">
 
       {/* Background */}
-      <div className="absolute inset-0">
-        <img src="/Hero.png" className="w-full h-full object-cover" alt="background" loading="lazy" />
-        <div className="absolute inset-0 bg-[#fdfbf7]/95" />
-      </div>
+      <div className="absolute inset-0 bg-[#fdfbf7]" />
 
       <div className="max-w-6xl mx-auto relative">
 

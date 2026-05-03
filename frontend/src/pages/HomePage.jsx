@@ -251,7 +251,7 @@ const faqs = [
 
 {/* Right Image - After (Week 14) */}
                       <img
-                         src="/Week/Week-14.JPG"
+                         src={new URL('../assets/Week/Week-14.JPG', import.meta.url).href}
                          className="absolute inset-0 w-full h-full object-cover"
                          alt="Week 14"
                          loading="lazy"
@@ -264,7 +264,7 @@ const faqs = [
                          style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
                       >
                          <img
-                            src="/Week/Week-1.PNG"
+                            src={new URL('../assets/Week/Week-1.PNG', import.meta.url).href}
                            className="absolute inset-0 w-full h-full object-cover"
                            alt="Week 1"
                            loading="lazy"
@@ -302,20 +302,20 @@ const faqs = [
                <div className="max-w-6xl mx-auto">
 <div className="flex overflow-x-auto gap-6 pb-8 px-2 scrollbar-hide justify-start">
 {[
-                           { week: '1', title: 'Week 1', img: '/Week/Week-1.PNG' },
-                           { week: '2', title: 'Week 2', img: '/Week/Week-2.PNG' },
-                           { week: '4', title: 'Week 4', img: '/Week/Week-4.PNG' },
-                           { week: '6', title: 'Week 6', img: '/Week/Week-6.PNG' },
-                           { week: '8', title: 'Week 8', img: '/Week/Week-8.PNG' },
-                           { week: '12', title: 'Week 12', img: '/Week/Week-12.PNG' },
-                           { week: '14', title: 'Week 14', img: '/Week/Week-14.JPG' },
+                           { week: '1', title: 'Week 1', img: new URL('../assets/Week/Week-1.PNG', import.meta.url).href },
+                           { week: '2', title: 'Week 2', img: new URL('../assets/Week/Week-2.PNG', import.meta.url).href },
+                           { week: '4', title: 'Week 4', img: new URL('../assets/Week/Week-4.PNG', import.meta.url).href },
+                           { week: '6', title: 'Week 6', img: new URL('../assets/Week/Week-6.PNG', import.meta.url).href },
+                           { week: '8', title: 'Week 8', img: new URL('../assets/Week/Week-8.PNG', import.meta.url).href },
+                           { week: '12', title: 'Week 12', img: new URL('../assets/Week/Week-12.PNG', import.meta.url).href },
+                           { week: '14', title: 'Week 14', img: new URL('../assets/Week/Week-14.JPG', import.meta.url).href },
                         ].map((step, i) => (
                         <div
                            key={i}
                            className="relative min-w-[280px] md:min-w-[320px] shrink-0 group translate-z-0"
                         >
                            <div className="relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#c5a059]/20 bg-white">
-                              <img src={step.img} className="w-full h-64 md:h-80 object-cover" alt="" />
+                              <img src={step.img} className="w-full h-64 md:h-80 object-cover" alt="" loading="lazy" />
                               <div className="absolute top-4 left-4 bg-[#064e3b] text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide shadow-lg">
                                  Week {step.week}
                               </div>

@@ -25,7 +25,7 @@ const AboutPage = () => {
           <div className="relative">
             <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-white shadow-lg">
               <img
-                src="/sadiq.JPG"
+                src={new URL('../assets/sadiq.JPG', import.meta.url).href}
                 alt="R. Sadiq Basha - Founder"
                 className="w-full h-full object-cover"
               />
