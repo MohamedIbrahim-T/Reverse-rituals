@@ -480,6 +480,40 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// @desc    Get orders by phone number
+// @route   GET /api/orders/by-phone
+// @access  Public
+const getOrdersByPhone = async (req, res) => {
+  const { phone } = req.query;
+
+  if (!phone) {
+    return res.status(400).json({ message: 'Phone number is required' });
+  }
+
+  try {
+    const orders = await Order.find({ 'shippingAddress.phone': phone }).sort({ createdAt: -1 });
+
+    const ordersWithStatus = orders.map(order => {
+      const orderObj = order.toObject();
+      if (!orderObj.status) {
+        if (orderObj.isDelivered) {
+          orderObj.status = 'Delivered';
+        } else if (orderObj.isPaid) {
+          orderObj.status = 'Shipped';
+        } else {
+          orderObj.status = 'Pending';
+        }
+      }
+      return orderObj;
+    });
+
+    res.json(ordersWithStatus);
+  } catch (error) {
+    console.error('Error fetching orders by phone:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   addOrderItems,
   createPayLinkForOrder,
@@ -492,4 +526,5 @@ module.exports = {
   updateOrderStatus,
   markOrderAsPaid,
   deleteOrder,
+  getOrdersByPhone,
 };

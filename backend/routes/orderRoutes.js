@@ -14,6 +14,7 @@ const {
   markOrderAsPaid,
   deleteOrder,
   createPaymentForOrder,
+  getOrdersByPhone,
 } = require('../controllers/orderController');
 
 const { protect, admin, optionalProtect } = require('../middleware/auth');
@@ -21,6 +22,7 @@ const { protect, admin, optionalProtect } = require('../middleware/auth');
 
 // ✅ NORMAL ROUTES
 router.get('/myorders', protect, getMyOrders);
+router.get('/by-phone', getOrdersByPhone);
 router.post('/verify', verifyPayment);
 router.put('/fix-paid/:id', protect, admin, async (req, res) => {
   try {

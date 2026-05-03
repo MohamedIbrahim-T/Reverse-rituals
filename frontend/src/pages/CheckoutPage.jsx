@@ -64,6 +64,7 @@ const CheckoutPage = () => {
 
   const [formData, setFormData] = useState({
     fullName: '',
+    email: '',
     address: '',
     state: '',
     city: '',
@@ -303,9 +304,7 @@ const CheckoutPage = () => {
     );
   };
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login?redirect=/checkout');
-    } else if (!authLoading && user) {
+    if (!authLoading) {
       setIsCheckingAuth(false);
     }
   }, [authLoading, user, navigate]);
@@ -356,10 +355,11 @@ const CheckoutPage = () => {
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Redirect to orders page after successful payment
+  // Redirect to order success page after successful payment
   useEffect(() => {
     if (paymentSuccess) {
-      navigate('/orders', { replace: true });
+      const phone = formData.phone;
+      navigate(`/order-success?phone=${encodeURIComponent(phone)}`, { replace: true });
     }
   }, [paymentSuccess, navigate]);
 
@@ -397,7 +397,7 @@ const CheckoutPage = () => {
           country: 'India',
           phone: formData.phone || '',
           altPhone: formData.altPhone || '',
-          email: user?.email || ''
+email: user?.email || formData.email || ''
         },
         paymentMethod: 'Razorpay',
         shippingCharge: shippingCharge
@@ -519,9 +519,14 @@ const CheckoutPage = () => {
                         className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="Enter your name" />
                     </div>
                     <div>
-                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Email</label>
-                      <input type="email" value={user?.email || ''} readOnly
-                        className="w-full px-5 py-3 bg-[#e8e8e8] border border-[#064e3b]/10 rounded-xl text-[#064e3b]/50 cursor-not-allowed" />
+                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Email {user ? '(Saved)' : '(Optional)'}</label>
+                      {user?.email ? (
+                        <input type="email" value={user.email} readOnly
+                          className="w-full px-5 py-3 bg-[#e8e8e8] border border-[#064e3b]/10 rounded-xl text-[#064e3b]/50 cursor-not-allowed" />
+                      ) : (
+                        <input type="email" name="email" value={formData.email || ''} onChange={handleChange}
+                          className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="your@email.com" />
+                      )}
                     </div>
                     <div>
                       <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Phone Number</label>

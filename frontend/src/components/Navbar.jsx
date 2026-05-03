@@ -135,6 +135,14 @@ const Navbar = () => {
             {/* Right Side */}
             <div className="flex items-center gap-2">
 
+              {/* Track Order */}
+              <Link
+                to="/track-order"
+                className="px-3 py-2 text-[#064e3b] text-sm font-medium hover:text-[#c5a059] transition"
+              >
+                Track Order
+              </Link>
+
               {/* Cart */}
               <Link to="/cart" className="relative p-2 rounded-full hover:bg-[#064e3b]/5 transition">
                 <ShoppingCart size={20} className="text-[#064e3b]" />
@@ -145,15 +153,8 @@ const Navbar = () => {
                 )}
               </Link>
 
-              {/* Login / Profile - Desktop */}
-              {!user ? (
-                <Link
-                  to="/login"
-                  className="px-4 py-2 border border-[#064e3b] rounded-full text-[#064e3b] text-sm font-medium hover:bg-[#064e3b]/5 transition"
-                >
-                  Login
-                </Link>
-              ) : (
+              {/* Profile / Logout - Only show if logged in */}
+              {user && (
                 <div className="flex items-center gap-2">
                   <Link
                     to={user.isAdmin ? "/admin" : "/orders"}
@@ -173,8 +174,16 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* RIGHT - MOBILE */}
-          <div className="md:hidden flex items-center gap-2 z-10">
+{/* RIGHT - MOBILE */}
+          <div className="md:hidden flex items-center gap-1">
+
+            {/* Track Order - Mobile */}
+            <Link
+              to="/track-order"
+              className="px-2 py-1 text-[#064e3b] text-xs font-medium hover:text-[#c5a059] transition"
+            >
+              Track
+            </Link>
 
             {/* Cart */}
             <Link to="/cart" className="relative p-2 rounded-full hover:bg-[#064e3b]/5 transition">
@@ -186,15 +195,8 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Login / Profile - Mobile */}
-            {!user ? (
-              <Link
-                to="/login"
-                className="px-3 py-1.5 border border-[#064e3b] rounded-full text-[#064e3b] text-xs font-medium hover:bg-[#064e3b]/5 transition"
-              >
-                Login
-              </Link>
-            ) : (
+            {/* Profile - Only show if logged in */}
+            {user && (
               <Link
                 to={user.isAdmin ? "/admin" : "/orders"}
                 className="p-2 rounded-full hover:bg-[#064e3b]/5 transition"
@@ -271,6 +273,14 @@ const Navbar = () => {
                 >
                   <MessageCircle size={18} /> WhatsApp
                 </a>
+
+                <Link
+                  to="/track-order"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-2 py-3 px-4 text-[#064e3b]"
+                >
+                  <Package size={18} /> Track Order
+                </Link>
 
                 {/* Logout - Mobile Sidebar */}
                 {user && (

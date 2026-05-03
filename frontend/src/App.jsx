@@ -17,6 +17,8 @@ import AboutPage from './pages/AboutPage';
 import OrdersPage from './pages/OrdersPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
+import TrackOrderPage from './pages/TrackOrderPage';
 
 
 import VisitTracker from './components/VisitTracker';
@@ -42,6 +44,8 @@ function App() {
               <Route path="signup" element={<SignupPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="checkout" element={<CheckoutPage />} />
+              <Route path="order-success" element={<OrderSuccessPage />} />
+              <Route path="track-order" element={<TrackOrderPage />} />
               <Route path="admin" element={<AdminPage />} />
 
 
