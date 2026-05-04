@@ -5,11 +5,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   ShoppingBag, Package, Truck, CheckCircle, Trash2, Edit3, Plus, X,
   DollarSign, Users, BarChart3, Calendar, Search, Home, Settings,
-  LogOut, Bell, Menu, ChevronRight, Image, CreditCard, MapPin, Phone, Mail, Download, FileSpreadsheet
+  LogOut, Bell, Menu, ChevronRight, Image, CreditCard, MapPin, Phone, Mail, Download, FileSpreadsheet, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
+import ImageUpload from '../components/ImageUpload';
+import ReviewsSection from './ReviewsSection';
 
 const AdminPage = () => {
   const { user, logout, loading: authLoading } = useAuth();
@@ -28,7 +30,7 @@ const AdminPage = () => {
   const [exportFromDate, setExportFromDate] = useState('');
   const [exportToDate, setExportToDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', price: '', description: '', image: '', category: '', countInStock: '',
+    name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '',
   });
   const [actionLoading, setActionLoading] = useState({});
   const [thermalGenerating, setThermalGenerating] = useState(null);
@@ -601,7 +603,7 @@ Call : 7358422064
       }
       setIsModalOpen(false);
       setEditingProduct(null);
-      setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '' });
+      setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '' });
       fetchData();
     } catch (error) {
       toast.error('Operation failed');
@@ -613,6 +615,7 @@ Call : 7358422064
     setFormData({
       name: product.name, price: product.price, description: product.description,
       image: product.image, category: product.category, countInStock: product.countInStock,
+      images: product.images ? product.images.join(',') : '',
     });
     setIsModalOpen(true);
   };
@@ -659,6 +662,7 @@ Call : 7358422064
     { id: 'analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
     { id: 'orders', icon: <ShoppingBag size={20} />, label: 'Orders', badge: paidOrders.length },
     { id: 'products', icon: <Package size={20} />, label: 'Products', badge: products.length },
+    { id: 'reviews', icon: <MessageSquare size={20} />, label: 'Reviews' },
     { id: 'customers', icon: <Users size={20} />, label: 'Customers' },
     { id: 'settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
@@ -846,7 +850,7 @@ Call : 7358422064
             </div>
             {activeTab === 'products' && (
               <button
-                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '' }); setIsModalOpen(true); }}
+                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '' }); setIsModalOpen(true); }}
                 className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-[#064e3b] text-white rounded-xl sm:rounded-2xl font-bold hover:bg-[#c5a059] transition-all text-sm"
               >
                 <Plus size={18} /> <span className="hidden sm:inline">Add Product</span>
@@ -1260,7 +1264,7 @@ Call : 7358422064
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {/* Add Product Card */}
               <button
-                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '' }); setIsModalOpen(true); }}
+                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '' }); setIsModalOpen(true); }}
                 className="bg-white rounded-2xl sm:rounded-[2rem] border-2 border-dashed border-[#064e3b]/20 flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 min-h-[160px] sm:min-h-[200px] lg:min-h-[300px] hover:border-[#c5a059] hover:bg-[#fdfbf7]/50 transition-all group"
               >
                 <div className="w-10 h-10 sm:w-16 sm:h-16 bg-[#064e3b]/5 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:bg-[#c5a059] group-hover:text-white transition-all">
@@ -1301,6 +1305,8 @@ Call : 7358422064
               ))}
             </div>
           )}
+
+          {activeTab === 'reviews' && <ReviewsSection />}
 
           {activeTab === 'customers' && (
             <div>
@@ -1426,8 +1432,11 @@ Call : 7358422064
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Image URL</label>
-                  <input type="text" required value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  <ImageUpload
+                      label="Product Image"
+                      value={formData.image}
+                      onChange={(url) => setFormData({ ...formData, image: url })}
+                    />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Description</label>

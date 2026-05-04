@@ -1,24 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
+import axios from "axios";
 import "../index.css"
 
 import "swiper/css";
 
-const reviews = [
-  { id: 1, image: new URL('../assets/reviews/review-1.PNG', import.meta.url).href },
-  { id: 2, image: new URL('../assets/reviews/review-2.PNG', import.meta.url).href },
-  { id: 3, image: new URL('../assets/reviews/review-3.PNG', import.meta.url).href },
-  { id: 4, image: new URL('../assets/reviews/review-4.PNG', import.meta.url).href },
-  { id: 5, image: new URL('../assets/reviews/review-5.PNG', import.meta.url).href },
-  { id: 6, image: new URL('../assets/reviews/review-6.PNG', import.meta.url).href },
-  { id: 7, image: new URL('../assets/reviews/review-7.PNG', import.meta.url).href },
-  { id: 8, image: new URL('../assets/reviews/review-8.PNG', import.meta.url).href },
-  { id: 9, image: new URL('../assets/reviews/review-9.PNG', import.meta.url).href },
-];
-
 const ReviewSection = () => {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const res = await axios.get(`${API_URL}/api/reviews?type=whatsapp`);
+        const approvedReviews = res.data.filter(r => r.isApproved !== false);
+        setReviews(approvedReviews);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+        setReviews([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  const defaultReviews = [
+    { _id: 'local-1', image: new URL('../assets/reviews/review-1.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-2', image: new URL('../assets/reviews/review-2.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-3', image: new URL('../assets/reviews/review-3.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-4', image: new URL('../assets/reviews/review-4.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-5', image: new URL('../assets/reviews/review-5.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-6', image: new URL('../assets/reviews/review-6.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-7', image: new URL('../assets/reviews/review-7.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-8', image: new URL('../assets/reviews/review-8.PNG', import.meta.url).href, isLocal: true },
+    { _id: 'local-9', image: new URL('../assets/reviews/review-9.PNG', import.meta.url).href, isLocal: true },
+  ];
+
+  const displayReviews = [...reviews, ...defaultReviews];
+
   return (
     <section className="py-6 bg-[#fdfbf7]">
 
@@ -35,7 +58,7 @@ const ReviewSection = () => {
 
         <Swiper
           centeredSlides={true}
-          loop={reviews.length > 3}
+          loop={displayReviews.length > 3}
           grabCursor={true}
 
           slidesPerView={1.5}
@@ -57,8 +80,8 @@ const ReviewSection = () => {
           modules={[Autoplay]}
           className="reviewSwiper touch-pan-y"
         >
-          {reviews.map((review) => (
-            <SwiperSlide key={review.id}>
+          {displayReviews.map((review, idx) => (
+            <SwiperSlide key={review._id || idx}>
               <div className="review-card">
                 <img
                   src={review.image}

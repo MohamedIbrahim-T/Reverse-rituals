@@ -5,6 +5,8 @@ const connectDB = require('./config/db');
 const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 connectDB();
 
@@ -18,7 +20,8 @@ app.use(cors({}));
 const webhookHandler = require('./routes/orderRoutes').webhook;
 app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), webhookHandler);
 
-// Normal JSON parsing
+// Multipart/form-data for file uploads
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Routes
@@ -26,6 +29,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/upload', uploadRoutes);
+app.use('/api/reviews', reviewRoutes);
+
+console.log('All routes loaded');
 
 // Pincode Proxy
 const axios = require('axios');

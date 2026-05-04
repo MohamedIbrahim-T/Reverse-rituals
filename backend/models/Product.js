@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema({
   originalPrice: { type: Number },
   category: { type: String, default: 'Hair Care' },
   image: { type: String, required: true },
+  images: [{ type: String }],
   features: [{ type: String }],
   benefits: [{
     title: { type: String },

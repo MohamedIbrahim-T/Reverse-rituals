@@ -39,13 +39,14 @@ const deleteProduct = async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = async (req, res) => {
-  const { name, price, description, image, category, countInStock } = req.body;
+  const { name, price, description, image, category, countInStock, images } = req.body;
 
   const product = new Product({
     name: name || 'Sample name',
     price: price || 0,
     user: req.user._id,
     image: image || '/images/sample.jpg',
+    images: images || [],
     category: category || 'Sample category',
     countInStock: countInStock || 0,
     numReviews: 0,
@@ -60,7 +61,7 @@ const createProduct = async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
-  const { name, price, description, image, category, countInStock } = req.body;
+  const { name, price, description, image, category, countInStock, images } = req.body;
 
   const product = await Product.findById(req.params.id);
 
@@ -69,6 +70,7 @@ const updateProduct = async (req, res) => {
     product.price = price || product.price;
     product.description = description || product.description;
     product.image = image || product.image;
+    product.images = images || product.images;
     product.category = category || product.category;
     product.countInStock = countInStock || product.countInStock;
 
