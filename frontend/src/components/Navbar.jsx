@@ -138,7 +138,7 @@ const Navbar = () => {
               {/* Track Order */}
               <Link
                 to="/track-order"
-                className="px-3 py-2 text-[#064e3b] text-sm font-medium hover:text-[#c5a059] transition"
+                className="px-4 py-2 bg-[#064e3b] text-white text-sm font-medium rounded-full hover:bg-[#053d32] transition"
               >
                 Track Order
               </Link>
@@ -180,7 +180,7 @@ const Navbar = () => {
             {/* Track Order - Mobile */}
             <Link
               to="/track-order"
-              className="px-2 py-1 text-[#064e3b] text-xs font-medium hover:text-[#c5a059] transition"
+              className="px-3 py-1.5 bg-[#064e3b] text-white text-xs font-medium rounded-full hover:bg-[#053d32] transition"
             >
               Track
             </Link>
@@ -277,7 +277,7 @@ const Navbar = () => {
                 <Link
                   to="/track-order"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 py-3 px-4 text-[#064e3b]"
+                  className="flex items-center gap-2 py-3 px-4 bg-[#064e3b] text-white rounded-lg"
                 >
                   <Package size={18} /> Track Order
                 </Link>
