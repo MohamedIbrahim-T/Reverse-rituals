@@ -15,7 +15,7 @@ const morgan = require('morgan');
 
 app.use(morgan('dev'));
 app.use(cors({
-  origin: ['https://reverserituals.in', 'https://www.reverserituals.in']
+  origin: ['https://reverserituals.in', 'https://www.reverserituals.in', 'http://localhost:5173']
 }));
 
 // ✅ Webhook needs RAW BODY before JSON parsing
