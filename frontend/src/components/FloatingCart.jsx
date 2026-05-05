@@ -38,23 +38,12 @@ const FloatingCart = () => {
                 </div>
               </div>
               
-              <div className="flex gap-2">
-                <a
-                  href={`https://wa.me/917358422064?text=${encodeURIComponent(`Hi, I want to order ${totalItems} items:\n${cartItems.map(item => `- ${item.name}`).join('\n')}\nTotal: ₹${cartTotal}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#25D366] text-white p-2.5 rounded-xl flex items-center justify-center hover:bg-[#128C7E] transition-all"
-                  title="Order on WhatsApp"
-                >
-                  <MessageCircle size={20} />
-                </a>
                 <button 
                   onClick={() => navigate('/cart')}
                   className="bg-[#c5a059] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#b38f4d] transition-all active:scale-95 shadow-lg shadow-black/20"
                 >
-                  Checkout <ArrowRight size={16} />
+                  View Cart <ArrowRight size={16} />
                 </button>
-              </div>
             </div>
           </motion.div>
         )}

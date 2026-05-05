@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, ArrowRight, Minus, Plus, Package, ArrowLeft, ShieldCheck, Truck, Lock, MessageCircle } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowRight, Minus, Plus, Package, ArrowLeft, ShieldCheck, Truck, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -193,22 +193,6 @@ const CartPage = () => {
                 <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" />
               </button>
 
-              <div className="mt-4 flex items-center gap-4">
-                <div className="h-px bg-[#064e3b]/10 flex-1"></div>
-                <span className="text-[10px] font-black text-[#064e3b]/30 uppercase tracking-widest">Or</span>
-                <div className="h-px bg-[#064e3b]/10 flex-1"></div>
-              </div>
-
-              <a
-                href={`https://wa.me/917358422064?text=${encodeURIComponent(`Hi, I would like to order:\n${cartItems.map(item => `- ${item.name} (Qty: ${item.qty})`).join('\n')}\n\nTotal: ₹${cartTotal}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 w-full py-5 bg-[#25D366] text-white rounded-2xl font-black text-lg hover:bg-[#128C7E] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#25D366]/10 active:scale-95"
-              >
-                <MessageCircle size={22} />
-                Order on WhatsApp
-              </a>
-
               {/* Payment Method Logos */}
               <div className="mt-8 pt-8 border-t border-[#064e3b]/5 text-center">
                 <p className="text-[#064e3b]/20 text-[10px] font-black uppercase tracking-[0.3em] mb-5">Accepted Payment Methods</p>
@@ -223,6 +207,23 @@ const CartPage = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 3. MOBILE STICKY CHECKOUT BAR */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#064e3b]/5 p-4 z-[50] shadow-[0_-10px_20px_rgba(0,0,0,0.05)] backdrop-blur-lg bg-white/90">
+        <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
+          <div className="shrink-0">
+            <span className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-[0.2em] block mb-0.5">Total Amount</span>
+            <span className="text-xl font-black text-[#c5a059]">₹{cartTotal.toLocaleString()}</span>
+          </div>
+          <button
+            onClick={() => navigate('/checkout')}
+            className="flex-1 py-4 bg-[#064e3b] text-white rounded-2xl font-black text-sm hover:bg-[#c5a059] transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#064e3b]/20 active:scale-95"
+          >
+            Checkout Now
+            <ArrowRight size={18} />
+          </button>
         </div>
       </div>
     </div>
