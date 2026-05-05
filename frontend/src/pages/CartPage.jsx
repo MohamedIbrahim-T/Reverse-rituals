@@ -142,12 +142,12 @@ const CartPage = () => {
             <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-2xl border border-[#064e3b]/5 lg:sticky lg:top-28 overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-[#c5a059]/5 rounded-bl-[3rem] md:rounded-bl-[5rem]"></div>
               
-              <h3 className="text-2xl font-black text-[#064e3b] mb-8 relative">Summary</h3>
+              <h3 className="text-lg md:text-2xl font-black text-[#064e3b] mb-6 md:mb-8 relative">Summary</h3>
 
               <div className="space-y-5 mb-8 relative">
                 <div className="flex justify-between items-center text-[#064e3b]/60">
                   <span className="font-bold flex items-center gap-2 text-sm uppercase tracking-wider"><Package size={16} className="text-[#c5a059]" /> Selection Total</span>
-                  <span className="font-black text-lg text-[#064e3b]">₹{cartTotal.toLocaleString()}</span>
+                  <span className="font-black text-base md:text-lg text-[#064e3b]">₹{cartTotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex justify-between items-start text-[#064e3b]/60">
@@ -180,13 +180,13 @@ const CartPage = () => {
                     <span className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em] block mb-1">Total Amount</span>
                     <span className="text-sm font-medium text-[#064e3b]/40">Exclusive of shipping</span>
                   </div>
-                  <span className="text-4xl font-black text-[#c5a059] tracking-tighter">₹{cartTotal.toLocaleString()}</span>
+                  <span className="text-2xl md:text-4xl font-black text-[#c5a059] tracking-tighter">₹{cartTotal.toLocaleString()}</span>
                 </div>
               </div>
 
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full py-6 bg-[#064e3b] text-white rounded-2xl font-black text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 group shadow-xl shadow-[#064e3b]/20 relative overflow-hidden active:scale-95"
+                className="w-full py-5 md:py-6 bg-[#064e3b] text-white rounded-2xl font-black text-base md:text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 group shadow-xl shadow-[#064e3b]/20 relative overflow-hidden active:scale-95"
               >
                 <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]"></div>
                 Proceed to Checkout
@@ -207,23 +207,6 @@ const CartPage = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* 3. MOBILE STICKY CHECKOUT BAR */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#064e3b]/5 p-4 z-[50] shadow-[0_-10px_20px_rgba(0,0,0,0.05)] backdrop-blur-lg bg-white/90">
-        <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
-          <div className="shrink-0">
-            <span className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-[0.2em] block mb-0.5">Total Amount</span>
-            <span className="text-xl font-black text-[#c5a059]">₹{cartTotal.toLocaleString()}</span>
-          </div>
-          <button
-            onClick={() => navigate('/checkout')}
-            className="flex-1 py-4 bg-[#064e3b] text-white rounded-2xl font-black text-sm hover:bg-[#c5a059] transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#064e3b]/20 active:scale-95"
-          >
-            Checkout Now
-            <ArrowRight size={18} />
-          </button>
         </div>
       </div>
     </div>

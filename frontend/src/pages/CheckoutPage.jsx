@@ -497,7 +497,7 @@ email: user?.email || formData.email || ''
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <span className="text-[#c5a059] font-black uppercase tracking-[0.4em] text-[10px] mb-3 block">Final Step</span>
-                <h1 className="text-4xl md:text-6xl font-black text-[#064e3b] leading-tight">Secure <span className="text-[#c5a059]">Checkout</span></h1>
+                <h1 className="text-3xl md:text-6xl font-black text-[#064e3b] leading-tight">Secure <span className="text-[#c5a059]">Checkout</span></h1>
               </div>
               <div className="flex items-center gap-6">
                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
@@ -627,7 +627,7 @@ email: user?.email || formData.email || ''
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full py-6 bg-[#064e3b] text-white rounded-2xl font-black text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-[#064e3b]/30 active:scale-95 disabled:opacity-70 group relative overflow-hidden"
+                    className="w-full py-5 md:py-6 bg-[#064e3b] text-white rounded-2xl font-black text-base md:text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-[#064e3b]/30 active:scale-95 disabled:opacity-70 group relative overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]"></div>
                     {isProcessing ? (
@@ -645,7 +645,7 @@ email: user?.email || formData.email || ''
               <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-[#064e3b]/5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#c5a059]/5 rounded-bl-[5rem]"></div>
                 
-                <h3 className="text-2xl font-black text-[#064e3b] mb-8 flex items-center gap-3 relative">
+                <h3 className="text-lg md:text-2xl font-black text-[#064e3b] mb-6 md:mb-8 flex items-center gap-3 relative">
                   <Package size={24} className="text-[#c5a059]" /> 
                   Selection Summary
                 </h3>
@@ -697,7 +697,7 @@ email: user?.email || formData.email || ''
                       <span className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em] block mb-1">Final Amount</span>
                       <p className="text-[9px] text-[#064e3b]/30 font-bold uppercase tracking-widest">Incl. all taxes & rituals</p>
                     </div>
-                    <span className="text-4xl font-black text-[#c5a059] tracking-tighter">₹{finalTotal.toLocaleString()}</span>
+                    <span className="text-2xl md:text-4xl font-black text-[#c5a059] tracking-tighter">₹{finalTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
