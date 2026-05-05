@@ -8,6 +8,8 @@ export const CartProvider = ({ children }) => {
     return storedCart ? JSON.parse(storedCart) : [];
   });
 
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
@@ -36,6 +38,9 @@ export const CartProvider = ({ children }) => {
     } else {
       setCartItems([...cartItems, { ...product, qty }]);
     }
+
+    // Auto open cart drawer on add (for desktop)
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (id) => {
@@ -61,7 +66,10 @@ export const CartProvider = ({ children }) => {
   const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal }}>
+    <CartContext.Provider value={{ 
+      cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal,
+      isCartOpen, setIsCartOpen
+    }}>
       {children}
     </CartContext.Provider>
   );

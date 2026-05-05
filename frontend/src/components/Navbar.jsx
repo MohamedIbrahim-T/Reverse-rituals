@@ -10,7 +10,7 @@ const WHATSAPP_NUMBER = "917358422064";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { cartItems, clearCart } = useCart();
+  const { cartItems, clearCart, isCartOpen, setIsCartOpen } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
   const location = useLocation();
@@ -144,14 +144,17 @@ const Navbar = () => {
               </Link>
 
               {/* Cart */}
-              <Link to="/cart" className="relative p-2 rounded-full hover:bg-[#064e3b]/5 transition">
+              <button 
+                onClick={() => setIsCartOpen(!isCartOpen)}
+                className="relative p-2 rounded-full hover:bg-[#064e3b]/5 transition cursor-pointer"
+              >
                 <ShoppingCart size={20} className="text-[#064e3b]" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#c5a059] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                     {cartCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Profile / Logout - Only show if logged in */}
               {user && (

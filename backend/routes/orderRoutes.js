@@ -95,17 +95,21 @@ const webhookHandler = async (req, res) => {
         await order.save();
         console.log('✅ Paid via webhook:', order._id);
 
-        try {
-          const emailModule = require('../config/email');
-          const sendOrderEmail = emailModule.sendOrderEmail;
-          const User = require('../models/User');
-          
-          const user = order.user ? await User.findById(order.user) : null;
-          const email = user?.email || order.shippingAddress?.email || '';
+        // ✅ SEND EMAIL IN BACKGROUND
+        (async () => {
+          try {
+            const emailModule = require('../config/email');
+            const sendOrderEmail = emailModule.sendOrderEmail;
+            const User = require('../models/User');
+            
+            const user = order.user ? await User.findById(order.user) : null;
+            const email = user?.email || order.shippingAddress?.email || '';
 
-          if (!email || !email.includes('@') || !email.includes('.')) {
-            console.log('📧 Invalid email, skipping send:', email);
-          } else {
+            if (!email || !email.includes('@') || !email.includes('.')) {
+              console.log('📧 Invalid email, skipping send:', email);
+              return;
+            }
+
             await sendOrderEmail({
               orderId: order._id.toString().slice(-8),
               customerName: order.shippingAddress.fullName,
@@ -118,10 +122,10 @@ const webhookHandler = async (req, res) => {
               estimatedDelivery: order.estimatedDelivery,
             });
             console.log('📧 Email sent via webhook to:', email);
+          } catch (emailErr) {
+            console.log('📧 Webhook email background error:', emailErr.message);
           }
-        } catch (emailErr) {
-          console.log('📧 Webhook email error:', emailErr.message);
-        }
+        })();
       }
     }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ShoppingCart, Star, Check, ArrowLeft, Minus, Plus, Truck, Shield, Leaf, RotateCcw, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -12,7 +12,8 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('benefits');
-  const { addToCart } = useCart();
+  const { addToCart, clearCart } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -33,6 +34,12 @@ const ProductPage = () => {
   const handleAddToCart = () => {
     addToCart(product, quantity);
     toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleBuyNow = () => {
+    clearCart();
+    addToCart(product, quantity);
+    navigate('/checkout');
   };
 
   if (loading) return (
@@ -151,13 +158,21 @@ const ProductPage = () => {
                   <Plus size={16} md:size={18} className="text-[#064e3b]" />
                 </button>
               </div>
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-[#064e3b] text-white rounded-full font-medium hover:bg-[#c5a059] transition-colors"
-              >
-                <ShoppingCart size={18} md:size={20} />
-                Add to Cart
-              </button>
+              <div className="flex-1 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-[#064e3b]/5 text-[#064e3b] rounded-full font-medium hover:bg-[#064e3b] hover:text-white transition-colors"
+                >
+                  <ShoppingCart size={18} md:size={20} />
+                  Add to Cart
+                </button>
+                <button
+                  onClick={handleBuyNow}
+                  className="flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-[#c5a059] text-white rounded-full font-medium hover:bg-[#b38f4d] transition-colors shadow-lg shadow-[#c5a059]/20"
+                >
+                  Buy Now
+                </button>
+              </div>
             </div>
 
             {/* Features */}

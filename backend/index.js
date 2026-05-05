@@ -14,7 +14,9 @@ const app = express();
 const morgan = require('morgan');
 
 app.use(morgan('dev'));
-app.use(cors({}));
+app.use(cors({
+  origin: ['https://reverserituals.in', 'https://www.reverserituals.in']
+}));
 
 // ✅ Webhook needs RAW BODY before JSON parsing
 const webhookHandler = require('./routes/orderRoutes').webhook;

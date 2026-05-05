@@ -482,214 +482,235 @@ email: user?.email || formData.email || ''
       <div className="min-h-screen bg-[#fdfbf7] pt-24 flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-[#c5a059] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#064e3b]/60">Please wait...</p>
+          <p className="text-[#064e3b]/60 font-medium">Preparing your ritual...</p>
         </div>
       </div>
     ) : (
-      <div className="min-h-screen bg-[#fdfbf7] pt-24 pb-16 px-4 md:px-6">
+      <div className="min-h-screen bg-[#fdfbf7] pt-24 pb-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <Link to="/cart" className="inline-flex items-center gap-2 text-[#064e3b]/50 hover:text-[#064e3b] mb-6 font-medium text-sm">
-            <ArrowLeft size={16} /> Back to Cart
-          </Link>
+          <div className="mb-10">
+            <Link to="/cart" className="inline-flex items-center gap-2 text-[#064e3b]/50 hover:text-[#064e3b] mb-6 font-bold text-xs uppercase tracking-[0.2em] transition-colors">
+              <ArrowLeft size={14} /> Back to selection
+            </Link>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-            <div>
-              <span className="text-[#c5a059] font-bold uppercase tracking-[0.3em] text-xs mb-2 block">Complete Purchase</span>
-              <h1 className="text-3xl md:text-5xl font-black text-[#064e3b]">Secure <span className="text-[#c5a059]">Checkout</span></h1>
-            </div>
-            <div className="flex items-center gap-2 text-[#064e3b]/50 text-sm">
-              <Lock size={16} /> SSL Encrypted
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <span className="text-[#c5a059] font-black uppercase tracking-[0.4em] text-[10px] mb-3 block">Final Step</span>
+                <h1 className="text-4xl md:text-6xl font-black text-[#064e3b] leading-tight">Secure <span className="text-[#c5a059]">Checkout</span></h1>
+              </div>
+              <div className="flex items-center gap-6">
+                 <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
+                   <Lock size={14} className="text-green-600" />
+                   <span className="text-[10px] font-black text-[#064e3b] uppercase tracking-widest">SSL Encrypted</span>
+                 </div>
+                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
+                   <ShieldCheck size={14} className="text-[#c5a059]" />
+                   <span className="text-[10px] font-black text-[#064e3b] uppercase tracking-widest">Verified</span>
+                 </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             {/* Form */}
-            <div className="lg:col-span-2 space-y-6">
-              <form onSubmit={handlePayment} className="space-y-6">
+            <div className="lg:col-span-7 space-y-8">
+              <form onSubmit={handlePayment} className="space-y-8">
                 {/* Contact Info */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#064e3b]/5">
-                  <h3 className="text-lg font-black text-[#064e3b] mb-5 flex items-center gap-2">
-                    <User size={20} className="text-[#c5a059]" /> Contact Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Full Name</label>
-                      <input type="text" required name="fullName" value={formData.fullName} onChange={handleChange}
-                        className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="Enter your name" />
+                <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#064e3b]/5 rounded-bl-[3rem]"></div>
+                  
+                  <h3 className="text-xl font-black text-[#064e3b] mb-8 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#064e3b] text-white rounded-xl flex items-center justify-center">
+                      <User size={20} />
                     </div>
-                    <div>
-                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Email {user ? '(Saved)' : '(Optional)'}</label>
+                    Contact Details
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Full Name</label>
+                      <input type="text" required name="fullName" value={formData.fullName} onChange={handleChange}
+                        className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter your full name" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Email {user ? '(Linked)' : '(Optional)'}</label>
                       {user?.email ? (
-                        <input type="email" value={user.email} readOnly
-                          className="w-full px-5 py-3 bg-[#e8e8e8] border border-[#064e3b]/10 rounded-xl text-[#064e3b]/50 cursor-not-allowed" />
+                        <div className="w-full px-6 py-4 bg-gray-100 border border-transparent rounded-2xl text-[#064e3b]/40 font-medium flex items-center gap-2">
+                          {user.email} <CheckCircle2 size={14} className="text-green-500" />
+                        </div>
                       ) : (
                         <input type="email" name="email" value={formData.email || ''} onChange={handleChange}
-                          className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="your@email.com" />
+                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="your@email.com" />
                       )}
                     </div>
-                    <div>
-                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Phone Number</label>
-                      <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                        className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="10-digit number" />
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Primary Phone</label>
+                      <div className="relative">
+                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#064e3b]/40 font-bold">+91</span>
+                        <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                          className="w-full pl-16 pr-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="00000 00000" />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Alternate Phone (Optional)</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Alternate Phone</label>
                       <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => setFormData({ ...formData, altPhone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                        className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="Alternate number" />
+                        className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Secondary number" />
                     </div>
                   </div>
                 </div>
 
                 {/* Shipping Address */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#064e3b]/5">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-                    <h3 className="text-lg font-black text-[#064e3b] flex items-center gap-2">
-                      <MapPin size={20} className="text-[#c5a059]" /> Shipping Address
+                <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#c5a059]/5 rounded-bl-[3rem]"></div>
+                  
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <h3 className="text-xl font-black text-[#064e3b] flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#c5a059] text-white rounded-xl flex items-center justify-center">
+                        <MapPin size={20} />
+                      </div>
+                      Shipping Address
                     </h3>
                     <button type="button" onClick={detectLocation} disabled={isLocating}
-                      className="px-4 py-2 bg-[#064e3b]/5 text-[#064e3b] rounded-xl font-bold text-sm hover:bg-[#064e3b] hover:text-white transition-all flex items-center gap-2">
-                      {isLocating ? <Loader2 size={16} className="animate-spin" /> : <LocateFixed size={16} />}
-                      {isLocating ? '...' : 'Detect'}
+                      className="px-6 py-3 bg-[#064e3b]/5 text-[#064e3b] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#064e3b] hover:text-white transition-all flex items-center gap-3 active:scale-95">
+                      {isLocating ? <Loader2 size={14} className="animate-spin" /> : <LocateFixed size={14} />}
+                      {isLocating ? 'Detecting...' : 'Auto Detect'}
                     </button>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Street Address</label>
-                      <textarea required name="address" value={formData.address} onChange={handleChange} rows={2}
-                        className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="House No, Building, Street, Area" />
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Street & House Details</label>
+                      <textarea required name="address" value={formData.address} onChange={handleChange} rows={3}
+                        className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all resize-none" placeholder="Door No, Floor, Building Name, Street Name" />
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="col-span-2 md:col-span-1">
-                        <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">Pincode</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Pincode</label>
                         <div className="relative">
-                          {isFetchingPincode && <Loader2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#c5a059] animate-spin" />}
+                          {isFetchingPincode && <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c5a059] animate-spin" />}
                           <input type="text" required name="zipCode" value={formData.zipCode} onChange={handlePincodeChange} maxLength={6}
-                            className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059] pl-10" placeholder="6 digits" />
+                            className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-bold text-[#064e3b] tracking-[0.2em] transition-all" placeholder="600001" />
                         </div>
                       </div>
-                      <div className="col-span-2 md:col-span-1">
-                        <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">State</label>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">State</label>
                         <select required name="state" value={formData.state} onChange={handleChange}
-                          className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]">
-                          <option value="">Select</option>
+                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all appearance-none cursor-pointer">
+                          <option value="">Select State</option>
                           {states.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </div>
-                      <div className="col-span-2 md:col-span-1">
-                        <label className="text-sm font-bold text-[#064e3b]/60 ml-1 mb-2 block">City</label>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">City / District</label>
                         <input type="text" required name="city" value={formData.city} onChange={handleChange}
-                          className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" placeholder="Enter city" />
+                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter city" />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Terms */}
-                <div className="flex items-start gap-3 p-4 bg-[#fdfbf7] rounded-xl">
-                  <input type="checkbox" id="terms" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className="w-5 h-5 mt-1 accent-[#064e3b]" />
-                  <label htmlFor="terms" className="text-sm text-[#064e3b]/60">
-                    I agree to the <span className="text-[#064e3b] font-bold underline">Terms & Conditions</span> and <span className="text-[#064e3b] font-bold underline">Privacy Policy</span>
+                <div className="flex items-start gap-4 p-6 bg-white rounded-3xl border border-[#064e3b]/5 shadow-sm">
+                  <div className="relative flex items-center">
+                    <input type="checkbox" id="terms" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="w-6 h-6 rounded-lg accent-[#064e3b] cursor-pointer" />
+                  </div>
+                  <label htmlFor="terms" className="text-xs text-[#064e3b]/60 leading-relaxed font-medium">
+                    I agree to the <span className="text-[#064e3b] font-black underline cursor-pointer">Terms of Service</span> and acknowledge the <span className="text-[#064e3b] font-black underline cursor-pointer">Privacy Policy</span>. By checking this, I confirm my order details are correct.
                   </label>
                 </div>
 
-                {/* Save Address Buttons */}
-                {/* <div className="flex flex-wrap gap-3">
-                  {hasSavedAddress && (
-                    <button type="button" onClick={handleUseSavedAddress}
-                      className="px-5 py-2.5 bg-[#c5a059]/10 text-[#c5a059] rounded-xl font-bold text-sm hover:bg-[#c5a059] hover:text-white transition-all">
-                      Use Saved Address
-                    </button>
-                  )}
-                  <button type="button" onClick={handleSaveAddress}
-                    className="px-5 py-2.5 bg-[#064e3b] text-white rounded-xl font-bold text-sm hover:bg-[#053d2f] transition-all">
-                    Save Address
+                {/* Pay Button - Mobile Sticky */}
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#064e3b]/5 z-50 md:relative md:p-0 md:bg-transparent md:border-0">
+                  <button
+                    type="submit"
+                    disabled={isProcessing}
+                    className="w-full py-6 bg-[#064e3b] text-white rounded-2xl font-black text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-[#064e3b]/30 active:scale-95 disabled:opacity-70 group relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]"></div>
+                    {isProcessing ? (
+                      <><Loader2 size={24} className="animate-spin" /> Verifying...</>
+                    ) : (
+                      <><CreditCard size={24} /> Pay ₹{finalTotal.toLocaleString()}</>
+                    )}
                   </button>
-                </div> */}
-
-                {/* Pay Button */}
-                <button
-                  type="submit"
-                  disabled={isProcessing}
-                  className="w-full py-5 bg-[#064e3b] text-white rounded-2xl font-bold hover:bg-[#c5a059] transition-all flex items-center justify-center gap-3 text-lg disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {isProcessing ? (
-                    <><Loader2 size={24} className="animate-spin" /> Processing Ritual...</>
-                  ) : (
-                    <><CreditCard size={24} /> Pay ₹{finalTotal.toLocaleString()}</>
-                  )}
-                </button>
+                </div>
               </form>
             </div>
 
             {/* Order Summary Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-[#064e3b]/5 sticky top-24">
-                <h3 className="text-lg font-black text-[#064e3b] mb-5 flex items-center gap-2">
-                  <Package size={20} className="text-[#c5a059]" /> Order Summary
+            <div className="lg:col-span-5 sticky top-28">
+              <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-[#064e3b]/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#c5a059]/5 rounded-bl-[5rem]"></div>
+                
+                <h3 className="text-2xl font-black text-[#064e3b] mb-8 flex items-center gap-3 relative">
+                  <Package size={24} className="text-[#c5a059]" /> 
+                  Selection Summary
                 </h3>
 
-                <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+                <div className="space-y-4 mb-8 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#064e3b]/10 relative">
                   {displayItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-2 bg-[#fdfbf7] rounded-xl">
-                      {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[#064e3b] text-sm truncate">{item.name}</p>
-                        <p className="text-[#064e3b]/40 text-xs">Qty: {item.qty} × ₹{item.price}</p>
+                    <motion.div 
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      key={idx} 
+                      className="flex items-center gap-4 p-4 bg-[#fdfbf7] rounded-2xl border border-[#064e3b]/5 group"
+                    >
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-[#064e3b]/10 shrink-0">
+                        {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />}
                       </div>
-                      <span className="font-bold text-[#064e3b] text-sm">₹{item.price * item.qty}</span>
-                    </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-[#064e3b] text-sm truncate">{item.name}</p>
+                        <p className="text-[#064e3b]/40 text-[10px] font-black uppercase tracking-widest mt-1">Quantity: {item.qty} Rituals</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-black text-[#064e3b] text-sm block">₹{(item.price * item.qty).toLocaleString()}</span>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
 
-                <div className="space-y-3 pt-4 border-t border-[#064e3b]/10">
+                <div className="space-y-4 pt-6 border-t border-[#064e3b]/10 relative">
                   <div className="flex justify-between text-[#064e3b]/60">
-                    <span>Subtotal</span>
-                    <span className="font-bold">₹{cartTotal}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Subtotal</span>
+                    <span className="font-black text-[#064e3b]">₹{cartTotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-[#064e3b]/60">
-                    <span className="flex items-center gap-2"><Truck size={14} /> Shipping</span>
-                    <span className={`font-black ${shippingCharge === 0 ? 'text-green-600' : ''}`}>
-                      {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
+                  <div className="flex justify-between items-center text-[#064e3b]/60">
+                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <Truck size={14} className="text-[#c5a059]" /> Shipping Fee
+                    </span>
+                    <span className={`font-black ${shippingCharge === 0 ? 'text-green-600' : 'text-[#064e3b]'}`}>
+                      {shippingCharge === 0 ? 'COMPLIMENTARY' : `₹${shippingCharge}`}
                     </span>
                   </div>
-                  {shippingCharge > 0 && formData.state && (
-                    <p className="text-[10px] text-[#c5a059] font-medium">
-                      Shipping charges for {formData.state}: {shippingCharge === 49 ? '₹49 ' : '₹99 '}
-                    </p>
-                  )}
-                  {shippingCharge === 0 && formData.state && (
-                    <p className="text-[10px] text-green-600 font-medium">Free shipping for Tamil Nadu!</p>
-                  )}
-                  {!formData.state && (
-                    <p className="text-[10px] text-[#c5a059] font-medium">Select state to see shipping charges</p>
+                  
+                  {formData.state && (
+                    <div className={`p-3 rounded-xl text-[10px] font-black text-center uppercase tracking-widest ${shippingCharge === 0 ? 'bg-green-50 text-green-600' : 'bg-[#c5a059]/10 text-[#c5a059]'}`}>
+                      {shippingCharge === 0 ? 'Free Shipping Active for your location' : `₹${shippingCharge} Shipping for ${formData.state}`}
+                    </div>
                   )}
 
-                  <div className="flex justify-between pt-3 border-t border-[#064e3b]/10">
-                    <span className="font-bold text-[#064e3b]">Total</span>
-                    <span className="text-xl font-black text-[#c5a059]">₹{finalTotal.toLocaleString()}</span>
+                  <div className="flex justify-between items-center pt-6 border-t border-[#064e3b]/10">
+                    <div>
+                      <span className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em] block mb-1">Final Amount</span>
+                      <p className="text-[9px] text-[#064e3b]/30 font-bold uppercase tracking-widest">Incl. all taxes & rituals</p>
+                    </div>
+                    <span className="text-4xl font-black text-[#c5a059] tracking-tighter">₹{finalTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 bg-[#c5a059]/5 rounded-xl flex items-start gap-3">
-                  <ShieldCheck className="text-[#c5a059] mt-1" size={20} />
-                  <div>
-                    <p className="font-bold text-[#064e3b] text-sm">Secure Payment</p>
-                    <p className="text-[#064e3b]/40 text-xs">Your payment is secured by Razorpay</p>
-                  </div>
-                </div>
-
-                {/* Payment Method Logos */}
-                <div className="mt-4 pt-4 border-t border-[#064e3b]/10">
-                  <p className="text-center text-[#064e3b]/40 text-xs mb-3">Accepting all UPI apps</p>
-                  <div className="flex items-center justify-center gap-3">
-                    <img src={new URL('../assets/GPAY.jpeg', import.meta.url).href} alt="Google Pay" className="h-6 w-auto" />
-                    <img src={new URL('../assets/PAYTYM.jpeg', import.meta.url).href} alt="Paytm" className="h-6 w-auto" />
-                    <img src={new URL('../assets/PHONEPE.png', import.meta.url).href} alt="PhonePe" className="h-6 w-auto" />
-                  </div>
+                <div className="mt-10 pt-10 border-t border-[#064e3b]/5 text-center">
+                   <div className="flex items-center justify-center gap-2 mb-6">
+                      <ShieldCheck size={16} className="text-[#c5a059]" />
+                      <span className="text-[9px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em]">Encrypted Checkout</span>
+                   </div>
+                   <div className="flex items-center justify-center gap-4 grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all cursor-default">
+                      <img src={new URL('../assets/GPAY.jpeg', import.meta.url).href} alt="GPay" className="h-5" />
+                      <img src={new URL('../assets/PAYTYM.jpeg', import.meta.url).href} alt="Paytm" className="h-5" />
+                      <img src={new URL('../assets/PHONEPE.png', import.meta.url).href} alt="PhonePe" className="h-5" />
+                   </div>
                 </div>
               </div>
             </div>
