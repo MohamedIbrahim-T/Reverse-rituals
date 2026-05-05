@@ -39,8 +39,8 @@ export const CartProvider = ({ children }) => {
       setCartItems([...cartItems, { ...product, qty }]);
     }
 
-    // Auto open cart drawer on add (for desktop)
-    setIsCartOpen(true);
+    // Auto open cart drawer on add (for desktop) - REMOVED per user request
+    // setIsCartOpen(true);
   };
 
   const removeFromCart = (id) => {
