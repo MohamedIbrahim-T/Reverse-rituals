@@ -2,7 +2,6 @@ import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
 const ProductCard = ({ product }) => {
@@ -11,17 +10,6 @@ const ProductCard = ({ product }) => {
   const handleAddToCart = (e) => {
     e.preventDefault();
     addToCart(product);
-    toast.success(`${product.name} added to cart!`, {
-      position: "bottom-right",
-      autoClose: 2000,
-      theme: "light",
-      style: {
-        background: "#ffffff",
-        color: "#064e3b",
-        borderRadius: "10px",
-        border: "1px solid #e5e7eb"
-      }
-    });
   };
 
   return (

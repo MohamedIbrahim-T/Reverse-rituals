@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ShoppingCart, Star, Check, ArrowLeft, Minus, Plus, Truck, Shield, Leaf, RotateCcw, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProductPage = () => {
@@ -33,7 +32,6 @@ const ProductPage = () => {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
-    toast.success(`${product.name} added to cart!`);
   };
 
   const handleBuyNow = () => {
