@@ -512,10 +512,11 @@ email: user?.email || formData.email || ''
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            {/* Form */}
-            <div className="lg:col-span-7 space-y-8">
-              <form onSubmit={handlePayment} className="space-y-8">
+          <form id="checkout-form" onSubmit={handlePayment}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+              {/* Form Fields */}
+              <div className="lg:col-span-7 space-y-8">
+                <div className="space-y-8">
                 {/* Contact Info */}
                 <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#064e3b]/5 rounded-bl-[3rem]"></div>
@@ -622,23 +623,9 @@ email: user?.email || formData.email || ''
                   </label>
                 </div>
 
-                {/* Pay Button - Mobile Sticky */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-[#064e3b]/5 z-50 md:relative md:p-0 md:bg-transparent md:border-0">
-                  <button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full py-5 md:py-6 bg-[#064e3b] text-white rounded-2xl font-black text-base md:text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-[#064e3b]/30 active:scale-95 disabled:opacity-70 group relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]"></div>
-                    {isProcessing ? (
-                      <><Loader2 size={24} className="animate-spin" /> Verifying...</>
-                    ) : (
-                      <><CreditCard size={24} /> Pay ₹{finalTotal.toLocaleString()}</>
-                    )}
-                  </button>
+                  </div>
                 </div>
-              </form>
-            </div>
+              </div>
 
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-5 sticky top-28">
@@ -692,13 +679,26 @@ email: user?.email || formData.email || ''
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center pt-6 border-t border-[#064e3b]/10">
+                  <div className="flex justify-between items-center pt-6 border-t border-[#064e3b]/10 mb-8">
                     <div>
                       <span className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em] block mb-1">Final Amount</span>
                       <p className="text-[9px] text-[#064e3b]/30 font-bold uppercase tracking-widest">Incl. all taxes & rituals</p>
                     </div>
                     <span className="text-2xl md:text-4xl font-black text-[#c5a059] tracking-tighter">₹{finalTotal.toLocaleString()}</span>
                   </div>
+
+                  <button
+                    type="submit"
+                    disabled={isProcessing}
+                    className="w-full py-5 md:py-6 bg-[#064e3b] text-white rounded-2xl font-black text-base md:text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-[#064e3b]/30 active:scale-95 disabled:opacity-70 group relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]"></div>
+                    {isProcessing ? (
+                      <><Loader2 size={24} className="animate-spin" /> Verifying...</>
+                    ) : (
+                      <><CreditCard size={24} /> Pay ₹{finalTotal.toLocaleString()}</>
+                    )}
+                  </button>
                 </div>
 
                 <div className="mt-10 pt-10 border-t border-[#064e3b]/5 text-center">
@@ -714,7 +714,7 @@ email: user?.email || formData.email || ''
                 </div>
               </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     )
