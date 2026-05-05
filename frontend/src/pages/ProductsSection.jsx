@@ -67,7 +67,7 @@ const ProductsSection = ({ products, loading }) => {
                             centeredSlides={true}
                             slidesPerView={"auto"}
                             spaceBetween={16}
-                            loop={products.length > 3}
+                            loop={products.length >= 6}
                             speed={500}
                             watchSlidesProgress={true}
                             className="!overflow-visible px-2"
