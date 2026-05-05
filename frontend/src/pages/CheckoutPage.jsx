@@ -597,7 +597,7 @@ email: user?.email || formData.email || ''
                 </div>
 
                 {/* Save Address Buttons */}
-                <div className="flex flex-wrap gap-3">
+                {/* <div className="flex flex-wrap gap-3">
                   {hasSavedAddress && (
                     <button type="button" onClick={handleUseSavedAddress}
                       className="px-5 py-2.5 bg-[#c5a059]/10 text-[#c5a059] rounded-xl font-bold text-sm hover:bg-[#c5a059] hover:text-white transition-all">
@@ -608,7 +608,7 @@ email: user?.email || formData.email || ''
                     className="px-5 py-2.5 bg-[#064e3b] text-white rounded-xl font-bold text-sm hover:bg-[#053d2f] transition-all">
                     Save Address
                   </button>
-                </div>
+                </div> */}
 
                 {/* Pay Button */}
                 <button
