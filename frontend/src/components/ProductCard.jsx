@@ -32,7 +32,7 @@ const ProductCard = ({ product }) => {
     >
       <Link
         to={`/product/${product._id}`}
-        className="relative block aspect-[4/4.5] overflow-hidden bg-[#fdfbf7]"
+        className="relative block aspect-[5/4.5] overflow-hidden bg-[#fdfbf7]"
       >
         <motion.img
           whileHover={{ scale: 1.05 }}

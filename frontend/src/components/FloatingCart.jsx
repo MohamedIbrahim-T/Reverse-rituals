@@ -25,7 +25,7 @@ const FloatingCart = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-6 left-4 right-4 z-[60] md:hidden"
+            className="fixed bottom-0 left-4 right-4 z-[60] md:hidden"
           >
             <div className="bg-[#064e3b] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-lg bg-[#064e3b]/95">
               <div className="flex items-center gap-3">
@@ -40,7 +40,7 @@ const FloatingCart = () => {
               
                 <button 
                   onClick={() => navigate('/cart')}
-                  className="bg-[#c5a059] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#b38f4d] transition-all active:scale-95 shadow-lg shadow-black/20"
+                  className="bg-[#c5a059] text-white px-2 py-2.5 rounded-xl font-bold text-[10px] flex items-center gap-2 hover:bg-[#b38f4d] transition-all active:scale-95 shadow-lg shadow-black/20"
                 >
                   View Cart <ArrowRight size={16} />
                 </button>

@@ -479,7 +479,7 @@ email: user?.email || formData.email || ''
 
   return (
     authLoading || isCheckingAuth ? (
-      <div className="min-h-screen bg-[#fdfbf7] pt-24 flex items-center justify-center">
+      <div className="min-h-screen bg-[#fdfbf7] pt-10 flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-[#c5a059] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[#064e3b]/60 font-medium">Preparing your ritual...</p>
