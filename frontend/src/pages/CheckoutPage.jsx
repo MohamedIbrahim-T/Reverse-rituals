@@ -585,7 +585,7 @@ email: user?.email || formData.email || ''
                         className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all resize-none" placeholder="Door No, Floor, Building Name, Street Name" />
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Pincode</label>
                         <div className="relative">

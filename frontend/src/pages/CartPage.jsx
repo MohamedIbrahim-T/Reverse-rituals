@@ -67,26 +67,26 @@ const CartPage = () => {
                     transition={{ delay: index * 0.05 }}
                     className="group bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-[#064e3b]/5 hover:shadow-2xl hover:border-[#c5a059]/20 transition-all duration-500"
                   >
-                    <div className="flex gap-5 md:gap-8">
+                    <div className="flex gap-4 md:gap-8">
                       {/* Image */}
-                      <div className="w-24 md:w-36 aspect-square rounded-2xl overflow-hidden bg-[#fdfbf7] shrink-0 border border-[#064e3b]/5 group-hover:scale-[1.02] transition-transform duration-500">
+                      <div className="w-20 md:w-36 aspect-square rounded-2xl overflow-hidden bg-[#fdfbf7] shrink-0 border border-[#064e3b]/5 group-hover:scale-[1.02] transition-transform duration-500">
                         {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
                       </div>
 
                       {/* Details */}
-                      <div className="flex-1 flex flex-col justify-between py-1">
-                        <div>
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-black text-[#064e3b] text-lg md:text-xl leading-tight group-hover:text-[#c5a059] transition-colors">{item.name}</h3>
+                      <div className="flex-1 flex flex-col justify-between py-0.5">
+                        <div className="pr-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <h3 className="font-black text-[#064e3b] text-sm md:text-xl leading-tight group-hover:text-[#c5a059] transition-colors line-clamp-2">{item.name}</h3>
                             <button
                               onClick={() => removeFromCart(item._id)}
-                              className="p-2 -mt-2 -mr-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                              className="p-1.5 md:p-2 -mt-1 -mr-1 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0"
                               title="Remove item"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} md={18} />
                             </button>
                           </div>
-                          <p className="text-[#064e3b]/40 text-sm font-bold mt-1">₹{item.price.toLocaleString()} per unit</p>
+                          <p className="text-[#064e3b]/40 text-[10px] md:text-sm font-bold mt-1">₹{item.price.toLocaleString()} / unit</p>
                         </div>
 
                         <div className="flex items-center justify-between mt-4">
@@ -138,9 +138,9 @@ const CartPage = () => {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-2xl border border-[#064e3b]/5 sticky top-28 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#c5a059]/5 rounded-bl-[5rem]"></div>
+          <div className="lg:col-span-5 mt-10 lg:mt-0">
+            <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-2xl border border-[#064e3b]/5 lg:sticky lg:top-28 overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-[#c5a059]/5 rounded-bl-[3rem] md:rounded-bl-[5rem]"></div>
               
               <h3 className="text-2xl font-black text-[#064e3b] mb-8 relative">Summary</h3>
 
