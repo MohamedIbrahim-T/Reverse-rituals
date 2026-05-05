@@ -29,6 +29,7 @@ const AdminPage = () => {
   const [exportDate, setExportDate] = useState('');
   const [exportFromDate, setExportFromDate] = useState('');
   const [exportToDate, setExportToDate] = useState('');
+  const [exportProduct, setExportProduct] = useState('');
   const [formData, setFormData] = useState({
     name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '',
   });
@@ -629,27 +630,29 @@ Call : 7358422064
   const lowStockProducts = products.filter(p => p.countInStock < 5).length;
 
   const filteredOrders = orders.filter(order => {
-    // Search filter
     const matchesSearch =
       order.shippingAddress.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order._id.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Date filter - single date
-    if (exportDate) {
-      const matchesDate = new Date(order.createdAt).toDateString() === new Date(exportDate).toDateString();
-      return matchesSearch && matchesDate;
+    let matchesProduct = true;
+    if (exportProduct) {
+      matchesProduct = order.orderItems.some(item => item._id === exportProduct || item.product === exportProduct);
     }
 
-    // Date filter - date range
+    if (exportDate) {
+      const matchesDate = new Date(order.createdAt).toDateString() === new Date(exportDate).toDateString();
+      return matchesSearch && matchesDate && matchesProduct;
+    }
+
     if (exportFromDate && exportToDate) {
       const from = new Date(exportFromDate);
       const to = new Date(exportToDate);
       to.setHours(23, 59, 59, 999);
       const matchesDateRange = new Date(order.createdAt) >= from && new Date(order.createdAt) <= to;
-      return matchesSearch && matchesDateRange;
+      return matchesSearch && matchesDateRange && matchesProduct;
     }
 
-    return matchesSearch;
+    return matchesSearch && matchesProduct;
   });
 
   const filteredProducts = products.filter(product =>
@@ -1039,7 +1042,7 @@ Call : 7358422064
                       </span>
                     )}
                     <button
-                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); }}
+                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); setExportProduct(''); }}
                       className="px-3 py-1.5 text-xs text-[#064e3b]/40 hover:text-[#064e3b] border border-[#064e3b]/10 rounded-lg"
                     >
                       Clear Filters
@@ -1047,7 +1050,7 @@ Call : 7358422064
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                   {/* Single Date */}
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-medium text-[#064e3b]/60">Single Date</label>
@@ -1081,6 +1084,21 @@ Call : 7358422064
                     />
                   </div>
 
+                  {/* Product Filter */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#064e3b]/60">Filter by Product</label>
+                    <select
+                      value={exportProduct}
+                      onChange={(e) => setExportProduct(e.target.value)}
+                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
+                    >
+                      <option value="">All Products</option>
+                      {products.map(product => (
+                        <option key={product._id} value={product._id}>{product.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-medium text-[#064e3b]/60">Actions</label>
@@ -1102,7 +1120,7 @@ Call : 7358422064
                 </div>
 
                 {/* Bulk Actions */}
-                {(exportDate || (exportFromDate && exportToDate)) && (
+                {(exportDate || (exportFromDate && exportToDate) || exportProduct) && (
                   <div className="mt-4 pt-4 border-t border-[#064e3b]/10">
                     <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
                     <div className="flex flex-wrap gap-2">
