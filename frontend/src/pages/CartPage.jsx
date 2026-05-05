@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, ArrowRight, Minus, Plus, Package, ArrowLeft, ShieldCheck, Truck, Lock } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowRight, Minus, Plus, Package, ArrowLeft, ShieldCheck, Truck, Lock, MessageCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -186,12 +186,28 @@ const CartPage = () => {
 
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full py-6 bg-[#064e3b] text-white rounded-2xl font-black text-lg hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 group shadow-xl shadow-[#064e3b]/20 relative overflow-hidden active:scale-95"
+                className="w-full py-6 bg-[#064e3b] text-white rounded-2xl font-black text-xl hover:bg-[#c5a059] transition-all flex items-center justify-center gap-4 group shadow-xl shadow-[#064e3b]/20 relative overflow-hidden active:scale-95"
               >
                 <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-[-20deg]"></div>
                 Proceed to Checkout
-                <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform" />
+                <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" />
               </button>
+
+              <div className="mt-4 flex items-center gap-4">
+                <div className="h-px bg-[#064e3b]/10 flex-1"></div>
+                <span className="text-[10px] font-black text-[#064e3b]/30 uppercase tracking-widest">Or</span>
+                <div className="h-px bg-[#064e3b]/10 flex-1"></div>
+              </div>
+
+              <a
+                href={`https://wa.me/917358422064?text=${encodeURIComponent(`Hi, I would like to order:\n${cartItems.map(item => `- ${item.name} (Qty: ${item.qty})`).join('\n')}\n\nTotal: ₹${cartTotal}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 w-full py-5 bg-[#25D366] text-white rounded-2xl font-black text-lg hover:bg-[#128C7E] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#25D366]/10 active:scale-95"
+              >
+                <MessageCircle size={22} />
+                Order on WhatsApp
+              </a>
 
               {/* Payment Method Logos */}
               <div className="mt-8 pt-8 border-t border-[#064e3b]/5 text-center">
