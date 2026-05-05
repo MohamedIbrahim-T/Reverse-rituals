@@ -284,24 +284,11 @@ const AdminPage = () => {
   const downloadAllThermalBills = async () => {
     const html2pdf = (await import('html2pdf.js')).default;
 
-    let filtered = orders;
-
-    if (exportDate) {
-      filtered = orders.filter(
-        o => new Date(o.createdAt).toDateString() === new Date(exportDate).toDateString()
-      );
-    } else if (exportFromDate && exportToDate) {
-      const from = new Date(exportFromDate);
-      const to = new Date(exportToDate);
-      to.setHours(23, 59, 59, 999);
-      filtered = orders.filter(o => new Date(o.createdAt) >= from && new Date(o.createdAt) <= to);
-    }
-
-    // Filter only PAID orders
-    const paidOrders = filtered.filter(o => o.isPaid);
+    // Filter only PAID orders from the currently filtered orders
+    const paidOrders = filteredOrders.filter(o => o.isPaid);
 
     if (paidOrders.length === 0) {
-      toast.error('No PAID orders found for selected date');
+      toast.error('No PAID orders found for current filters');
       return;
     }
 
@@ -385,28 +372,13 @@ Call : 7358422064
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-      let filtered = orders;
-
-      if (exportDate) {
-        filtered = orders.filter(
-          o => new Date(o.createdAt).toDateString() === new Date(exportDate).toDateString()
-        );
-      } else if (exportFromDate && exportToDate) {
-        const from = new Date(exportFromDate);
-        const to = new Date(exportToDate);
-        to.setHours(23, 59, 59, 999);
-        filtered = orders.filter(
-          o => new Date(o.createdAt) >= from && new Date(o.createdAt) <= to
-        );
-      }
-
-      if (filtered.length === 0) {
-        toast.error('No orders for selected date');
+      if (filteredOrders.length === 0) {
+        toast.error('No orders to update');
         return;
       }
 
       await Promise.all(
-        filtered.map(order => {
+        filteredOrders.map(order => {
           if (status === 'Delivered') {
             return axios.put(`${API_URL}/api/orders/${order._id}/deliver`, {}, {
               headers: { Authorization: `Bearer ${user.token}` }
@@ -527,33 +499,14 @@ Call : 7358422064
   };
 
   const exportOrdersToExcel = () => {
-    let filtered = orders;
-
-    // Filter by single date
-    if (exportDate) {
-      const selectedDate = new Date(exportDate).toDateString();
-      filtered = orders.filter(order => new Date(order.createdAt).toDateString() === selectedDate);
-    }
-
-    // Filter by date range
-    if (exportFromDate && exportToDate) {
-      const fromDate = new Date(exportFromDate);
-      const toDate = new Date(exportToDate);
-      toDate.setHours(23, 59, 59, 999); // Include full end day
-      filtered = orders.filter(order => {
-        const orderDate = new Date(order.createdAt);
-        return orderDate >= fromDate && orderDate <= toDate;
-      });
-    }
-
-    if (filtered.length === 0) {
-      toast.error('No orders found for selected date range');
+    if (filteredOrders.length === 0) {
+      toast.error('No orders found for selected filters');
       return;
     }
 
     const csvContent = [
       ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status'],
-      ...filtered.map(order => [
+      ...filteredOrders.map(order => [
         order._id.toString().slice(-8).toUpperCase(),
         new Date(order.createdAt).toLocaleDateString('en-IN'),
         new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
