@@ -18,31 +18,31 @@ const FloatingCart = () => {
 
   return (
     <>
-      {/* 1. MOBILE BOTTOM BAR (Zomato style) */}
+      {/* 1. COMPACT FLOATING CART BAR (Mobile Style, Premium) */}
       <AnimatePresence>
         {totalItems > 0 && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
+            initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-0 left-4 right-4 z-[60] md:hidden"
+            exit={{ y: 50, opacity: 0 }}
+            className="fixed left-4 right-24 md:right-[100px] md:left-auto bottom-6 z-50"
           >
-            <div className="bg-[#064e3b] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-lg bg-[#064e3b]/95">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-xl">
-                  <ShoppingBag size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Your Products</p>
-                  <p className="font-black text-sm">{totalItems} {totalItems === 1 ? 'Item' : 'Items'} <span className="mx-1 text-white/30">|</span> ₹{cartTotal.toLocaleString()}</p>
+            <div className="bg-[#064e3b]/95 backdrop-blur-lg text-white p-2 pl-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center gap-3 border border-white/10 ring-1 ring-white/5">
+              <div className="flex flex-col">
+                <p className="text-[8px] uppercase tracking-[0.2em] text-white/40 font-black leading-none mb-1">Ritual</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-xs tracking-tight">{totalItems} {totalItems === 1 ? 'Item' : 'Items'}</span>
+                  <span className="text-white/10">|</span>
+                  <span className="font-black text-xs text-[#c5a059]">₹{cartTotal.toLocaleString()}</span>
                 </div>
               </div>
 
               <button
-                onClick={() => navigate('/cart')}
-                className="bg-[#c5a059] text-white px-2 py-2.5 rounded-xl font-bold text-[10px] flex items-center gap-2 hover:bg-[#b38f4d] transition-all active:scale-95 shadow-lg shadow-black/20"
+                onClick={() => setIsCartOpen(true)}
+                className="bg-[#c5a059] text-white h-9 px-4 rounded-lg font-black text-[10px] flex items-center gap-1.5 hover:bg-[#b38f4d] transition-all active:scale-95 shadow-lg shadow-[#c5a059]/20 group uppercase tracking-wider"
               >
-                View Cart <ArrowRight size={16} />
+                View 
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           </motion.div>
@@ -68,7 +68,7 @@ const FloatingCart = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-[400px] bg-white z-[110] shadow-2xl flex flex-col hidden md:flex border-l border-[#064e3b]/5"
+              className="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white z-[110] shadow-2xl flex flex-col border-l border-[#064e3b]/5"
             >
               {/* Header */}
               <div className="p-6 border-b border-[#064e3b]/5 flex items-center justify-between bg-[#fdfbf7]">
