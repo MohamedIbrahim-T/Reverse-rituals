@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CreditCard, MapPin, Phone, User, ArrowRight, ShieldCheck,
-  LocateFixed, Navigation, CheckCircle2, Loader2, Search, ArrowLeft,
+  CheckCircle2, ArrowLeft,
   Package, Truck, Lock
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -81,8 +81,6 @@ const CheckoutPage = () => {
   const [cities, setCities] = useState([]);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
-  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const alertShownRef = React.useRef(false);
@@ -183,126 +181,11 @@ const CheckoutPage = () => {
     fetchCities();
   }, [formData.state]);
 
-  const handlePincodeChange = async (e) => {
+  const handlePincodeChange = (e) => {
     const code = e.target.value.replace(/\D/g, '').slice(0, 6);
     setFormData({ ...formData, zipCode: code });
-
-    if (code.length === 6) {
-      setIsFetchingPincode(true);
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-        const { data } = await axios.get(`${API_URL}/api/pincode/${code}`);
-        if (data && data[0].Status === "Success") {
-          const postoffice = data[0].PostOffice[0];
-          setFormData({
-            ...formData,
-            state: postoffice.State === "Delhi" ? "National Capital Territory of Delhi" : postoffice.State,
-            city: postoffice.District || postoffice.Name,
-            zipCode: code
-          });
-          toast.success(`Detected: ${postoffice.District}, ${postoffice.State}`);
-        }
-      } catch (error) { console.error("Pincode API error:", error); }
-      finally { setIsFetchingPincode(false); }
-    }
   };
 
-  const detectLocation = () => {
-    setIsLocating(true);
-
-    if (!navigator.geolocation) {
-      toast.error("Geolocation not supported");
-      setIsLocating(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        try {
-          const API_KEY = "pk.23868e37dd6c553082504b74192359c2";
-
-          // 🔥 STEP 1: Get address from LocationIQ
-          const locRes = await fetch(
-            `https://us1.locationiq.com/v1/reverse.php?key=${API_KEY}&lat=${latitude}&lon=${longitude}&format=json`
-          );
-          const locData = await locRes.json();
-
-          if (locData.error) throw new Error(locData.error);
-
-          const addr = locData.address || {};
-
-          // 🔥 STEP 2: Extract pincode
-          const pincode = addr.postcode || "";
-
-          let finalCity = "";
-          let finalState = "";
-
-          // 🔥 STEP 3: Verify using PINCODE API (VERY IMPORTANT)
-          if (pincode) {
-            try {
-              const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-              const pinRes = await fetch(`${API_URL}/api/pincode/${pincode}`);
-              const pinData = await pinRes.json();
-
-              if (pinData[0].Status === "Success") {
-                const post = pinData[0].PostOffice[0];
-                finalCity = post.District;
-                finalState = post.State;
-              }
-            } catch (err) {
-              console.log("Pincode fallback failed");
-            }
-          }
-
-          // 🔥 STEP 4: Clean wrong values
-          const blacklist = ["Puduchcheri"];
-
-          const clean = (val) => {
-            if (!val) return null;
-            return blacklist.includes(val) ? null : val;
-          };
-
-          // 🔥 STEP 5: Smart address builder
-          const addressParts = [
-            clean(addr.house_number),
-            clean(addr.road),
-            clean(addr.suburb || addr.neighbourhood || addr.residential),
-            clean(addr.hamlet || addr.village),
-            clean(addr.town || addr.city),
-          ].filter(Boolean);
-
-          const finalAddress = addressParts.join(", ");
-
-          // 🔥 STEP 6: Final fallback system
-          setFormData((prev) => ({
-            ...prev,
-            address: finalAddress || locData.display_name || "",
-            city:
-              finalCity ||
-              addr.city ||
-              addr.town ||
-              addr.village ||
-              "Pudukkottai",
-            state: finalState || addr.state || "Tamil Nadu",
-            zipCode: pincode,
-          }));
-
-          toast.success("Location detected accurately!");
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to detect location");
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      () => {
-        toast.error("Location permission denied");
-        setIsLocating(false);
-      }
-    );
-  };
   useEffect(() => {
     if (!authLoading) {
       setIsCheckingAuth(false);
@@ -565,18 +448,13 @@ const CheckoutPage = () => {
                   <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#c5a059]/5 rounded-bl-[3rem]"></div>
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div className="mb-8">
                       <h3 className="text-xl font-black text-[#064e3b] flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#c5a059] text-white rounded-xl flex items-center justify-center">
                           <MapPin size={20} />
                         </div>
                         Shipping Address
                       </h3>
-                      <button type="button" onClick={detectLocation} disabled={isLocating}
-                        className="px-6 py-3 bg-[#064e3b]/5 text-[#064e3b] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#064e3b] hover:text-white transition-all flex items-center gap-3 active:scale-95">
-                        {isLocating ? <Loader2 size={14} className="animate-spin" /> : <LocateFixed size={14} />}
-                        {isLocating ? 'Detecting...' : 'Auto Detect'}
-                      </button>
                     </div>
 
                     <div className="space-y-6">
@@ -589,11 +467,8 @@ const CheckoutPage = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Pincode</label>
-                          <div className="relative">
-                            {isFetchingPincode && <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c5a059] animate-spin" />}
-                            <input type="text" required name="zipCode" value={formData.zipCode} onChange={handlePincodeChange} maxLength={6}
-                              className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-bold text-[#064e3b] tracking-[0.2em] transition-all" placeholder="600001" />
-                          </div>
+                          <input type="text" required name="zipCode" value={formData.zipCode} onChange={handlePincodeChange} maxLength={6}
+                            className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-bold text-[#064e3b] tracking-[0.2em] transition-all" placeholder="600001" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">State</label>

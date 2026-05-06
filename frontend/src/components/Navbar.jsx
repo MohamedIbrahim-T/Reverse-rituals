@@ -144,8 +144,8 @@ const Navbar = () => {
               </Link>
 
               {/* Cart */}
-              <button 
-                onClick={() => setIsCartOpen(!isCartOpen)}
+              <Link 
+                to="/cart"
                 className="relative p-2 rounded-full hover:bg-[#064e3b]/5 transition cursor-pointer"
               >
                 <ShoppingCart size={20} className="text-[#064e3b]" />
@@ -154,7 +154,7 @@ const Navbar = () => {
                     {cartCount}
                   </span>
                 )}
-              </button>
+              </Link>
 
               {/* Profile / Logout - Only show if logged in */}
               {user && (
