@@ -397,7 +397,7 @@ const CheckoutPage = () => {
           country: 'India',
           phone: formData.phone || '',
           altPhone: formData.altPhone || '',
-email: user?.email || formData.email || ''
+          email: user?.email || formData.email || ''
         },
         paymentMethod: 'Razorpay',
         shippingCharge: shippingCharge
@@ -486,7 +486,7 @@ email: user?.email || formData.email || ''
         </div>
       </div>
     ) : (
-      <div className="min-h-screen bg-[#fdfbf7] pt-24 pb-20 px-4 md:px-6">
+      <div className="min-h-screen bg-[#fdfbf7] pt-16 pb-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-10">
@@ -500,14 +500,14 @@ email: user?.email || formData.email || ''
                 <h1 className="text-3xl md:text-6xl font-black text-[#064e3b] leading-tight">Secure <span className="text-[#c5a059]">Checkout</span></h1>
               </div>
               <div className="flex items-center gap-6">
-                 <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
-                   <Lock size={14} className="text-green-600" />
-                   <span className="text-[10px] font-black text-[#064e3b] uppercase tracking-widest">SSL Encrypted</span>
-                 </div>
-                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
-                   <ShieldCheck size={14} className="text-[#c5a059]" />
-                   <span className="text-[10px] font-black text-[#064e3b] uppercase tracking-widest">Verified</span>
-                 </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
+                  <Lock size={14} className="text-green-600" />
+                  <span className="text-[10px] font-black text-[#064e3b] uppercase tracking-widest">SSL Encrypted</span>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#064e3b]/5 shadow-sm">
+                  <ShieldCheck size={14} className="text-[#c5a059]" />
+                  <span className="text-[10px] font-black text-[#064e3b] uppercase tracking-widest">Verified</span>
+                </div>
               </div>
             </div>
           </div>
@@ -517,132 +517,132 @@ email: user?.email || formData.email || ''
               {/* Form Fields */}
               <div className="lg:col-span-7 space-y-8">
                 <div className="space-y-8">
-                {/* Contact Info */}
-                <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#064e3b]/5 rounded-bl-[3rem]"></div>
-                  
-                  <h3 className="text-xl font-black text-[#064e3b] mb-8 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#064e3b] text-white rounded-xl flex items-center justify-center">
-                      <User size={20} />
-                    </div>
-                    Contact Details
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Full Name</label>
-                      <input type="text" required name="fullName" value={formData.fullName} onChange={handleChange}
-                        className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter your full name" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Email {user ? '(Linked)' : '(Optional)'}</label>
-                      {user?.email ? (
-                        <div className="w-full px-6 py-4 bg-gray-100 border border-transparent rounded-2xl text-[#064e3b]/40 font-medium flex items-center gap-2">
-                          {user.email} <CheckCircle2 size={14} className="text-green-500" />
-                        </div>
-                      ) : (
-                        <input type="email" name="email" value={formData.email || ''} onChange={handleChange}
-                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="your@email.com" />
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Primary Phone</label>
-                      <div className="relative">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#064e3b]/40 font-bold">+91</span>
-                        <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                          className="w-full pl-16 pr-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="00000 00000" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Alternate Phone</label>
-                      <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => setFormData({ ...formData, altPhone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                        className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Secondary number" />
-                    </div>
-                  </div>
-                </div>
+                  {/* Contact Info */}
+                  <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#064e3b]/5 rounded-bl-[3rem]"></div>
 
-                {/* Shipping Address */}
-                <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#c5a059]/5 rounded-bl-[3rem]"></div>
-                  
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <h3 className="text-xl font-black text-[#064e3b] flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#c5a059] text-white rounded-xl flex items-center justify-center">
-                        <MapPin size={20} />
+                    <h3 className="text-xl font-black text-[#064e3b] mb-8 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#064e3b] text-white rounded-xl flex items-center justify-center">
+                        <User size={20} />
                       </div>
-                      Shipping Address
+                      Contact Details
                     </h3>
-                    <button type="button" onClick={detectLocation} disabled={isLocating}
-                      className="px-6 py-3 bg-[#064e3b]/5 text-[#064e3b] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#064e3b] hover:text-white transition-all flex items-center gap-3 active:scale-95">
-                      {isLocating ? <Loader2 size={14} className="animate-spin" /> : <LocateFixed size={14} />}
-                      {isLocating ? 'Detecting...' : 'Auto Detect'}
-                    </button>
-                  </div>
 
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Street & House Details</label>
-                      <textarea required name="address" value={formData.address} onChange={handleChange} rows={3}
-                        className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all resize-none" placeholder="Door No, Floor, Building Name, Street Name" />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Pincode</label>
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Full Name</label>
+                        <input type="text" required name="fullName" value={formData.fullName} onChange={handleChange}
+                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter your full name" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Email {user ? '(Linked)' : '(Optional)'}</label>
+                        {user?.email ? (
+                          <div className="w-full px-6 py-4 bg-gray-100 border border-transparent rounded-2xl text-[#064e3b]/40 font-medium flex items-center gap-2">
+                            {user.email} <CheckCircle2 size={14} className="text-green-500" />
+                          </div>
+                        ) : (
+                          <input type="email" name="email" value={formData.email || ''} onChange={handleChange}
+                            className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="your@email.com" />
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Primary Phone</label>
                         <div className="relative">
-                          {isFetchingPincode && <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c5a059] animate-spin" />}
-                          <input type="text" required name="zipCode" value={formData.zipCode} onChange={handlePincodeChange} maxLength={6}
-                            className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-bold text-[#064e3b] tracking-[0.2em] transition-all" placeholder="600001" />
+                          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#064e3b]/40 font-bold">+91</span>
+                          <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                            className="w-full pl-16 pr-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="00000 00000" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">State</label>
-                        <select required name="state" value={formData.state} onChange={handleChange}
-                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all appearance-none cursor-pointer">
-                          <option value="">Select State</option>
-                          {states.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div className="space-y-2 col-span-2 md:col-span-1">
-                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">City / District</label>
-                        <input type="text" required name="city" value={formData.city} onChange={handleChange}
-                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter city" />
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Alternate Phone</label>
+                        <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => setFormData({ ...formData, altPhone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Secondary number" />
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Terms */}
-                <div className="flex items-start gap-4 p-6 bg-white rounded-3xl border border-[#064e3b]/5 shadow-sm">
-                  <div className="relative flex items-center">
-                    <input type="checkbox" id="terms" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="w-6 h-6 rounded-lg accent-[#064e3b] cursor-pointer" />
-                  </div>
-                  <label htmlFor="terms" className="text-xs text-[#064e3b]/60 leading-relaxed font-medium">
-                    I agree to the <span className="text-[#064e3b] font-black underline cursor-pointer">Terms of Service</span> and acknowledge the <span className="text-[#064e3b] font-black underline cursor-pointer">Privacy Policy</span>. By checking this, I confirm my order details are correct.
-                  </label>
-                </div>
+                  {/* Shipping Address */}
+                  <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-[#064e3b]/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#c5a059]/5 rounded-bl-[3rem]"></div>
 
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                      <h3 className="text-xl font-black text-[#064e3b] flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#c5a059] text-white rounded-xl flex items-center justify-center">
+                          <MapPin size={20} />
+                        </div>
+                        Shipping Address
+                      </h3>
+                      <button type="button" onClick={detectLocation} disabled={isLocating}
+                        className="px-6 py-3 bg-[#064e3b]/5 text-[#064e3b] rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#064e3b] hover:text-white transition-all flex items-center gap-3 active:scale-95">
+                        {isLocating ? <Loader2 size={14} className="animate-spin" /> : <LocateFixed size={14} />}
+                        {isLocating ? 'Detecting...' : 'Auto Detect'}
+                      </button>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Street & House Details</label>
+                        <textarea required name="address" value={formData.address} onChange={handleChange} rows={3}
+                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all resize-none" placeholder="Door No, Floor, Building Name, Street Name" />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Pincode</label>
+                          <div className="relative">
+                            {isFetchingPincode && <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c5a059] animate-spin" />}
+                            <input type="text" required name="zipCode" value={formData.zipCode} onChange={handlePincodeChange} maxLength={6}
+                              className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-bold text-[#064e3b] tracking-[0.2em] transition-all" placeholder="600001" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">State</label>
+                          <select required name="state" value={formData.state} onChange={handleChange}
+                            className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all appearance-none cursor-pointer">
+                            <option value="">Select State</option>
+                            {states.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">City / District</label>
+                          <input type="text" required name="city" value={formData.city} onChange={handleChange}
+                            className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Enter city" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Terms */}
+                  <div className="flex items-start gap-4 p-6 bg-white rounded-3xl border border-[#064e3b]/5 shadow-sm">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" id="terms" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        className="w-6 h-6 rounded-lg accent-[#064e3b] cursor-pointer" />
+                    </div>
+                    <label htmlFor="terms" className="text-xs text-[#064e3b]/60 leading-relaxed font-medium">
+                      I agree to the <span className="text-[#064e3b] font-black underline cursor-pointer">Terms of Service</span> and acknowledge the <span className="text-[#064e3b] font-black underline cursor-pointer">Privacy Policy</span>. By checking this, I confirm my order details are correct.
+                    </label>
+                  </div>
+
                 </div>
               </div>
+            </div>
 
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-5 sticky top-28">
               <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-[#064e3b]/5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#c5a059]/5 rounded-bl-[5rem]"></div>
-                
+
                 <h3 className="text-lg md:text-2xl font-black text-[#064e3b] mb-6 md:mb-8 flex items-center gap-3 relative">
-                  <Package size={24} className="text-[#c5a059]" /> 
+                  <Package size={24} className="text-[#c5a059]" />
                   Selection Summary
                 </h3>
 
                 <div className="space-y-4 mb-8 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#064e3b]/10 relative">
                   {displayItems.map((item, idx) => (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      key={idx} 
+                      key={idx}
                       className="flex items-center gap-4 p-4 bg-[#fdfbf7] rounded-2xl border border-[#064e3b]/5 group"
                     >
                       <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-[#064e3b]/10 shrink-0">
@@ -669,10 +669,10 @@ email: user?.email || formData.email || ''
                       <Truck size={14} className="text-[#c5a059]" /> Shipping Fee
                     </span>
                     <span className={`font-black ${shippingCharge === 0 ? 'text-green-600' : 'text-[#064e3b]'}`}>
-                      {shippingCharge === 0 ? 'COMPLIMENTARY' : `₹${shippingCharge}`}
+                      {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
                     </span>
                   </div>
-                  
+
                   {formData.state && (
                     <div className={`p-3 rounded-xl text-[10px] font-black text-center uppercase tracking-widest ${shippingCharge === 0 ? 'bg-green-50 text-green-600' : 'bg-[#c5a059]/10 text-[#c5a059]'}`}>
                       {shippingCharge === 0 ? 'Free Shipping Active for your location' : `₹${shippingCharge} Shipping for ${formData.state}`}
@@ -702,15 +702,15 @@ email: user?.email || formData.email || ''
                 </div>
 
                 <div className="mt-10 pt-10 border-t border-[#064e3b]/5 text-center">
-                   <div className="flex items-center justify-center gap-2 mb-6">
-                      <ShieldCheck size={16} className="text-[#c5a059]" />
-                      <span className="text-[9px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em]">Encrypted Checkout</span>
-                   </div>
-                   <div className="flex items-center justify-center gap-4 grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all cursor-default">
-                      <img src={new URL('../assets/GPAY.jpeg', import.meta.url).href} alt="GPay" className="h-5" />
-                      <img src={new URL('../assets/PAYTYM.jpeg', import.meta.url).href} alt="Paytm" className="h-5" />
-                      <img src={new URL('../assets/PHONEPE.png', import.meta.url).href} alt="PhonePe" className="h-5" />
-                   </div>
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <ShieldCheck size={16} className="text-[#c5a059]" />
+                    <span className="text-[9px] font-black text-[#064e3b]/40 uppercase tracking-[0.3em]">Encrypted Checkout</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all cursor-default">
+                    <img src={new URL('../assets/GPAY.jpeg', import.meta.url).href} alt="GPay" className="h-5" />
+                    <img src={new URL('../assets/PAYTYM.jpeg', import.meta.url).href} alt="Paytm" className="h-5" />
+                    <img src={new URL('../assets/PHONEPE.png', import.meta.url).href} alt="PhonePe" className="h-5" />
+                  </div>
                 </div>
               </div>
             </div>
