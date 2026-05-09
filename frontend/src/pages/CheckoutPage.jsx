@@ -42,15 +42,20 @@ const CheckoutPage = () => {
         // Store saved address for "Use Saved Address" button
         if (data.shippingAddress?.address) {
           setSavedAddressFromDB(data.shippingAddress);
+          // Sanitize phone numbers - remove any +91 prefix
+          const sanitizePhone = (phone) => {
+            if (!phone) return '';
+            return phone.replace(/\D/g, '').slice(0, 10);
+          };
           // Auto-fill form with saved address
           setFormData({
             fullName: data.shippingAddress.fullName || data.name || user.name || '',
             address: data.shippingAddress.address || '',
             state: data.shippingAddress.state || '',
             city: data.shippingAddress.city || '',
-            zipCode: data.shippingAddress.zipCode || '',
-            phone: data.shippingAddress.phone || data.phone || '',
-            altPhone: data.shippingAddress.altPhone || '',
+            zipCode: (data.shippingAddress.zipCode || '').toString().trim(),
+            phone: sanitizePhone(data.shippingAddress.phone || data.phone || ''),
+            altPhone: sanitizePhone(data.shippingAddress.altPhone || ''),
           });
         }
       } catch (error) {
@@ -90,13 +95,17 @@ const CheckoutPage = () => {
 
   const handleUseSavedAddress = () => {
     if (savedAddressFromDB) {
+      const sanitizePhone = (phone) => {
+        if (!phone) return '';
+        return phone.replace(/\D/g, '').slice(0, 10);
+      };
       setFormData({
         fullName: savedAddressFromDB.fullName || user.name || '',
         address: savedAddressFromDB.address || '',
         state: savedAddressFromDB.state || '',
         city: savedAddressFromDB.city || '',
-        zipCode: savedAddressFromDB.zipCode || '',
-        phone: savedAddressFromDB.phone || user.phone || '',
+        zipCode: (savedAddressFromDB.zipCode || '').toString().trim(),
+        phone: sanitizePhone(savedAddressFromDB.phone || user.phone || ''),
       });
       toast.success('Address loaded from saved');
     }
@@ -113,14 +122,18 @@ const CheckoutPage = () => {
     }
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const sanitizePhone = (phone) => {
+        if (!phone) return '';
+        return phone.replace(/\D/g, '').slice(0, 10);
+      };
       await axios.put(`${API_URL}/api/users/profile`, {
         shippingAddress: {
           fullName: formData.fullName,
           address: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode,
-          phone: formData.phone,
+          zipCode: (formData.zipCode || '').toString().trim(),
+          phone: sanitizePhone(formData.phone),
         }
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
@@ -266,6 +279,11 @@ const CheckoutPage = () => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
       // Always create new order from cart
+      const sanitizePhone = (phone) => {
+        if (!phone) return '';
+        return phone.replace(/\D/g, '').slice(0, 10);
+      };
+      
       const orderData = {
         orderItems: cartItems.map(item => ({
           product: item._id,
@@ -276,10 +294,10 @@ const CheckoutPage = () => {
           address: formData.address || '',
           city: formData.city || '',
           state: formData.state || '',
-          zipCode: formData.zipCode || '',
+          zipCode: (formData.zipCode || '').toString().trim(),
           country: 'India',
-          phone: formData.phone || '',
-          altPhone: formData.altPhone || '',
+          phone: sanitizePhone(formData.phone),
+          altPhone: sanitizePhone(formData.altPhone),
           email: user?.email || formData.email || ''
         },
         paymentMethod: 'Razorpay',
