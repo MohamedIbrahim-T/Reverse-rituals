@@ -45,7 +45,7 @@ const CheckoutPage = () => {
           // Sanitize phone numbers - remove any +91 prefix
           const sanitizePhone = (phone) => {
             if (!phone) return '';
-            return phone.replace(/\D/g, '').slice(0, 10);
+            return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10);
           };
           // Auto-fill form with saved address
           setFormData({
@@ -97,7 +97,7 @@ const CheckoutPage = () => {
     if (savedAddressFromDB) {
       const sanitizePhone = (phone) => {
         if (!phone) return '';
-        return phone.replace(/\D/g, '').slice(0, 10);
+        return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10);
       };
       setFormData({
         fullName: savedAddressFromDB.fullName || user.name || '',
@@ -124,7 +124,7 @@ const CheckoutPage = () => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       const sanitizePhone = (phone) => {
         if (!phone) return '';
-        return phone.replace(/\D/g, '').slice(0, 10);
+        return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10);
       };
       await axios.put(`${API_URL}/api/users/profile`, {
         shippingAddress: {
@@ -450,13 +450,13 @@ const CheckoutPage = () => {
                         <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Primary Phone</label>
                         <div className="relative">
                           <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#064e3b]/40 font-bold">+91</span>
-                          <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                          <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10) })}
                             className="w-full pl-16 pr-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="00000 00000" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Alternate Phone</label>
-                        <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => setFormData({ ...formData, altPhone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                        <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => setFormData({ ...formData, altPhone: e.target.value.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10) })}
                           className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Secondary number" />
                       </div>
                     </div>
