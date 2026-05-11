@@ -7,8 +7,11 @@ import { motion } from 'framer-motion';
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
 
+  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
+
   const handleAddToCart = (e) => {
     e.preventDefault();
+    if (isOutOfStock) return;
     addToCart(product);
   };
 
@@ -16,7 +19,7 @@ const ProductCard = ({ product }) => {
     <motion.div
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3 }}
-      className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl flex flex-col h-full"
+      className={`group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl flex flex-col h-full ${isOutOfStock ? 'opacity-75' : ''}`}
     >
       <Link
         to={`/product/${product._id}`}
@@ -30,6 +33,11 @@ const ProductCard = ({ product }) => {
           className="w-full h-full object-cover"
           loading="lazy"
         />
+        {isOutOfStock && (
+          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            Out of Stock
+          </div>
+        )}
       </Link>
 
       <div className="p-5 flex flex-col flex-grow">
@@ -55,13 +63,18 @@ const ProductCard = ({ product }) => {
 
         <div className="mt-auto">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: isOutOfStock ? 1 : 1.02 }}
+            whileTap={{ scale: isOutOfStock ? 1 : 0.95 }}
             onClick={handleAddToCart}
-            className="w-full py-3 rounded-2xl bg-[#064e3b] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#c5a059] transition-colors cursor-pointer"
+            disabled={isOutOfStock}
+            className={`w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+              isOutOfStock 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-[#064e3b] text-white hover:bg-[#c5a059]'
+            }`}
           >
             <ShoppingCart size={18} />
-            Add to Cart
+            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
           </motion.button>
         </div>
       </div>

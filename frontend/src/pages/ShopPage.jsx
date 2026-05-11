@@ -108,23 +108,38 @@ const ShopPage = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {filteredProducts.map((product) => (
-              <div key={product._id} className="flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden border border-[#064e3b]/5">
-                <div className="md:w-1/3 aspect-square md:aspect-auto">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
-                </div>
-                <div className="flex-1 p-8 flex flex-col justify-center">
-                  <h3 className="text-2xl font-serif font-medium text-[#064e3b] mb-2">{product.name}</h3>
-                  <p className="text-[#064e3b]/50 mb-4">{product.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-serif italic text-[#c5a059]">₹{product.price}</span>
-                    <button className="px-6 py-3 bg-[#064e3b] text-white rounded-full hover:bg-[#c5a059] transition-colors">
-                      Add to Cart
-                    </button>
+            {filteredProducts.map((product) => {
+              const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
+              return (
+                <div key={product._id} className={`flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden border border-[#064e3b]/5 ${isOutOfStock ? 'opacity-75' : ''}`}>
+                  <div className="md:w-1/3 aspect-square md:aspect-auto relative">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
+                    {isOutOfStock && (
+                      <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                        Out of Stock
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 p-8 flex flex-col justify-center">
+                    <h3 className="text-2xl font-serif font-medium text-[#064e3b] mb-2">{product.name}</h3>
+                    <p className="text-[#064e3b]/50 mb-4">{product.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-serif italic text-[#c5a059]">₹{product.price}</span>
+                      <button 
+                        disabled={isOutOfStock}
+                        className={`px-6 py-3 rounded-full font-medium transition-colors ${
+                          isOutOfStock
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-[#064e3b] text-white hover:bg-[#c5a059]'
+                        }`}
+                      >
+                        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

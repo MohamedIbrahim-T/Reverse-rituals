@@ -30,11 +30,15 @@ const ProductPage = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
+  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
+
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     addToCart(product, quantity);
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) return;
     clearCart();
     addToCart(product, quantity);
     navigate('/checkout');
@@ -76,7 +80,7 @@ const ProductPage = () => {
 
           {/* Image */}
           <div className="relative order-1">
-            <div className="aspect-[4/5] md:aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-lg">
+            <div className={`aspect-[4/5] md:aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-lg ${isOutOfStock ? 'opacity-75' : ''}`}>
               <img
                 src={product.image}
                 alt={product.name}
@@ -86,6 +90,11 @@ const ProductPage = () => {
             {product.tag && (
               <span className="absolute top-3 md:top-4 left-3 md:left-4 px-3 md:px-4 py-1.5 bg-[#c5a059] text-white text-xs font-medium uppercase tracking-wider rounded-full">
                 {product.tag}
+              </span>
+            )}
+            {isOutOfStock && (
+              <span className="absolute top-3 md:top-4 right-3 md:right-4 px-3 md:px-4 py-1.5 bg-red-500 text-white text-xs font-bold uppercase tracking-wider rounded-full">
+                Out of Stock
               </span>
             )}
             {/* {product.originalPrice && (
@@ -141,7 +150,7 @@ const ProductPage = () => {
 
             {/* Quantity & Add to Cart */}
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-8">
-              <div className="flex items-center border border-[#064e3b]/20 rounded-full overflow-hidden w-fit">
+              <div className={`flex items-center border border-[#064e3b]/20 rounded-full overflow-hidden w-fit ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}>
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 md:w-12 h-10 md:h-12 flex items-center justify-center hover:bg-[#064e3b]/5 transition-colors"
@@ -159,16 +168,26 @@ const ProductPage = () => {
               <div className="flex-1 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-[#064e3b]/5 text-[#064e3b] rounded-full font-medium hover:bg-[#064e3b] hover:text-white transition-colors"
+                  disabled={isOutOfStock}
+                  className={`flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 rounded-full font-medium transition-colors ${
+                    isOutOfStock
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#064e3b]/5 text-[#064e3b] hover:bg-[#064e3b] hover:text-white'
+                  }`}
                 >
                   <ShoppingCart size={18} md:size={20} />
-                  Add to Cart
+                  {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  className="flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-[#c5a059] text-white rounded-full font-medium hover:bg-[#b38f4d] transition-colors shadow-lg shadow-[#c5a059]/20"
+                  disabled={isOutOfStock}
+                  className={`flex-1 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 rounded-full font-medium transition-colors shadow-lg ${
+                    isOutOfStock
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+                      : 'bg-[#c5a059] text-white hover:bg-[#b38f4d] shadow-[#c5a059]/20'
+                  }`}
                 >
-                  Buy Now
+                  {isOutOfStock ? 'Unavailable' : 'Buy Now'}
                 </button>
               </div>
             </div>
