@@ -22,6 +22,11 @@ const productSchema = new mongoose.Schema({
   }],
   usageTips: [{ type: String }],
   countInStock: { type: Number, required: true, default: 0 },
+  stockStatus: { 
+    type: String, 
+    enum: ['in_stock', 'low_stock', 'out_of_stock'], 
+    default: 'in_stock' 
+  },
   rating: { type: Number, default: 0 },
   numReviews: { type: Number, default: 0 },
 }, { timestamps: true });

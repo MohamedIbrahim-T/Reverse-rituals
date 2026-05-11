@@ -61,7 +61,7 @@ const createProduct = async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
-  const { name, price, description, image, category, countInStock, images } = req.body;
+  const { name, price, description, image, category, countInStock, images, stockStatus } = req.body;
 
   const product = await Product.findById(req.params.id);
 
@@ -72,8 +72,26 @@ const updateProduct = async (req, res) => {
     product.image = image || product.image;
     product.images = images || product.images;
     product.category = category || product.category;
-    product.countInStock = countInStock || product.countInStock;
+    product.countInStock = countInStock !== undefined ? countInStock : product.countInStock;
+    product.stockStatus = stockStatus || product.stockStatus;
 
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+  } else {
+    res.status(404).json({ message: 'Product not found' });
+  }
+};
+
+// @desc    Update product stock status
+// @route   PUT /api/products/:id/stock-status
+// @access  Private/Admin
+const updateStockStatus = async (req, res) => {
+  const { stockStatus } = req.body;
+
+  const product = await Product.findById(req.params.id);
+
+  if (product) {
+    product.stockStatus = stockStatus;
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } else {
@@ -87,4 +105,5 @@ module.exports = {
   deleteProduct,
   createProduct,
   updateProduct,
+  updateStockStatus,
 };
