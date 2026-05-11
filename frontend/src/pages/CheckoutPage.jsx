@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   CreditCard, MapPin, Phone, User, ArrowRight, ShieldCheck,
   CheckCircle2, ArrowLeft,
-  Package, Truck, Lock
+  Package, Truck, Lock, Edit3, AlertCircle, Loader2
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -88,6 +88,7 @@ const CheckoutPage = () => {
   const [loadingCities, setLoadingCities] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showOrderReview, setShowOrderReview] = useState(false);
   const alertShownRef = React.useRef(false);
 
   // If user has saved address in DB, show button
@@ -263,6 +264,12 @@ const CheckoutPage = () => {
     e.preventDefault();
     if (!agreedToTerms) { toast.error("Please agree to the terms"); return; }
 
+    // Show order review modal instead of direct payment
+    setShowOrderReview(true);
+    return;
+  };
+
+  const proceedToPayment = async () => {
     setIsProcessing(true);
 
     const res = await loadRazorpay();
@@ -606,6 +613,123 @@ const CheckoutPage = () => {
               </div>
             </div>
           </form>
+
+          {/* Order Review Modal */}
+          {showOrderReview && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl sm:rounded-[2.5rem] w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+              >
+                <div className="p-5 sm:p-8 md:p-10">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#c5a059]/10 rounded-full flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={20} className="text-[#c5a059]" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-[#064e3b]">Review Your Order</h2>
+                      <p className="text-[#064e3b]/50 text-xs sm:text-sm font-medium">Please confirm all details</p>
+                    </div>
+                  </div>
+
+                  {/* Left: Details | Right: Product Summary */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4 sm:mb-6">
+                    {/* Left: Contact & Shipping */}
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="p-4 sm:p-5 bg-[#fdfbf7] rounded-xl sm:rounded-2xl">
+                        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                          <Phone size={16} sm:size={18} className="text-[#c5a059]" />
+                          <span className="text-[10px] sm:text-xs font-black text-[#064e3b] uppercase tracking-widest">Contact Details</span>
+                        </div>
+                        <p className="font-bold text-[#064e3b] text-sm">{formData.fullName}</p>
+                        <p className="text-[#064e3b]/60 text-sm">+91 {formData.phone}</p>
+                        {formData.altPhone && <p className="text-[#064e3b]/40 text-[10px] sm:text-xs mt-1">Alt: +91 {formData.altPhone}</p>}
+                      </div>
+
+                      <div className="p-4 sm:p-5 bg-[#fdfbf7] rounded-xl sm:rounded-2xl">
+                        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                          <MapPin size={16} sm:size={18} className="text-[#c5a059]" />
+                          <span className="text-[10px] sm:text-xs font-black text-[#064e3b] uppercase tracking-widest">Shipping Address</span>
+                        </div>
+                        <p className="text-[#064e3b] text-xs sm:text-sm leading-relaxed">
+                          {formData.address}, {formData.city}, {formData.state} - {formData.zipCode}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: Products Summary */}
+                    <div className="p-4 sm:p-5 bg-[#fdfbf7] rounded-xl sm:rounded-2xl">
+                      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                        <Package size={16} sm:size={18} className="text-[#c5a059]" />
+                        <span className="text-[10px] sm:text-xs font-black text-[#064e3b] uppercase tracking-widest">Product Summary ({cartItems.length})</span>
+                      </div>
+                      <div className="space-y-2 sm:space-y-3 max-h-48 overflow-y-auto pr-1">
+                        {cartItems.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-3 p-2 sm:p-3 bg-white rounded-lg border border-[#064e3b]/5">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                              {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-[#064e3b] text-xs sm:text-sm truncate">{item.name}</p>
+                              <p className="text-[#064e3b]/40 text-[10px] sm:text-xs">Qty: {item.qty}</p>
+                            </div>
+                            <span className="font-black text-[#064e3b] text-xs sm:text-sm">₹{(item.price * item.qty).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Total Section */}
+                  <div className="p-4 sm:p-5 bg-[#064e3b] rounded-xl sm:rounded-2xl mb-4 sm:mb-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-[#c5a059] text-[10px] sm:text-xs font-black uppercase tracking-widest block">Total Amount</span>
+                        <p className="text-white/60 text-[10px] sm:text-xs">Including shipping & taxes</p>
+                      </div>
+                      <span className="text-2xl sm:text-3xl font-black text-white">₹{finalTotal.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Warning */}
+                  <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-50 rounded-lg sm:rounded-xl mb-4 sm:mb-6 border border-amber-200">
+                    <AlertCircle size={16} sm:size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-amber-800 text-[10px] sm:text-sm">
+                      Please verify all details above. Once payment is made, changes may not be possible.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 sm:gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowOrderReview(false)}
+                      className="flex-1 py-3 sm:py-4 bg-[#fdfbf7] text-[#064e3b] border border-[#064e3b]/10 rounded-xl sm:rounded-2xl font-black hover:bg-[#064e3b]/5 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Edit3 size={16} sm:size={18} />
+                      <span className="text-xs sm:text-sm">Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowOrderReview(false);
+                        proceedToPayment();
+                      }}
+                      disabled={isProcessing}
+                      className="flex-1 py-3 sm:py-4 bg-[#064e3b] text-white rounded-xl sm:rounded-2xl font-black text-sm sm:text-base hover:bg-[#c5a059] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                    >
+                      {isProcessing ? (
+                        <>Processing...</>
+                      ) : (
+                        <>Confirm & Pay ₹{finalTotal.toLocaleString()}</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
     )
