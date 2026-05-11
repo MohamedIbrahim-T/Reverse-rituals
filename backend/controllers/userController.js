@@ -254,6 +254,41 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// @desc    Update user by admin
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+const updateUserByAdmin = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    if (req.body.phone) {
+      user.shippingAddress = user.shippingAddress || {};
+      user.shippingAddress.phone = req.body.phone;
+    }
+    if (req.body.shippingAddress) {
+      user.shippingAddress = { ...user.shippingAddress, ...req.body.shippingAddress };
+    }
+
+    const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+      shippingAddress: updatedUser.shippingAddress,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   authUser,
   getUserProfile,
@@ -263,4 +298,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getAllUsers,
+  updateUserByAdmin,
 };
