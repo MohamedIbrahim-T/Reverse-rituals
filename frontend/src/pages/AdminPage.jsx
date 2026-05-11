@@ -46,6 +46,10 @@ const AdminPage = () => {
     conversionRate: 0
   });
   const [customers, setCustomers] = useState([]);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [customerFormData, setCustomerFormData] = useState({ name: '', email: '', phone: '', address: '', city: '', state: '', pincode: '' });
+  const [editingOrderAddress, setEditingOrderAddress] = useState(null);
+  const [orderAddressForm, setOrderAddressForm] = useState({ fullName: '', address: '', city: '', state: '', zipCode: '', country: '', phone: '', altPhone: '' });
   const [visitsGraph, setVisitsGraph] = useState([]);
   const [ordersGraph, setOrdersGraph] = useState([]);
   const [analyticsFilter, setAnalyticsFilter] = useState('');
@@ -415,10 +419,48 @@ const downloadAllThermalBills = async () => {
         })
       );
 
-      toast.success(`Updated ${filtered.length} orders`);
+      toast.success(`Updated ${filteredOrders.length} orders`);
       fetchData();
     } catch (error) {
       toast.error('Bulk update failed');
+    }
+  };
+
+  const handleSaveCustomer = async (e) => {
+    e.preventDefault();
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.put(`${API_URL}/api/users/${editingCustomer._id}`, {
+        name: customerFormData.name,
+        email: customerFormData.email,
+        shippingAddress: {
+          phone: customerFormData.phone,
+          address: customerFormData.address,
+          city: customerFormData.city,
+          state: customerFormData.state,
+          pincode: customerFormData.pincode,
+        }
+      }, { headers: { Authorization: `Bearer ${user.token}` } });
+      toast.success('Customer updated successfully');
+      setEditingCustomer(null);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update customer');
+    }
+  };
+
+  const handleSaveOrderAddress = async (e) => {
+    e.preventDefault();
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.put(`${API_URL}/api/orders/${editingOrderAddress._id}/address`, orderAddressForm, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      toast.success('Address updated successfully');
+      setEditingOrderAddress(null);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update address');
     }
   };
 
@@ -1252,7 +1294,27 @@ const downloadAllThermalBills = async () => {
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                              <h5 className="text-sm font-bold text-[#064e3b]/40 uppercase tracking-wider mb-3">Shipping Address</h5>
+                              <div className="flex items-center justify-between mb-3">
+                                <h5 className="text-sm font-bold text-[#064e3b]/40 uppercase tracking-wider">Shipping Address</h5>
+                                <button
+                                  onClick={() => {
+                                    setEditingOrderAddress(order);
+                                    setOrderAddressForm({
+                                      fullName: order.shippingAddress.fullName || '',
+                                      address: order.shippingAddress.address || '',
+                                      city: order.shippingAddress.city || '',
+                                      state: order.shippingAddress.state || '',
+                                      zipCode: order.shippingAddress.zipCode || '',
+                                      country: order.shippingAddress.country || 'India',
+                                      phone: order.shippingAddress.phone || '',
+                                      altPhone: order.shippingAddress.altPhone || '',
+                                    });
+                                  }}
+                                  className="p-1.5 text-[#064e3b] hover:text-[#c5a059] transition-colors"
+                                >
+                                  <Edit3 size={16} />
+                                </button>
+                              </div>
                               <div className="space-y-2 text-[#064e3b]">
                                 <p className="font-bold">{order.shippingAddress.fullName}</p>
                                 <p className="text-sm">{order.shippingAddress.address}</p>
@@ -1372,6 +1434,7 @@ const downloadAllThermalBills = async () => {
                         <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Orders</th>
                         <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Total Spent</th>
                         <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Status</th>
+                        <th className="text-left p-5 text-xs font-bold uppercase tracking-wider text-[#064e3b]/40">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#064e3b]/5">
@@ -1400,6 +1463,27 @@ const downloadAllThermalBills = async () => {
                                 <span className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-xs font-bold">Admin</span>
                               ) : (
                                 <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-bold">Customer</span>
+                              )}
+                            </td>
+                            <td className="p-5">
+                              {!customer.isAdmin && (
+                                <button
+                                  onClick={() => {
+                                    setEditingCustomer(customer);
+                                    setCustomerFormData({
+                                      name: customer.name || '',
+                                      email: customer.email || '',
+                                      phone: customer.shippingAddress?.phone || '',
+                                      address: customer.shippingAddress?.address || '',
+                                      city: customer.shippingAddress?.city || '',
+                                      state: customer.shippingAddress?.state || '',
+                                      pincode: customer.shippingAddress?.pincode || '',
+                                    });
+                                  }}
+                                  className="p-2 text-[#064e3b] hover:text-[#c5a059] transition-colors"
+                                >
+                                  <Edit3 size={18} />
+                                </button>
                               )}
                             </td>
                           </tr>
@@ -1504,6 +1588,112 @@ const downloadAllThermalBills = async () => {
                 <div className="flex gap-4 pt-2">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 border border-[#064e3b]/10 rounded-xl font-bold text-[#064e3b] hover:bg-[#064e3b]/5 transition-all">Cancel</button>
                   <button type="submit" className="flex-1 py-4 bg-[#064e3b] text-white rounded-xl font-bold hover:bg-[#c5a059] transition-all">{editingProduct ? 'Save' : 'Create'}</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Customer Modal */}
+      <AnimatePresence>
+        {editingCustomer && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white rounded-[2rem] p-6 lg:p-10 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl lg:text-3xl font-black text-[#064e3b]">Edit Customer</h2>
+                <button onClick={() => setEditingCustomer(null)} className="text-[#064e3b]/30 hover:text-[#064e3b]"><X size={28} /></button>
+              </div>
+              <form onSubmit={handleSaveCustomer} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Name</label>
+                  <input type="text" required value={customerFormData.name} onChange={(e) => setCustomerFormData({ ...customerFormData, name: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Email</label>
+                  <input type="email" required value={customerFormData.email} onChange={(e) => setCustomerFormData({ ...customerFormData, email: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Phone</label>
+                  <input type="text" value={customerFormData.phone} onChange={(e) => setCustomerFormData({ ...customerFormData, phone: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Address</label>
+                  <input type="text" value={customerFormData.address} onChange={(e) => setCustomerFormData({ ...customerFormData, address: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">City</label>
+                    <input type="text" value={customerFormData.city} onChange={(e) => setCustomerFormData({ ...customerFormData, city: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">State</label>
+                    <input type="text" value={customerFormData.state} onChange={(e) => setCustomerFormData({ ...customerFormData, state: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Pincode</label>
+                  <input type="text" value={customerFormData.pincode} onChange={(e) => setCustomerFormData({ ...customerFormData, pincode: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div className="flex gap-4 pt-2">
+                  <button type="button" onClick={() => setEditingCustomer(null)} className="flex-1 py-4 border border-[#064e3b]/10 rounded-xl font-bold text-[#064e3b] hover:bg-[#064e3b]/5 transition-all">Cancel</button>
+                  <button type="submit" className="flex-1 py-4 bg-[#064e3b] text-white rounded-xl font-bold hover:bg-[#c5a059] transition-all">Save</button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Order Address Modal */}
+      <AnimatePresence>
+        {editingOrderAddress && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="bg-white rounded-[2rem] p-6 lg:p-10 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl lg:text-3xl font-black text-[#064e3b]">Edit Address</h2>
+                <button onClick={() => setEditingOrderAddress(null)} className="text-[#064e3b]/30 hover:text-[#064e3b]"><X size={28} /></button>
+              </div>
+              <form onSubmit={handleSaveOrderAddress} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Full Name</label>
+                  <input type="text" required value={orderAddressForm.fullName} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, fullName: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Phone</label>
+                  <input type="text" value={orderAddressForm.phone} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, phone: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Alt Phone</label>
+                  <input type="text" value={orderAddressForm.altPhone} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, altPhone: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Address</label>
+                  <input type="text" required value={orderAddressForm.address} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, address: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">City</label>
+                    <input type="text" required value={orderAddressForm.city} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, city: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">State</label>
+                    <input type="text" required value={orderAddressForm.state} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, state: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Pincode</label>
+                    <input type="text" required value={orderAddressForm.zipCode} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, zipCode: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Country</label>
+                    <input type="text" required value={orderAddressForm.country} onChange={(e) => setOrderAddressForm({ ...orderAddressForm, country: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                </div>
+                <div className="flex gap-4 pt-2">
+                  <button type="button" onClick={() => setEditingOrderAddress(null)} className="flex-1 py-4 border border-[#064e3b]/10 rounded-xl font-bold text-[#064e3b] hover:bg-[#064e3b]/5 transition-all">Cancel</button>
+                  <button type="submit" className="flex-1 py-4 bg-[#064e3b] text-white rounded-xl font-bold hover:bg-[#c5a059] transition-all">Save Address</button>
                 </div>
               </form>
             </motion.div>
