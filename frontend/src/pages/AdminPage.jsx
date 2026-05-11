@@ -31,8 +31,9 @@ const AdminPage = () => {
   const [exportToDate, setExportToDate] = useState('');
   const [exportProduct, setExportProduct] = useState('');
   const [formData, setFormData] = useState({
-    name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '',
+    name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '', stockStatus: 'in_stock',
   });
+  const [updatingStockStatus, setUpdatingStockStatus] = useState({});
   const [actionLoading, setActionLoading] = useState({});
   const [thermalGenerating, setThermalGenerating] = useState(null);
 
@@ -281,91 +282,112 @@ const AdminPage = () => {
     }
   };
 
-  const downloadAllThermalBills = async () => {
-    const html2pdf = (await import('html2pdf.js')).default;
+const downloadAllThermalBills = async () => {
+    try {
+      const { default: jsPDF } = await import('jspdf');
 
-    // Filter only PAID orders from the currently filtered orders
-    const paidOrders = filteredOrders.filter(o => o.isPaid);
+      const paidOrders = filteredOrders.filter(o => o.isPaid);
+      const totalFiltered = filteredOrders.length;
+      const paidFiltered = paidOrders.length;
+      const unpaidCount = totalFiltered - paidFiltered;
 
-    if (paidOrders.length === 0) {
-      toast.error('No PAID orders found for current filters');
-      return;
-    }
+      if (paidOrders.length === 0) {
+        toast.error('No PAID orders found for current filters');
+        return;
+      }
 
-    let allBills = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:20px;font-family:monospace;font-size:12px;color:#000000;background:#fff;">`;
+      if (unpaidCount > 0) {
+        toast.info(`${unpaidCount} unpaid orders skipped (only downloading ${paidFiltered} paid orders)`);
+      }
 
-    paidOrders.forEach(order => {
-      allBills += `
-      <div style="width:3.6in;min-height:5in;margin:0 auto;page-break-after:always;padding-bottom:25px;color:#000000;">
+      let filenameDate = new Date().toISOString().slice(0, 10);
+      if (exportDate) {
+        filenameDate = new Date(exportDate).toISOString().slice(0, 10);
+      } else if (exportFromDate) {
+        filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
+      }
+
+      const html2canvas = (await import('html2canvas')).default;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'in', format: [4, 6] });
+
+      const container = document.createElement('div');
+      container.style.cssText = 'position:fixed;top:0;left:-5000px;width:350px;';
+      document.body.appendChild(container);
+
+      for (let i = 0; i < paidOrders.length; i++) {
+        const order = paidOrders[i];
         
-        <div style="text-align:center;border-bottom:1px dashed #000000;padding-bottom:10px;margin-bottom:10px;">
-          <div style="font-size:16px;font-weight:bold;color:#000000;">REVERSE RITUALS</div>
-          <div style="font-size:11px;color:#000000;">Natural Hair Care Products</div>
-        </div>
-        
-        <div style="margin-bottom:8px;color:#000000;">
-          <b>Order:</b> #${order._id.toString().slice(-8).toUpperCase()} | <b>Date:</b> ${new Date(order.createdAt).toLocaleDateString('en-IN')}
-        </div>
-        
-        <div style="border-top:1px dashed #000000;border-bottom:1px dashed #000000;padding:6px 0;margin:6px 0;">
-          <b style="color:#000000;">DELIVER TO:</b>
-        </div>
-        
-        <div style="margin-bottom:8px;color:#000000;font-size:14px;">
-          <span>${order.shippingAddress.fullName}</span><br/>
-          ${order.shippingAddress.address}<br/>
-          ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
-          📞 ${order.shippingAddress.phone}
-          ${order.shippingAddress.altPhone ? `<br/>Alt: ${order.shippingAddress.altPhone}` : ''}
-        </div>
-        
-        <div style="border-top:1px dashed #000000;padding:6px 0;margin:6px 0;">
-          <b style="color:#000000;">ITEMS (${order.orderItems.length}):</b>
-        </div>
-        
-        ${order.orderItems.map(item => `
-          <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px;color:#000000;">
-            <span>${item.name}</span>
-            <span>x${item.qty}</span>
+        container.innerHTML = `
+          <div style="width:350px;min-height:500px;padding:15px;font-family:monospace;font-size:12px;color:#000;background:#fff;box-sizing:border-box;">
+            <div style="text-align:center;border-bottom:1px dashed #000000;padding-bottom:10px;margin-bottom:10px;">
+              <div style="font-size:16px;font-weight:bold;">REVERSE RITUALS</div>
+              <div style="font-size:11px;">Natural Hair Care Products</div>
+            </div>
+            
+            <div style="margin-bottom:8px;">
+              <b>Order:</b> #${order._id.toString().slice(-8).toUpperCase()} | <b>Date:</b> ${new Date(order.createdAt).toLocaleDateString('en-IN')}
+            </div>
+            
+            <div style="border-top:1px dashed #000000;border-bottom:1px dashed #000000;padding:6px 0;margin:6px 0;">
+              <b>DELIVER TO:</b>
+            </div>
+            
+            <div style="margin-bottom:8px;font-size:14px;">
+              ${order.shippingAddress.fullName}<br/>
+              ${order.shippingAddress.address}<br/>
+              ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
+              ${order.shippingAddress.phone}
+              ${order.shippingAddress.altPhone ? `<br/>Alt: ${order.shippingAddress.altPhone}` : ''}
+            </div>
+            
+            <div style="border-top:1px dashed #000000;padding:6px 0;margin:6px 0;">
+              <b>ITEMS (${order.orderItems.length}):</b>
+            </div>
+            
+            ${order.orderItems.map(item => `
+              <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px;">
+                <span>${item.name}</span>
+                <span>x${item.qty}</span>
+              </div>
+            `).join('')}
+            
+            <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:6px;font-size:11px;">
+              <b>Total Items:</b> ${order.orderItems.reduce((sum, item) => sum + item.qty, 0)}
+            </div>
+            
+            <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;">
+              Thank you! | reverserituals@gmail.com
+            </div>
+            <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;">
+              If the customer not answer the call, please call this number.
+      Call : 7358422064
+            </div>
           </div>
-        `).join('')}
-        
-        <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:6px;font-size:11px;color:#000000;">
-          <b>Total Items:</b> ${order.orderItems.reduce((sum, item) => sum + item.qty, 0)}
-        </div>
-        
-        <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;color:#000000;">
-          Thank you! | reverserituals@gmail.com
-        </div>
-        <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;color:#000000;">
-          If the customer not answer the call, please call this number.
-Call : 7358422064
-        </div>
-      </div>`;
-    });
+        `;
 
-    allBills += '</body></html>';
+        await new Promise(resolve => setTimeout(resolve, 50));
 
-    const element = document.createElement('div');
-    element.innerHTML = allBills;
+        const canvas = await html2canvas(container.firstElementChild, { 
+          scale: 2, 
+          useCORS: true, 
+          width: 350,
+          backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL('image/png');
 
-    let filenameDate = new Date().toISOString().slice(0, 10);
-    if (exportDate) {
-      filenameDate = new Date(exportDate).toISOString().slice(0, 10);
-    } else if (exportFromDate) {
-      filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
+        if (i > 0) {
+          doc.addPage([4, 6], 'portrait');
+        }
+        doc.addImage(imgData, 'PNG', 0, 0, 4, 6);
+      }
+
+      document.body.removeChild(container);
+      doc.save(`bills-${filenameDate}.pdf`);
+      toast.success(`${paidOrders.length} PAID bills generated`);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download bills: ' + error.message);
     }
-
-    const opt = {
-      margin: 0,
-      filename: `bills-${filenameDate}.pdf`,
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
-    };
-
-    html2pdf().set(opt).from(element).save();
-    toast.success(`${paidOrders.length} PAID bills generated`);
   };
 
   const handleBulkStatusChange = async (status) => {
@@ -498,6 +520,23 @@ Call : 7358422064
     }
   };
 
+  const handleStockStatusUpdate = async (productId, newStatus) => {
+    setUpdatingStockStatus(prev => ({ ...prev, [productId]: true }));
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await axios.put(`${API_URL}/api/products/${productId}/stock-status`, 
+        { stockStatus: newStatus },
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      toast.success('Stock status updated!');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update stock status');
+    } finally {
+      setUpdatingStockStatus(prev => ({ ...prev, [productId]: false }));
+    }
+  };
+
   const exportOrdersToExcel = () => {
     if (filteredOrders.length === 0) {
       toast.error('No orders found for selected filters');
@@ -548,16 +587,22 @@ Call : 7358422064
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      const submitData = {
+        ...formData,
+        countInStock: parseInt(formData.countInStock) || 0,
+        price: parseFloat(formData.price) || 0,
+        images: formData.images ? formData.images.split(',').map(img => img.trim()).filter(img => img) : [],
+      };
       if (editingProduct) {
-        await axios.put(`${API_URL}/api/products/${editingProduct._id}`, formData, config);
+        await axios.put(`${API_URL}/api/products/${editingProduct._id}`, submitData, config);
         toast.success('Product updated!');
       } else {
-        await axios.post(`${API_URL}/api/products`, formData, config);
+        await axios.post(`${API_URL}/api/products`, submitData, config);
         toast.success('Product created!');
       }
       setIsModalOpen(false);
       setEditingProduct(null);
-      setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '' });
+      setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '', stockStatus: 'in_stock' });
       fetchData();
     } catch (error) {
       toast.error('Operation failed');
@@ -570,6 +615,7 @@ Call : 7358422064
       name: product.name, price: product.price, description: product.description,
       image: product.image, category: product.category, countInStock: product.countInStock,
       images: product.images ? product.images.join(',') : '',
+      stockStatus: product.stockStatus || 'in_stock',
     });
     setIsModalOpen(true);
   };
@@ -589,7 +635,19 @@ Call : 7358422064
 
     let matchesProduct = true;
     if (exportProduct) {
-      matchesProduct = order.orderItems.some(item => item._id === exportProduct || item.product === exportProduct);
+      const selectedProduct = products.find(p => p._id === exportProduct);
+      matchesProduct = order.orderItems.some(item => {
+        if (!item) return false;
+        const itemProductId = item.product || item._id;
+        const itemProductIdStr = String(itemProductId);
+        const exportProdIdStr = String(exportProduct);
+        const matchesId = itemProductIdStr === exportProdIdStr || 
+                          itemProductIdStr.includes(exportProdIdStr) || 
+                          exportProdIdStr.includes(itemProductIdStr);
+        const matchesName = selectedProduct && item.name && 
+          item.name.toLowerCase().includes(selectedProduct.name.toLowerCase());
+        return matchesId || matchesName;
+      });
     }
 
     if (exportDate) {
@@ -599,9 +657,11 @@ Call : 7358422064
 
     if (exportFromDate && exportToDate) {
       const from = new Date(exportFromDate);
+      from.setHours(0, 0, 0, 0);
       const to = new Date(exportToDate);
       to.setHours(23, 59, 59, 999);
-      const matchesDateRange = new Date(order.createdAt) >= from && new Date(order.createdAt) <= to;
+      const orderDate = new Date(order.createdAt);
+      const matchesDateRange = orderDate >= from && orderDate <= to;
       return matchesSearch && matchesDateRange && matchesProduct;
     }
 
@@ -806,7 +866,7 @@ Call : 7358422064
             </div>
             {activeTab === 'products' && (
               <button
-                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '' }); setIsModalOpen(true); }}
+                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '', stockStatus: 'in_stock' }); setIsModalOpen(true); }}
                 className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-[#064e3b] text-white rounded-xl sm:rounded-2xl font-bold hover:bg-[#c5a059] transition-all text-sm"
               >
                 <Plus size={18} /> <span className="hidden sm:inline">Add Product</span>
@@ -1235,7 +1295,7 @@ Call : 7358422064
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {/* Add Product Card */}
               <button
-                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '' }); setIsModalOpen(true); }}
+                onClick={() => { setEditingProduct(null); setFormData({ name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '', stockStatus: 'in_stock' }); setIsModalOpen(true); }}
                 className="bg-white rounded-2xl sm:rounded-[2rem] border-2 border-dashed border-[#064e3b]/20 flex flex-col items-center justify-center gap-2 sm:gap-4 p-4 sm:p-8 min-h-[160px] sm:min-h-[200px] lg:min-h-[300px] hover:border-[#c5a059] hover:bg-[#fdfbf7]/50 transition-all group"
               >
                 <div className="w-10 h-10 sm:w-16 sm:h-16 bg-[#064e3b]/5 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:bg-[#c5a059] group-hover:text-white transition-all">
@@ -1254,13 +1314,29 @@ Call : 7358422064
                     <div className="absolute top-2 left-2">
                       <span className="px-2 py-0.5 bg-white/90 backdrop-blur-sm rounded-full text-[10px] sm:text-xs font-bold text-[#064e3b]">{product.category}</span>
                     </div>
+                    <div className="absolute top-2 right-2">
+                      <select
+                        value={product.stockStatus || 'in_stock'}
+                        onChange={(e) => handleStockStatusUpdate(product._id, e.target.value)}
+                        disabled={updatingStockStatus[product._id]}
+                        className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-bold border-0 cursor-pointer ${
+                          (product.stockStatus || 'in_stock') === 'out_of_stock' ? 'bg-red-500 text-white' :
+                          (product.stockStatus || 'in_stock') === 'low_stock' ? 'bg-yellow-500 text-white' :
+                          'bg-green-500 text-white'
+                        }`}
+                      >
+                        <option value="in_stock">In Stock</option>
+                        <option value="low_stock">Low Stock</option>
+                        <option value="out_of_stock">Out of Stock</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="p-3 sm:p-5">
                     <h4 className="font-bold text-[#064e3b] mb-1 sm:mb-2 text-xs sm:text-sm lg:text-base line-clamp-1">{product.name}</h4>
                     <div className="flex items-center justify-between mb-2 sm:mb-4">
                       <span className="text-sm sm:text-lg lg:text-xl font-black text-[#c5a059]">₹{product.price}</span>
                       <span className={`text-[10px] sm:text-xs lg:text-sm font-bold ${product.countInStock < 5 ? 'text-red-500' : 'text-green-500'}`}>
-                        {product.countInStock}
+                        {product.countInStock} in stock
                       </span>
                     </div>
                     <div className="flex gap-1 sm:gap-2">
@@ -1400,6 +1476,18 @@ Call : 7358422064
                   <div>
                     <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Stock</label>
                     <input type="number" required value={formData.countInStock} onChange={(e) => setFormData({ ...formData, countInStock: e.target.value })} className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Stock Status</label>
+                    <select
+                      value={formData.stockStatus || 'in_stock'}
+                      onChange={(e) => setFormData({ ...formData, stockStatus: e.target.value })}
+                      className="w-full px-5 py-3 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-xl focus:outline-none focus:border-[#c5a059]"
+                    >
+                      <option value="in_stock">In Stock</option>
+                      <option value="low_stock">Low Stock</option>
+                      <option value="out_of_stock">Out of Stock</option>
+                    </select>
                   </div>
                 </div>
                 <div>
