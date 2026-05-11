@@ -42,6 +42,21 @@ router.post('/:id/pay', optionalProtect, createPaymentForOrder);
 router.put('/:id/deliver', protect, admin, updateOrderToDelivered);
 router.put('/:id/status', protect, admin, updateOrderStatus);
 router.put('/:id/mark-paid', protect, admin, markOrderAsPaid);
+router.put('/:id/address', protect, admin, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    order.shippingAddress = {
+      ...order.shippingAddress,
+      ...req.body
+    };
+    await order.save();
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.get('/:id', protect, getOrderById);
 router.delete('/:id', protect, admin, deleteOrder);
