@@ -274,12 +274,20 @@ const TrackOrderPage = () => {
                     </div>
 
                     {order.shippingAddress && (
-                      <div className="mt-4 pt-4 border-t border-gray-100 flex items-start gap-3 text-sm text-gray-500">
-                        <MapPin size={20} className="text-[#c5a059] mt-0.5" />
-                        <div>
-                          <span className="font-medium text-[#064e3b]">Shipping: </span>
-                          {order.shippingAddress.fullName}, {order.shippingAddress.address} {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-2 text-sm text-gray-500">
+                        <div className="flex items-start gap-3">
+                          <MapPin size={20} className="text-[#c5a059] mt-0.5" />
+                          <div>
+                            <span className="font-medium text-[#064e3b]">Shipping: </span>
+                            {order.shippingAddress.fullName}, {order.shippingAddress.address} {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}
+                          </div>
                         </div>
+                        {order.shippingAddress.phone && (
+                          <div className="flex items-center gap-3 pl-7">
+                            <Phone size={16} className="text-[#c5a059]" />
+                            <span className="text-[#064e3b]">+91 {order.shippingAddress.phone}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

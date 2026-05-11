@@ -330,12 +330,10 @@ const CheckoutPage = () => {
               toast.success('Payment Successful!');
               clearCart();
               localStorage.removeItem('repay_order');
+              const verifiedOrder = verifyRes.data.order || order;
               localStorage.setItem('latestOrder', JSON.stringify({
-                ...order,
+                ...verifiedOrder,
                 isPaid: true,
-                shippingAddress: order.shippingAddress,
-                totalPrice: order.totalPrice,
-                orderItems: order.orderItems
               }));
               setPaymentSuccess(true);
               return;
