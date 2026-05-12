@@ -290,7 +290,7 @@ const CheckoutPage = () => {
         if (!phone) return '';
         return phone.replace(/\D/g, '').slice(0, 10);
       };
-      
+
       const orderData = {
         orderItems: cartItems.map(item => ({
           product: item._id,
@@ -617,10 +617,10 @@ const CheckoutPage = () => {
           {/* Order Review Modal */}
           {showOrderReview && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl sm:rounded-[2.5rem] w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+                className="bg-white rounded-2xl sm:rounded-[2.5rem] w-full max-w-md sm:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl"
               >
                 <div className="p-5 sm:p-8 md:p-10">
                   <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -696,7 +696,7 @@ const CheckoutPage = () => {
                   <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-50 rounded-lg sm:rounded-xl mb-4 sm:mb-6 border border-amber-200">
                     <AlertCircle size={16} sm:size={20} className="text-amber-600 shrink-0 mt-0.5" />
                     <p className="text-amber-800 text-[10px] sm:text-sm">
-                      Please verify all details above. Once payment is made, changes may not be possible.
+                      Please check and confirm all the details entered above.
                     </p>
                   </div>
 
