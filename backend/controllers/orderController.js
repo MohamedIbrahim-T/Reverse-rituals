@@ -55,6 +55,13 @@ const addOrderItems = async (req, res) => {
         return;
       }
 
+      if (product.stockStatus === 'out_of_stock') {
+        res.status(400).json({
+          message: `Product ${product.name} is currently out of stock`
+        });
+        return;
+      }
+
       if (product.countInStock < item.qty) {
         res.status(400).json({
           message: `Insufficient stock for ${product.name}. Available: ${product.countInStock}`
