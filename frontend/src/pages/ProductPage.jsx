@@ -30,7 +30,7 @@ const ProductPage = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
+  const isOutOfStock = product?.stockStatus === 'out_of_stock' || product?.countInStock === 0;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
