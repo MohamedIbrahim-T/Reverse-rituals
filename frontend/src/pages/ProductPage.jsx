@@ -31,6 +31,7 @@ const ProductPage = () => {
   }, [id]);
 
   const isOutOfStock = product?.stockStatus === 'out_of_stock' || product?.countInStock === 0;
+  const isLowStock = !isOutOfStock && product?.countInStock <= 10;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -95,6 +96,11 @@ const ProductPage = () => {
             {isOutOfStock && (
               <span className="absolute top-3 md:top-4 right-3 md:right-4 px-3 md:px-4 py-1.5 bg-red-500 text-white text-xs font-bold uppercase tracking-wider rounded-full">
                 Out of Stock
+              </span>
+            )}
+            {isLowStock && (
+              <span className="absolute top-3 md:top-4 right-3 md:right-4 px-3 md:px-4 py-1.5 bg-orange-500 text-white text-xs font-bold uppercase tracking-wider rounded-full">
+                Only {product.countInStock} left
               </span>
             )}
             {/* {product.originalPrice && (

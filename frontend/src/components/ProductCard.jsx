@@ -8,6 +8,7 @@ const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
 
   const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
+  const isLowStock = !isOutOfStock && product.countInStock <= 10;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -36,6 +37,11 @@ const ProductCard = ({ product }) => {
         {isOutOfStock && (
           <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
             Out of Stock
+          </div>
+        )}
+        {isLowStock && (
+          <div className="absolute top-3 right-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+            Only {product.countInStock} left
           </div>
         )}
       </Link>
