@@ -90,39 +90,26 @@ const HomePage = () => {
       };
    }, [isDragging]);
 
-   useEffect(() => {
-      const fetchProducts = async () => {
-         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-            const cached = localStorage.getItem('home_products');
-            const cachedTime = localStorage.getItem('home_products_time');
+useEffect(() => {
+       const fetchProducts = async () => {
+          try {
+             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+             
+             const { data } = await axios.get(`${API_URL}/api/products`, {
+                timeout: 10000,
+                headers: { 'Cache-Control': 'no-cache' }
+             });
 
-            if (cached && cachedTime && Date.now() - parseInt(cachedTime) < 1000 * 60 * 5) {
-               setProducts(JSON.parse(cached));
-               setLoading(false);
-               return;
-            }
-
-            const { data } = await axios.get(`${API_URL}/api/products`, {
-               timeout: 10000,
-               headers: { 'Cache-Control': 'no-cache' }
-            });
-
-            localStorage.setItem('home_products', JSON.stringify(data));
-            localStorage.setItem('home_products_time', Date.now().toString());
-
-            setProducts(data);
-            setLoading(false);
-         } catch (error) {
-            console.error('Error fetching products:', error);
-            const cached = localStorage.getItem('home_products');
-            if (cached) setProducts(JSON.parse(cached));
-            else setProducts([]);
-            setLoading(false);
-         }
-      };
-      fetchProducts();
-   }, []);
+             setProducts(data);
+             setLoading(false);
+          } catch (error) {
+             console.error('Error fetching products:', error);
+             setProducts([]);
+             setLoading(false);
+          }
+       };
+       fetchProducts();
+    }, []);
 
    const productOrder = [
       'alchemy-combo',

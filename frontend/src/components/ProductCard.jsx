@@ -8,7 +8,7 @@ const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
 
   const isOutOfStock = product.stockStatus === 'out_of_stock' || product.countInStock === 0;
-  const isLowStock = !isOutOfStock && product.countInStock <= 10;
+  const isLowStock = !isOutOfStock && product.countInStock <= 10 && product.countInStock > 0;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
