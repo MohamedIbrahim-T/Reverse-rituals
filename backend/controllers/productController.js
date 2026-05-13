@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const { LOW_STOCK_THRESHOLD, getStockStatus } = require('../models/Product');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -73,7 +74,7 @@ const updateProduct = async (req, res) => {
     product.images = images || product.images;
     product.category = category || product.category;
     product.countInStock = countInStock !== undefined ? countInStock : product.countInStock;
-    product.stockStatus = stockStatus || product.stockStatus;
+    product.stockStatus = stockStatus || getStockStatus(product.countInStock);
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -99,6 +100,34 @@ const updateStockStatus = async (req, res) => {
   }
 };
 
+// @desc    Get low stock products (count <= 10)
+// @route   GET /api/products/low-stock
+// @access  Private/Admin
+const getLowStockProducts = async (req, res) => {
+  const products = await Product.find({ 
+    countInStock: { $lte: LOW_STOCK_THRESHOLD }
+  }).sort({ countInStock: 1 });
+  res.json(products);
+};
+
+// @desc    Update product stock (decrement after order)
+// @route   PUT /api/products/:id/stock
+// @access  Private/Admin
+const updateProductStock = async (req, res) => {
+  const { countInStock } = req.body;
+
+  const product = await Product.findById(req.params.id);
+
+  if (product) {
+    product.countInStock = countInStock;
+    product.stockStatus = getStockStatus(countInStock);
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+  } else {
+    res.status(404).json({ message: 'Product not found' });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -106,4 +135,6 @@ module.exports = {
   createProduct,
   updateProduct,
   updateStockStatus,
+  getLowStockProducts,
+  updateProductStock,
 };

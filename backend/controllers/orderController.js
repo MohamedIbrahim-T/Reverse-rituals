@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const { getStockStatus } = require('../models/Product');
 const User = require('../models/User');
 const razorpay = require('../config/razorpay');
 const crypto = require('crypto');
@@ -237,6 +238,17 @@ const verifyPayment = async (req, res) => {
     const updatedOrder = await order.save();
 
     console.log('✅ Paid via verify:', updatedOrder._id);
+
+    // ✅ 4. DECREMENT PRODUCT STOCK
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.countInStock = Math.max(0, product.countInStock - item.qty);
+        product.stockStatus = getStockStatus(product.countInStock);
+        await product.save();
+        console.log(`📦 Stock updated for ${product.name}: ${product.countInStock} remaining`);
+      }
+    }
 
     // ✅ SEND EMAIL (ONLY ONCE) - Run in background to not block response
     console.log('📧 Trying to send email for order (background):', updatedOrder._id);

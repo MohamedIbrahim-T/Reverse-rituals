@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const LOW_STOCK_THRESHOLD = 10;
+
+const getStockStatus = function(countInStock) {
+  if (countInStock === 0) return 'out_of_stock';
+  if (countInStock <= LOW_STOCK_THRESHOLD) return 'low_stock';
+  return 'in_stock';
+};
+
 const productSchema = new mongoose.Schema({
   _id: { type: String },
   name: { type: String, required: true },
@@ -31,4 +39,8 @@ const productSchema = new mongoose.Schema({
   numReviews: { type: Number, default: 0 },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Product', productSchema);
+const Product = mongoose.model('Product', productSchema);
+
+module.exports = Product;
+module.exports.LOW_STOCK_THRESHOLD = 10;
+module.exports.getStockStatus = getStockStatus;
