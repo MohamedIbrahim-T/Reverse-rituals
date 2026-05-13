@@ -222,8 +222,8 @@ th,
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* Custom Toast Styles - react-toastify v11 */
-.Toastify__toast-container {
+/* Custom Toast Styles - Reverted to default */
+/* .Toastify__toast-container {
   z-index: 999999 !important;
 }
 
@@ -257,7 +257,7 @@ th,
 
 .Toastify__close-button {
   color: #ffffff !important;
-}
+} */
 
 
 

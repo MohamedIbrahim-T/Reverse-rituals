@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { jsPDF } from 'jspdf';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import ImageUpload from '../components/ImageUpload';
 import ReviewsSection from './ReviewsSection';
@@ -30,6 +31,7 @@ const AdminPage = () => {
   const [exportFromDate, setExportFromDate] = useState('');
   const [exportToDate, setExportToDate] = useState('');
   const [exportProduct, setExportProduct] = useState('');
+  const [exportStatus, setExportStatus] = useState('');
   const [formData, setFormData] = useState({
     name: '', price: '', description: '', image: '', category: '', countInStock: '', images: '', stockStatus: 'in_stock',
   });
@@ -37,12 +39,12 @@ const AdminPage = () => {
   const [actionLoading, setActionLoading] = useState({});
   const [thermalGenerating, setThermalGenerating] = useState(null);
 
-  const [analyticsStats, setAnalyticsStats] = useState({ 
-    totalVisitors: 0, 
+  const [analyticsStats, setAnalyticsStats] = useState({
+    totalVisitors: 0,
     loggedInVisitors: 0,
     guestVisitors: 0,
     newSignups: 0,
-    paidOrders: 0, 
+    paidOrders: 0,
     conversionRate: 0
   });
   const [customers, setCustomers] = useState([]);
@@ -59,11 +61,11 @@ const AdminPage = () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      
+
       const statsRes = await axios.get(`${API_URL}/api/analytics/admin/stats?filter=${filter}`, config);
       const visitsRes = await axios.get(`${API_URL}/api/analytics/admin/visits-graph?days=${graphDays}`, config);
       const ordersRes = await axios.get(`${API_URL}/api/analytics/admin/orders-graph?days=${graphDays}`, config);
-      
+
       setAnalyticsStats(statsRes.data);
       setVisitsGraph(visitsRes.data);
       setOrdersGraph(ordersRes.data);
@@ -196,88 +198,102 @@ const AdminPage = () => {
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
+      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
 
-      const thermal = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-    </head>
-    <body style="margin:0;padding:20px;font-family:monospace;font-size:12px;color:#000000;width:4in;background:#fff;">
-      <div style="width:3.6in;margin:0 auto;color:#000000;">
-        <!-- HEADER -->
-        <div style="text-align:center;border-bottom:1px dashed #000000;padding-bottom:10px;margin-bottom:10px;">
-          <div style="font-size:16px;font-weight:bold;color:#000000;">REVERSE RITUALS</div>
-          <div style="font-size:11px;color:#000000;">Natural Hair Care Products</div>
-        </div>
-        
-        <!-- ORDER INFO -->
-        <div style="margin-bottom:10px;color:#000000;">
-          <div><b>Order:</b> #${order._id.toString().slice(-8).toUpperCase()}</div>
-          <div><b>Date:</b> ${new Date(order.createdAt).toLocaleDateString('en-IN')} ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-        </div>
-        
-        <div style="border-top:1px dashed #000000;border-bottom:1px dashed #000000;padding:8px 0;margin:8px 0;">
-          <div style="font-weight:bold;color:#000000;">DELIVER TO:</div>
-        </div>
-        
-        <!-- CUSTOMER -->
-        <div style="margin-bottom:3px;color:#000000;font-size:14px;margin-top:0px;">
-          <div style="font-weight:bold;">${order.shippingAddress.fullName}</div>
-          <div>${order.shippingAddress.address}</div>
-          <div>${order.shippingAddress.city}, ${order.shippingAddress.state}</div>
-          <div>PIN: ${order.shippingAddress.zipCode}</div>
-          <div>Phone: ${order.shippingAddress.phone}</div>
-          ${order.shippingAddress.altPhone ? `<div>Alt Phone: ${order.shippingAddress.altPhone}</div>` : ''}
-        </div>
-        
-        <div style="border-top:1px dashed #000000;padding:2px 0;margin:2px 0;">
-          <div style="font-weight:bold;color:#000000;">ITEMS (${order.orderItems.length}):</div>
-        </div>
-        
-        <!-- ITEMS (NO PRICE) -->
-        <div style="margin-bottom:0px;color:#000000;">
-          ${order.orderItems.map(item => `
-            <div style="display:flex;justify-content:space-between;padding:2px 0;">
-              <span>${item.name}</span>
-              <span>x${item.qty}</span>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div style="border-top:1px dashed #000000;margin:10px 0;padding-top:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:bold;color:#000000;">
-            <span>Total Items:</span>
-            <span>${order.orderItems.reduce((sum, item) => sum + item.qty, 0)}</span>
-          </div>
-        </div>
-        
-        <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;">
-          <div>Thank you for your order!</div>
-          <div>reverserituals@gmail.com</div>
-        </div>
-        <div style="border-top:1px dashed #000000;margin-top:10px;padding-top:10px;text-align:center;font-size:10px;color:#000000;padding-bottom:10px;">
-          <div>If the customer not answer the call, please call this number.</div>
-          <div>Call : 7358422064</div>
-        </div>
-      </div>
-    </body>
-    </html>
-    `;
+      let y = 0.25;
 
-      const element = document.createElement('div');
-      element.innerHTML = thermal;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('REVERSE RITUALS', 2, y, { align: 'center' });
+      y += 0.15;
 
-      const opt = {
-        margin: 0,
-        filename: `bill-${order._id.toString().slice(-8).toUpperCase()}-${new Date().toISOString().slice(0, 10)}.pdf`,
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('Natural Hair Care Products', 2, y, { align: 'center' });
+      y += 0.12;
 
-      html2pdf().set(opt).from(element).save();
+      doc.setLineWidth(0.01);
+      doc.line(0.2, y, 3.8, y);
+      y += 0.2;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Order:', 0.15, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`#${order._id.toString().slice(-8).toUpperCase()} | Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')} ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`, 0.6, y);
+      y += 0.15;
+
+      doc.line(0.2, y, 3.8, y);
+      y += 0.2;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DELIVER TO:', 0.15, y);
+      y += 0.12;
+
+      doc.line(0.2, y, 3.8, y);
+      y += 0.2;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
+      y += 0.18;
+
+      const addr = order.shippingAddress?.address || '';
+      const addrLines = doc.splitTextToSize(addr, 3.5);
+      doc.text(addrLines, 0.15, y);
+      y += addrLines.length * 0.15;
+
+      doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
+      y += 0.18;
+
+      doc.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
+      if (order.shippingAddress?.altPhone) {
+        y += 0.15;
+        doc.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
+      }
+
+      y += 0.15;
+      doc.line(0.2, y, 3.8, y);
+      y += 0.2;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
+      y += 0.2;
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      order.orderItems?.forEach(item => {
+        const name = item.name?.length > 30 ? item.name.substring(0, 27) + '...' : item.name || 'Item';
+        doc.text(name, 0.15, y);
+        doc.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
+        y += 0.16;
+      });
+
+      y += 0.05;
+      doc.line(0.2, y, 3.8, y);
+      y += 0.18;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Total Items:', 0.15, y);
+      const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+      doc.text(`${totalItems}`, 3.7, y, { align: 'right' });
+
+      y += 0.35;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Thank you for your order! | reverserituals@gmail.com', 2, y, { align: 'center' });
+      y += 0.15;
+
+      doc.line(0.2, y, 3.8, y);
+      y += 0.15;
+
+      doc.setFontSize(8);
+      doc.text('If the customer not answer the call, please call this number. Call : 7358422064', 2, y, { align: 'center' });
+
+      doc.save(`bill-${order._id.toString().slice(-8).toUpperCase()}-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
       console.error('Thermal bill error:', err);
       toast.error('Failed to generate thermal bill');
@@ -286,23 +302,117 @@ const AdminPage = () => {
     }
   };
 
-const downloadAllThermalBills = async () => {
+  const downloadAllThermalBills = async () => {
+    if (filteredOrders.length === 0) {
+      toast.error('No orders found for selected filters');
+      return;
+    }
+
     try {
-      const { default: jsPDF } = await import('jspdf');
+      const { jsPDF } = await import('jspdf');
 
-      const paidOrders = filteredOrders.filter(o => o.isPaid);
-      const totalFiltered = filteredOrders.length;
-      const paidFiltered = paidOrders.length;
-      const unpaidCount = totalFiltered - paidFiltered;
+      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
 
-      if (paidOrders.length === 0) {
-        toast.error('No PAID orders found for current filters');
-        return;
-      }
+      const drawBill = (d, order, isNewPage = false) => {
+        if (isNewPage) d.addPage([4, 6], 'portrait');
 
-      if (unpaidCount > 0) {
-        toast.info(`${unpaidCount} unpaid orders skipped (only downloading ${paidFiltered} paid orders)`);
-      }
+        let y = 0.25;
+
+        d.setFont('helvetica', 'bold');
+        d.setFontSize(16);
+        d.text('REVERSE RITUALS', 2, y, { align: 'center' });
+        y += 0.15;
+
+        d.setFont('helvetica', 'normal');
+        d.setFontSize(9);
+        d.text('Natural Hair Care Products', 2, y, { align: 'center' });
+        y += 0.12;
+
+        d.setLineWidth(0.01);
+        d.line(0.2, y, 3.8, y);
+        y += 0.2;
+
+        d.setFontSize(10);
+        d.setFont('helvetica', 'bold');
+        d.text('Order:', 0.15, y);
+        d.setFont('helvetica', 'normal');
+        d.text(`#${order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : 'N/A'}`, 0.6, y);
+        y += 0.15;
+
+        d.line(0.2, y, 3.8, y);
+        y += 0.2;
+
+        d.setFontSize(12);
+        d.setFont('helvetica', 'bold');
+        d.text('DELIVER TO:', 0.15, y);
+        y += 0.12;
+
+        d.line(0.2, y, 3.8, y);
+        y += 0.2;
+
+        d.setFontSize(10);
+        d.setFont('helvetica', 'normal');
+        d.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
+        y += 0.18;
+
+        const addr = order.shippingAddress?.address || '';
+        const addrLines = d.splitTextToSize(addr, 3.5);
+        d.text(addrLines, 0.15, y);
+        y += addrLines.length * 0.15;
+
+        d.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
+        y += 0.18;
+
+        d.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
+        if (order.shippingAddress?.altPhone) {
+          y += 0.15;
+          d.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
+        }
+
+        y += 0.15;
+        d.line(0.2, y, 3.8, y);
+        y += 0.2;
+
+        d.setFontSize(11);
+        d.setFont('helvetica', 'bold');
+        d.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
+        y += 0.2;
+
+        d.setFontSize(9);
+        d.setFont('helvetica', 'normal');
+        order.orderItems?.forEach(item => {
+          const name = item.name?.length > 30 ? item.name.substring(0, 27) + '...' : item.name || 'Item';
+          d.text(name, 0.15, y);
+          d.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
+          y += 0.16;
+        });
+
+        y += 0.05;
+        d.line(0.2, y, 3.8, y);
+        y += 0.18;
+
+        d.setFontSize(10);
+        d.setFont('helvetica', 'bold');
+        d.text('Total Items:', 0.15, y);
+        const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+        d.text(`${totalItems}`, 3.7, y, { align: 'right' });
+
+        y += 0.35;
+        d.setFontSize(9);
+        d.setFont('helvetica', 'normal');
+        d.text('Thank you! | reverserituals@gmail.com', 2, y, { align: 'center' });
+        y += 0.15;
+
+        d.line(0.2, y, 3.8, y);
+        y += 0.15;
+
+        d.setFontSize(8);
+        d.text('If the customer not answer the call, please call this number. Call : 7358422064', 2, y, { align: 'center' });
+      };
+
+      filteredOrders.forEach((order, idx) => {
+        drawBill(doc, order, idx > 0);
+      });
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -311,86 +421,11 @@ const downloadAllThermalBills = async () => {
         filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
       }
 
-      const html2canvas = (await import('html2canvas')).default;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'in', format: [4, 6] });
-
-      const container = document.createElement('div');
-      container.style.cssText = 'position:fixed;top:0;left:-5000px;width:350px;';
-      document.body.appendChild(container);
-
-      for (let i = 0; i < paidOrders.length; i++) {
-        const order = paidOrders[i];
-        
-        container.innerHTML = `
-          <div style="width:350px;min-height:500px;padding:15px;font-family:monospace;font-size:12px;color:#000;background:#fff;box-sizing:border-box;">
-            <div style="text-align:center;border-bottom:1px dashed #000000;padding-bottom:10px;margin-bottom:10px;">
-              <div style="font-size:16px;font-weight:bold;">REVERSE RITUALS</div>
-              <div style="font-size:11px;">Natural Hair Care Products</div>
-            </div>
-            
-            <div style="margin-bottom:8px;">
-              <b>Order:</b> #${order._id.toString().slice(-8).toUpperCase()} | <b>Date:</b> ${new Date(order.createdAt).toLocaleDateString('en-IN')}
-            </div>
-            
-            <div style="border-top:1px dashed #000000;border-bottom:1px dashed #000000;padding:6px 0;margin:6px 0;">
-              <b>DELIVER TO:</b>
-            </div>
-            
-            <div style="margin-bottom:8px;font-size:14px;">
-              ${order.shippingAddress.fullName}<br/>
-              ${order.shippingAddress.address}<br/>
-              ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br/>
-              ${order.shippingAddress.phone}
-              ${order.shippingAddress.altPhone ? `<br/>Alt: ${order.shippingAddress.altPhone}` : ''}
-            </div>
-            
-            <div style="border-top:1px dashed #000000;padding:6px 0;margin:6px 0;">
-              <b>ITEMS (${order.orderItems.length}):</b>
-            </div>
-            
-            ${order.orderItems.map(item => `
-              <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px;">
-                <span>${item.name}</span>
-                <span>x${item.qty}</span>
-              </div>
-            `).join('')}
-            
-            <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:6px;font-size:11px;">
-              <b>Total Items:</b> ${order.orderItems.reduce((sum, item) => sum + item.qty, 0)}
-            </div>
-            
-            <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;">
-              Thank you! | reverserituals@gmail.com
-            </div>
-            <div style="border-top:1px dashed #000000;margin-top:8px;padding-top:8px;text-align:center;font-size:10px;">
-              If the customer not answer the call, please call this number.
-      Call : 7358422064
-            </div>
-          </div>
-        `;
-
-        await new Promise(resolve => setTimeout(resolve, 50));
-
-        const canvas = await html2canvas(container.firstElementChild, { 
-          scale: 2, 
-          useCORS: true, 
-          width: 350,
-          backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/png');
-
-        if (i > 0) {
-          doc.addPage([4, 6], 'portrait');
-        }
-        doc.addImage(imgData, 'PNG', 0, 0, 4, 6);
-      }
-
-      document.body.removeChild(container);
       doc.save(`bills-${filenameDate}.pdf`);
-      toast.success(`${paidOrders.length} PAID bills generated`);
+      toast.success(`${filteredOrders.length} bills generated`);
     } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download bills: ' + error.message);
+      console.error(error);
+      toast.error('Failed to download bills');
     }
   };
 
@@ -566,7 +601,7 @@ const downloadAllThermalBills = async () => {
     setUpdatingStockStatus(prev => ({ ...prev, [productId]: true }));
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      await axios.put(`${API_URL}/api/products/${productId}/stock-status`, 
+      await axios.put(`${API_URL}/api/products/${productId}/stock-status`,
         { stockStatus: newStatus },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
@@ -601,8 +636,8 @@ const downloadAllThermalBills = async () => {
         order.shippingAddress.email || '',
         order.orderItems.map(item => `${item.name} (x${item.qty})`).join(', '),
         order.totalPrice,
-        order.isPaid ? 'Paid' : 'Unpaid',
-        order.isDelivered ? 'Delivered' : (order.isPaid ? 'Shipped' : 'Packing & Processing'),
+        order.isPaid ? 'Paid' : 'UNPAID',
+        order.status || 'Pending',
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -683,31 +718,35 @@ const downloadAllThermalBills = async () => {
         const itemProductId = item.product || item._id;
         const itemProductIdStr = String(itemProductId);
         const exportProdIdStr = String(exportProduct);
-        const matchesId = itemProductIdStr === exportProdIdStr || 
-                          itemProductIdStr.includes(exportProdIdStr) || 
-                          exportProdIdStr.includes(itemProductIdStr);
-        const matchesName = selectedProduct && item.name && 
+        const matchesId = itemProductIdStr === exportProdIdStr ||
+          itemProductIdStr.includes(exportProdIdStr) ||
+          exportProdIdStr.includes(itemProductIdStr);
+        const matchesName = selectedProduct && item.name &&
           item.name.toLowerCase().includes(selectedProduct.name.toLowerCase());
         return matchesId || matchesName;
       });
     }
 
+    let matchesStatus = true;
+    if (exportStatus === 'paid') matchesStatus = order.isPaid;
+    if (exportStatus === 'unpaid') matchesStatus = !order.isPaid;
+
+    const orderDate = new Date(order.createdAt);
+    const orderDateStr = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`;
+
     if (exportDate) {
-      const matchesDate = new Date(order.createdAt).toDateString() === new Date(exportDate).toDateString();
-      return matchesSearch && matchesDate && matchesProduct;
+      const matchesDate = orderDateStr === exportDate;
+      return matchesSearch && matchesDate && matchesProduct && matchesStatus;
     }
 
-    if (exportFromDate && exportToDate) {
-      const from = new Date(exportFromDate);
-      from.setHours(0, 0, 0, 0);
-      const to = new Date(exportToDate);
-      to.setHours(23, 59, 59, 999);
-      const orderDate = new Date(order.createdAt);
-      const matchesDateRange = orderDate >= from && orderDate <= to;
-      return matchesSearch && matchesDateRange && matchesProduct;
+    if (exportFromDate || exportToDate) {
+      const from = exportFromDate || '0000-01-01';
+      const to = exportToDate || '9999-12-31';
+      const matchesDateRange = orderDateStr >= from && orderDateStr <= to;
+      return matchesSearch && matchesDateRange && matchesProduct && matchesStatus;
     }
 
-    return matchesSearch && matchesProduct;
+    return matchesSearch && matchesProduct && matchesStatus;
   });
 
   const filteredProducts = products.filter(product =>
@@ -895,7 +934,7 @@ const downloadAllThermalBills = async () => {
                 {activeTab === 'orders' && 'Orders'}
                 {activeTab === 'products' && 'Products'}
                 {activeTab === 'customers' && 'Customers'}
-                {activeTab === 'settings' && 'Settings'}
+                {activeTab === 'settings' && 'Configure your store'}
               </h3>
               <p className="text-[#064e3b]/40 text-sm">
                 {activeTab === 'dashboard' && 'Your store at a glance'}
@@ -1041,8 +1080,8 @@ const downloadAllThermalBills = async () => {
                       <AreaChart data={visitsGraph} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#064e3b" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#064e3b" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#064e3b" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#064e3b" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
@@ -1097,7 +1136,7 @@ const downloadAllThermalBills = async () => {
                       </span>
                     )}
                     <button
-                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); setExportProduct(''); }}
+                      onClick={() => { setExportDate(''); setExportFromDate(''); setExportToDate(''); setExportProduct(''); setExportStatus(''); }}
                       className="px-3 py-1.5 text-xs text-[#064e3b]/40 hover:text-[#064e3b] border border-[#064e3b]/10 rounded-lg"
                     >
                       Clear Filters
@@ -1154,6 +1193,21 @@ const downloadAllThermalBills = async () => {
                     </select>
                   </div>
 
+                  {/* Payment Status Filter */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[#064e3b]/60">Payment Status</label>
+                    <select
+                      value={exportStatus || ''}
+                      onChange={(e) => setExportStatus(e.target.value)}
+                      className="px-3 py-2 border border-[#064e3b]/10 rounded-lg text-sm focus:outline-none focus:border-[#c5a059]"
+                    >
+                      <option value="">All</option>
+                      <option value="paid">Paid Only</option>
+                      <option value="unpaid">Unpaid Only</option>
+                    </select>
+                  </div>
+
+
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-medium text-[#064e3b]/60">Actions</label>
@@ -1175,7 +1229,7 @@ const downloadAllThermalBills = async () => {
                 </div>
 
                 {/* Bulk Actions */}
-                {(exportDate || (exportFromDate && exportToDate) || exportProduct) && (
+                {(exportDate || (exportFromDate && exportToDate) || exportProduct || exportStatus) && (
                   <div className="mt-4 pt-4 border-t border-[#064e3b]/10">
                     <p className="text-xs font-medium text-[#064e3b]/60 mb-2">Bulk Update (Filtered Orders)</p>
                     <div className="flex flex-wrap gap-2">
@@ -1227,9 +1281,9 @@ const downloadAllThermalBills = async () => {
                       </div>
                       <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                         {order.isPaid ? (
-                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-green-100 text-green-600 rounded-full text-xs sm:text-sm font-bold">Paid</span>
+                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-green-100 text-green-600 rounded-full text-xs sm:text-sm font-black border border-green-200">PAID</span>
                         ) : (
-                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-red-100 text-red-600 rounded-full text-xs sm:text-sm font-bold">Unpaid</span>
+                          <span className="px-2 sm:px-4 py-1 sm:py-2 bg-red-500 text-white rounded-full text-xs sm:text-sm font-black animate-pulse shadow-lg shadow-red-200">UNPAID</span>
                         )}
                         <select
                           value={order.status || 'Pending'}
@@ -1381,11 +1435,10 @@ const downloadAllThermalBills = async () => {
                         value={product.stockStatus || 'in_stock'}
                         onChange={(e) => handleStockStatusUpdate(product._id, e.target.value)}
                         disabled={updatingStockStatus[product._id]}
-                        className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-bold border-0 cursor-pointer ${
-                          (product.stockStatus || 'in_stock') === 'out_of_stock' ? 'bg-red-500 text-white' :
+                        className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-bold border-0 cursor-pointer ${(product.stockStatus || 'in_stock') === 'out_of_stock' ? 'bg-red-500 text-white' :
                           (product.stockStatus || 'in_stock') === 'low_stock' ? 'bg-yellow-500 text-white' :
-                          'bg-green-500 text-white'
-                        }`}
+                            'bg-green-500 text-white'
+                          }`}
                       >
                         <option value="in_stock">In Stock</option>
                         <option value="low_stock">Low Stock</option>
@@ -1576,10 +1629,10 @@ const downloadAllThermalBills = async () => {
                 </div>
                 <div>
                   <ImageUpload
-                      label="Product Image"
-                      value={formData.image}
-                      onChange={(url) => setFormData({ ...formData, image: url })}
-                    />
+                    label="Product Image"
+                    value={formData.image}
+                    onChange={(url) => setFormData({ ...formData, image: url })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-[#064e3b]/40 mb-2">Description</label>
