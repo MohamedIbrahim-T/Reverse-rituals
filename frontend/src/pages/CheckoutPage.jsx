@@ -45,7 +45,11 @@ const CheckoutPage = () => {
           // Sanitize phone numbers - remove any +91 prefix
           const sanitizePhone = (phone) => {
             if (!phone) return '';
-            return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10);
+            const digits = phone.replace(/\D/g, '');
+            if (digits.length > 10 && digits.startsWith('91')) {
+              return digits.slice(2, 12);
+            }
+            return digits.slice(0, 10);
           };
           // Auto-fill form with saved address
           setFormData({
@@ -94,11 +98,20 @@ const CheckoutPage = () => {
   // If user has saved address in DB, show button
   const hasSavedAddress = savedAddressFromDB?.address;
 
+  const displayPhone = (phone) => {
+    if (!phone) return '';
+    return phone.startsWith('91') ? phone.slice(2) : phone;
+  };
+
   const handleUseSavedAddress = () => {
     if (savedAddressFromDB) {
       const sanitizePhone = (phone) => {
         if (!phone) return '';
-        return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10);
+        const digits = phone.replace(/\D/g, '');
+        if (digits.length > 10 && digits.startsWith('91')) {
+          return digits.slice(2, 12);
+        }
+        return digits.slice(0, 10);
       };
       setFormData({
         fullName: savedAddressFromDB.fullName || user.name || '',
@@ -125,7 +138,11 @@ const CheckoutPage = () => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       const sanitizePhone = (phone) => {
         if (!phone) return '';
-        return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10);
+        const digits = phone.replace(/\D/g, '');
+        if (digits.length > 10 && digits.startsWith('91')) {
+          return digits.slice(2, 12);
+        }
+        return digits.slice(0, 10);
       };
       await axios.put(`${API_URL}/api/users/profile`, {
         shippingAddress: {
@@ -263,6 +280,8 @@ const CheckoutPage = () => {
   const handlePayment = async (e) => {
     e.preventDefault();
     if (!agreedToTerms) { toast.error("Please agree to the terms"); return; }
+    if (formData.phone.length !== 10) { toast.error("Please enter a valid 10-digit phone number"); return; }
+    if (formData.altPhone && formData.altPhone.length > 10) { toast.error("Please enter a valid alternate phone number"); return; }
 
     // Show order review modal instead of direct payment
     setShowOrderReview(true);
@@ -288,7 +307,11 @@ const CheckoutPage = () => {
       // Always create new order from cart
       const sanitizePhone = (phone) => {
         if (!phone) return '';
-        return phone.replace(/\D/g, '').slice(0, 10);
+        const digits = phone.replace(/\D/g, '');
+        if (digits.length > 10 && digits.startsWith('91')) {
+          return digits.slice(2, 12);
+        }
+        return digits.slice(0, 10);
       };
 
       const orderData = {
@@ -454,15 +477,26 @@ const CheckoutPage = () => {
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Primary Phone</label>
                         <div className="relative">
-                          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#064e3b]/40 font-bold">+91</span>
-                          <input type="tel" required name="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10) })}
-                            className="w-full pl-16 pr-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="00000 00000" />
+                          <input type="tel" required name="phone" value={formData.phone} onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setFormData({ ...formData, phone: val });
+                          }}
+                            className={`w-full px-6 py-4 bg-[#fdfbf7] border rounded-2xl focus:outline-none font-medium text-[#064e3b] transition-all ${formData.phone.length !== 10 && formData.phone.length > 0 ? 'border-red-500 focus:border-red-500' : 'border-[#064e3b]/10 focus:border-[#c5a059]'}`} placeholder="10 digit mobile number" maxLength={10} />
                         </div>
+                        {formData.phone.length > 0 && formData.phone.length !== 10 && (
+                          <p className="text-red-500 text-xs font-medium ml-1">Please enter exactly 10 digits</p>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Alternate Phone</label>
-                        <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => setFormData({ ...formData, altPhone: e.target.value.replace(/^\+?91/, '').replace(/\D/g, '').slice(0, 10) })}
-                          className="w-full px-6 py-4 bg-[#fdfbf7] border border-[#064e3b]/10 rounded-2xl focus:outline-none focus:border-[#c5a059] font-medium text-[#064e3b] transition-all" placeholder="Secondary number" />
+<label className="text-[10px] font-black text-[#064e3b]/40 uppercase tracking-widest ml-1">Alternate Phone</label>
+                        <input type="tel" name="altPhone" value={formData.altPhone || ''} onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setFormData({ ...formData, altPhone: val });
+                        }}
+                          className={`w-full px-6 py-4 bg-[#fdfbf7] border rounded-2xl focus:outline-none font-medium text-[#064e3b] transition-all ${formData.altPhone?.length > 0 && formData.altPhone?.length !== 10 ? 'border-red-500 focus:border-red-500' : 'border-[#064e3b]/10 focus:border-[#c5a059]'}`} placeholder="10 digit mobile number" maxLength={10} />
+                        {formData.altPhone && formData.altPhone.length !== 10 && formData.altPhone.length > 0 && (
+                          <p className="text-red-500 text-xs font-medium ml-1">Please enter exactly 10 digits</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -643,8 +677,8 @@ const CheckoutPage = () => {
                           <span className="text-[10px] sm:text-xs font-black text-[#064e3b] uppercase tracking-widest">Contact Details</span>
                         </div>
                         <p className="font-bold text-[#064e3b] text-sm">{formData.fullName}</p>
-                        <p className="text-[#064e3b]/60 text-sm">+91 {formData.phone}</p>
-                        {formData.altPhone && <p className="text-[#064e3b]/40 text-[10px] sm:text-xs mt-1">Alt: +91 {formData.altPhone}</p>}
+                        <p className="text-[#064e3b]/60 text-sm">+91 {displayPhone(formData.phone)}</p>
+                        {formData.altPhone && <p className="text-[#064e3b]/40 text-[10px] sm:text-xs mt-1">Alt: +91 {displayPhone(formData.altPhone)}</p>}
                       </div>
 
                       <div className="p-4 sm:p-5 bg-[#fdfbf7] rounded-xl sm:rounded-2xl">
