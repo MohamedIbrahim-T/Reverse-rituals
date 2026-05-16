@@ -73,7 +73,10 @@ const updateProduct = async (req, res) => {
     product.image = image || product.image;
     product.images = images || product.images;
     product.category = category || product.category;
-    product.countInStock = countInStock !== undefined ? countInStock : product.countInStock;
+    if (countInStock !== undefined && countInStock !== product.countInStock) {
+      product.previousStock = product.countInStock;
+      product.countInStock = countInStock;
+    }
     product.stockStatus = stockStatus || getStockStatus(product.countInStock);
 
     const updatedProduct = await product.save();
@@ -119,6 +122,7 @@ const updateProductStock = async (req, res) => {
   const product = await Product.findById(req.params.id);
 
   if (product) {
+    product.previousStock = product.countInStock;
     product.countInStock = countInStock;
     product.stockStatus = getStockStatus(countInStock);
     const updatedProduct = await product.save();

@@ -7,6 +7,27 @@ const crypto = require('crypto');
 
 console.log('=== ORDER CONTROLLER LOADED ===');
 
+const generateOrderId = async () => {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  
+  let fyStart, fyEnd;
+  if (month >= 3) {
+    fyStart = year;
+    fyEnd = year + 1;
+  } else {
+    fyStart = year - 1;
+    fyEnd = year;
+  }
+  
+  const fyString = `${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`;
+  
+  const count = await Order.countDocuments() + 1;
+  
+  return `RR/${String(count).padStart(4, '0')}/${fyString}`;
+};
+
 let emailModule = null;
 let sendOrderEmail = async () => { console.log('Email function not loaded'); };
 try {
@@ -105,6 +126,9 @@ const addOrderItems = async (req, res) => {
     const hours = now.getHours();
     let estimatedDelivery;
 
+    const customOrderId = await generateOrderId();
+    console.log('Generated order ID:', customOrderId);
+
     if (hours === 0) {
       const nextDay = new Date(now);
       nextDay.setDate(nextDay.getDate() + 1);
@@ -116,6 +140,7 @@ const addOrderItems = async (req, res) => {
     }
 
     const order = new Order({
+      orderId: customOrderId,
       orderItems: orderItemsWithPrices,
       user: req.user ? req.user._id : null,
       shippingAddress,
@@ -243,6 +268,7 @@ const verifyPayment = async (req, res) => {
     for (const item of order.orderItems) {
       const product = await Product.findById(item.product);
       if (product) {
+        product.previousStock = product.countInStock;
         product.countInStock = Math.max(0, product.countInStock - item.qty);
         product.stockStatus = getStockStatus(product.countInStock);
         await product.save();

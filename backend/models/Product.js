@@ -30,6 +30,7 @@ const productSchema = new mongoose.Schema({
   }],
   usageTips: [{ type: String }],
   countInStock: { type: Number, required: true, default: 0 },
+  previousStock: { type: Number, default: null },
   stockStatus: { 
     type: String, 
     enum: ['in_stock', 'low_stock', 'out_of_stock'], 
