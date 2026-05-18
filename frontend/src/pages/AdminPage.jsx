@@ -216,11 +216,14 @@ const AdminPage = () => {
       doc.line(0.2, y, 3.8, y);
       y += 0.2;
 
+      const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
+      const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
+
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text('Order:', 0.15, y);
       doc.setFont('helvetica', 'normal');
-      doc.text(`#${order.orderId || order._id.toString().slice(-8).toUpperCase()} | Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')} ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`, 0.6, y);
+      doc.text(`#${order.orderId || order._id.toString().slice(-8).toUpperCase()} | Date: ${dateStr}`, 0.6, y);
       y += 0.15;
 
       doc.line(0.2, y, 3.8, y);
@@ -333,11 +336,14 @@ const AdminPage = () => {
         d.line(0.2, y, 3.8, y);
         y += 0.2;
 
+        const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
+        const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
+
         d.setFontSize(10);
         d.setFont('helvetica', 'bold');
         d.text('Order:', 0.15, y);
         d.setFont('helvetica', 'normal');
-        d.text(`#${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : 'N/A'}`, 0.6, y);
+        d.text(`#${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${dateStr}`, 0.6, y);
         y += 0.15;
 
         d.line(0.2, y, 3.8, y);
@@ -621,26 +627,40 @@ const AdminPage = () => {
       return;
     }
 
-    const csvContent = [
-      ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status'],
-      ...filteredOrders.map(order => [
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status'];
+
+    const rows = filteredOrders.map(order => {
+      const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
+      const dateStr = targetDate.toLocaleDateString('en-IN');
+      const timeStr = targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      const productsStr = order.orderItems?.map(item => `${item.name} (x${item.qty})`).join(', ') || '';
+
+      return [
         order.orderId || order._id.toString().slice(-8).toUpperCase(),
-        new Date(order.createdAt).toLocaleDateString('en-IN'),
-        new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-        order.shippingAddress.fullName,
-        order.shippingAddress.address,
-        order.shippingAddress.city,
-        order.shippingAddress.state,
-        order.shippingAddress.zipCode,
-        order.shippingAddress.phone,
-        order.shippingAddress.altPhone || '',
-        order.shippingAddress.email || '',
-        order.orderItems.map(item => `${item.name} (x${item.qty})`).join(', '),
-        order.totalPrice,
+        dateStr,
+        timeStr,
+        order.shippingAddress?.fullName || 'N/A',
+        order.shippingAddress?.address || 'N/A',
+        order.shippingAddress?.city || 'N/A',
+        order.shippingAddress?.state || 'N/A',
+        order.shippingAddress?.zipCode || 'N/A',
+        order.shippingAddress?.phone || 'N/A',
+        order.shippingAddress?.altPhone || '',
+        order.shippingAddress?.email || '',
+        productsStr,
+        order.totalPrice || 0,
         order.isPaid ? 'Paid' : 'UNPAID',
-        order.status || 'Pending',
-      ])
-    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+        order.status || 'Pending'
+      ].map(escapeCSV).join(',');
+    });
+
+    const csvContent = [headers.map(escapeCSV).join(','), ...rows].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -657,7 +677,7 @@ const AdminPage = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success(`Exported ${filtered.length} orders!`);
+    toast.success(`Exported ${filteredOrders.length} orders!`);
   };
 
   const handleProductSubmit = async (e) => {
@@ -707,14 +727,16 @@ const AdminPage = () => {
   const lowStockProducts = products.filter(p => p.countInStock < 5).length;
 
   const filteredOrders = orders.filter(order => {
+    const fullName = order.shippingAddress?.fullName || '';
+    const orderIdStr = order.orderId || order._id || '';
     const matchesSearch =
-      order.shippingAddress.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order._id.toLowerCase().includes(searchQuery.toLowerCase());
+      fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      orderIdStr.toLowerCase().includes(searchQuery.toLowerCase());
 
     let matchesProduct = true;
     if (exportProduct) {
       const selectedProduct = products.find(p => p._id === exportProduct);
-      matchesProduct = order.orderItems.some(item => {
+      matchesProduct = order.orderItems?.some(item => {
         if (!item) return false;
         const itemProductId = item.product || item._id;
         const itemProductIdStr = String(itemProductId);
@@ -732,8 +754,11 @@ const AdminPage = () => {
     if (exportStatus === 'paid') matchesStatus = order.isPaid;
     if (exportStatus === 'unpaid') matchesStatus = !order.isPaid;
 
-    const orderDate = new Date(order.createdAt);
-    const orderDateStr = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`;
+    const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    const orderDateStr = `${year}-${month}-${day}`;
 
     if (exportDate) {
       const matchesDate = orderDateStr === exportDate;
