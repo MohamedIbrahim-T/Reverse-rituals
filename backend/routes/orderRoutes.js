@@ -126,7 +126,7 @@ const webhookHandler = async (req, res) => {
             }
 
             await sendOrderEmail({
-              orderId: order._id.toString().slice(-8),
+              orderId: order.orderId || order._id.toString().slice(-8),
               customerName: order.shippingAddress.fullName,
               address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
               email,

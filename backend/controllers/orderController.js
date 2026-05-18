@@ -290,7 +290,7 @@ const verifyPayment = async (req, res) => {
         }
 
         const result = await sendOrderEmail({
-          orderId: updatedOrder._id.toString().slice(-8),
+          orderId: updatedOrder.orderId || updatedOrder._id.toString().slice(-8),
           customerName: order.shippingAddress.fullName,
           address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}`,
           email,
