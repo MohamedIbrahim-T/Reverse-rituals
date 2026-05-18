@@ -196,115 +196,152 @@ const AdminPage = () => {
     }
   };
 
-  const generateBillHTML = (order) => {
+  let cachedTamilFontBase64 = null;
+  const getTamilFontBase64 = async () => {
+    if (cachedTamilFontBase64) return cachedTamilFontBase64;
+    try {
+      const res = await axios.get('https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/unhinted/ttf/NotoSansTamil/NotoSansTamil-Regular.ttf', { responseType: 'blob' });
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(res.data);
+        reader.onloadend = () => {
+          cachedTamilFontBase64 = reader.result.split(',')[1];
+          resolve(cachedTamilFontBase64);
+        };
+        reader.onerror = reject;
+      });
+    } catch (err) {
+      console.error('Failed to load Tamil font from CDN, falling back:', err);
+      return null;
+    }
+  };
+
+  const setupDocFont = async (doc) => {
+    const fontBase64 = await getTamilFontBase64();
+    if (fontBase64) {
+      doc.addFileToVFS('NotoSansTamil.ttf', fontBase64);
+      doc.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'normal');
+      doc.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'bold');
+      doc.setFont('NotoSansTamil', 'normal');
+    } else {
+      doc.setFont('helvetica', 'normal');
+    }
+    return fontBase64 !== null;
+  };
+
+  const drawVectorBill = (doc, order, hasTamilFont, isNewPage = false) => {
+    if (isNewPage) {
+      doc.addPage([4, 6], 'portrait');
+      if (hasTamilFont) doc.setFont('NotoSansTamil', 'normal');
+    }
+
+    let y = 0.25;
+
+    doc.setFontSize(16);
+    if (!hasTamilFont) doc.setFont('helvetica', 'bold');
+    doc.text('REVERSE RITUALS', 2, y, { align: 'center' });
+    y += 0.15;
+
+    doc.setFontSize(9);
+    if (!hasTamilFont) doc.setFont('helvetica', 'normal');
+    doc.text('Natural Hair Care Products', 2, y, { align: 'center' });
+    y += 0.12;
+
+    doc.setLineWidth(0.01);
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
     const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
     const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
-    const orderId = order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A';
-    const fullName = order.shippingAddress?.fullName || 'N/A';
-    const address = order.shippingAddress?.address || '';
-    const cityStateZip = `${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`;
-    const phone = order.shippingAddress?.phone || '';
-    const altPhone = order.shippingAddress?.altPhone ? `Alt: ${order.shippingAddress.altPhone}` : '';
 
-    let itemsHTML = '';
+    doc.setFontSize(10);
+    doc.text(`Order: #${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${dateStr}`, 0.15, y);
+    y += 0.15;
+
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
+    doc.setFontSize(12);
+    doc.text('DELIVER TO:', 0.15, y);
+    y += 0.15;
+
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
+    doc.setFontSize(10);
+    doc.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
+    y += 0.18;
+
+    const addr = order.shippingAddress?.address || '';
+    const cleanAddr = addr.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const addrLines = doc.splitTextToSize(cleanAddr, 3.6);
+    doc.text(addrLines, 0.15, y);
+    y += addrLines.length * 0.18;
+
+    doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
+    y += 0.18;
+
+    doc.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
+    if (order.shippingAddress?.altPhone) {
+      y += 0.18;
+      doc.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
+    }
+
+    y += 0.18;
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
+    doc.setFontSize(11);
+    doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
+    y += 0.2;
+
+    doc.setFontSize(9);
     order.orderItems?.forEach(item => {
-      itemsHTML += `
-        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px;">
-          <span style="flex: 1; padding-right: 8px; word-break: break-word;">${item.name || 'Item'}</span>
-          <span style="font-weight: 600; white-space: nowrap;">x${item.qty || 0}</span>
-        </div>
-      `;
+      const nameLines = doc.splitTextToSize(item.name || 'Item', 3.0);
+      doc.text(nameLines, 0.15, y);
+      doc.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
+      y += nameLines.length * 0.18;
     });
 
-    const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+    y += 0.05;
+    doc.line(0.2, y, 3.8, y);
+    y += 0.18;
 
-    return `
-      <div style="width: 384px; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000; background: #fff; box-sizing: border-box;">
-        <div style="text-align: center; margin-bottom: 16px;">
-          <h1 style="font-size: 26px; font-weight: 800; margin: 0; color: #000; letter-spacing: -0.5px;">REVERSE RITUALS</h1>
-          <p style="font-size: 13px; margin: 4px 0 0; color: #444; font-weight: 500;">Natural Hair Care Products</p>
-        </div>
-        <div style="border-top: 1.5px solid #000; margin: 14px 0;"></div>
-        <div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5;">
-          <div style="display: flex; justify-content: space-between;">
-            <span><strong style="color: #000;">Order:</strong> #${orderId}</span>
-          </div>
-          <div><strong style="color: #000;">Date:</strong> ${dateStr}</div>
-        </div>
-        <div style="border-top: 1px dashed #888; margin: 14px 0;"></div>
-        <div style="margin-bottom: 18px;">
-          <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Deliver To:</div>
-          <div style="font-size: 17px; font-weight: 700; color: #000; margin-bottom: 6px;">${fullName}</div>
-          <div style="font-size: 15px; line-height: 1.5; color: #111; margin-bottom: 6px; word-wrap: break-word;">${address}</div>
-          <div style="font-size: 15px; color: #111; margin-bottom: 8px;">${cityStateZip}</div>
-          <div style="font-size: 14px; color: #000; font-weight: 600;">Phone: ${phone}</div>
-          ${altPhone ? `<div style="font-size: 14px; color: #000; font-weight: 600; margin-top: 2px;">${altPhone}</div>` : ''}
-        </div>
-        <div style="border-top: 1px dashed #888; margin: 14px 0;"></div>
-        <div style="margin-bottom: 18px;">
-          <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Items (${order.orderItems?.length || 0}):</div>
-          ${itemsHTML}
-        </div>
-        <div style="border-top: 1.5px solid #000; margin: 14px 0;"></div>
-        <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; margin-bottom: 24px; color: #000;">
-          <span>Total Items:</span>
-          <span>${totalItems}</span>
-        </div>
-        <div style="text-align: center; font-size: 13px; color: #444; margin-top: 32px; border-top: 1px solid #ddd; padding-top: 16px; line-height: 1.6;">
-          <p style="margin: 0 0 4px; font-weight: 600; color: #000;">Thank you for your order!</p>
-          <p style="margin: 0 0 12px; color: #555;">reverserituals@gmail.com</p>
-          <div style="background: #f8f9fa; border: 1px solid #222; padding: 10px; border-radius: 6px;">
-            <p style="margin: 0; font-size: 12px; font-weight: 700; color: #000;">If customer not answering call,</p>
-            <p style="margin: 2px 0 0; font-size: 13px; font-weight: 800; color: #000;">Please Call: 7358422064</p>
-          </div>
-        </div>
-      </div>
-    `;
+    doc.setFontSize(10);
+    doc.text('Total Items:', 0.15, y);
+    const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+    doc.text(`${totalItems}`, 3.7, y, { align: 'right' });
+
+    y += 0.35;
+    doc.setFontSize(9);
+    doc.text('Thank you for your order! | reverserituals@gmail.com', 2, y, { align: 'center' });
+    y += 0.15;
+
+    doc.line(0.2, y, 3.8, y);
+    y += 0.18;
+
+    doc.setFontSize(8);
+    const noteLines = doc.splitTextToSize('If customer not answer the call, please call: 7358422064', 3.6);
+    doc.text(noteLines, 2, y, { align: 'center' });
   };
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     toast.info('Generating PDF bill...');
     try {
-      const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.top = '0';
-      container.style.left = '0';
-      container.style.zIndex = '-9999';
-      container.style.background = '#ffffff';
-      container.style.color = '#000000';
-      container.style.width = '384px';
-      container.style.boxSizing = 'border-box';
-      container.innerHTML = generateBillHTML(order);
-      document.body.appendChild(container);
+      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
+      const hasTamilFont = await setupDocFont(doc);
+
+      drawVectorBill(doc, order, hasTamilFont, false);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
-      const filename = `bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`;
-
-      html2pdf().from(container).set({
-        margin: [0.2, 0.1, 0.2, 0.1],
-        filename,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 400, backgroundColor: '#ffffff', logging: false },
-        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
-      }).save().then(() => {
-        setTimeout(() => {
-          if (document.body.contains(container)) {
-            document.body.removeChild(container);
-          }
-        }, 1000);
-        setThermalGenerating(null);
-        toast.success('Bill downloaded successfully');
-      }).catch(err => {
-        console.error('Thermal bill save error:', err);
-        if (document.body.contains(container)) document.body.removeChild(container);
-        setThermalGenerating(null);
-        toast.error('Failed to generate thermal bill');
-      });
+      doc.save(`bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success('Bill downloaded successfully');
     } catch (err) {
       console.error('Thermal bill error:', err);
-      setThermalGenerating(null);
       toast.error('Failed to generate thermal bill');
+    } finally {
+      setThermalGenerating(null);
     }
   };
 
@@ -316,26 +353,12 @@ const AdminPage = () => {
 
     toast.info('Generating thermal bills...');
     try {
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'fixed';
-      wrapper.style.top = '0';
-      wrapper.style.left = '0';
-      wrapper.style.zIndex = '-9999';
-      wrapper.style.background = '#ffffff';
-      wrapper.style.color = '#000000';
-      wrapper.style.width = '384px';
-      wrapper.style.boxSizing = 'border-box';
+      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
+      const hasTamilFont = await setupDocFont(doc);
 
       filteredOrders.forEach((order, idx) => {
-        const orderDiv = document.createElement('div');
-        if (idx > 0) {
-          orderDiv.style.pageBreakBefore = 'always';
-        }
-        orderDiv.innerHTML = generateBillHTML(order);
-        wrapper.appendChild(orderDiv);
+        drawVectorBill(doc, order, hasTamilFont, idx > 0);
       });
-
-      document.body.appendChild(wrapper);
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -344,24 +367,8 @@ const AdminPage = () => {
         filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
       }
 
-      html2pdf().from(wrapper).set({
-        margin: [0.2, 0.1, 0.2, 0.1],
-        filename: `bills-${filenameDate}.pdf`,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 400, backgroundColor: '#ffffff', logging: false },
-        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
-      }).save().then(() => {
-        setTimeout(() => {
-          if (document.body.contains(wrapper)) {
-            document.body.removeChild(wrapper);
-          }
-        }, 1000);
-        toast.success(`${filteredOrders.length} bills generated successfully`);
-      }).catch(err => {
-        console.error('Bulk thermal bill save error:', err);
-        if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
-        toast.error('Failed to download bills');
-      });
+      doc.save(`bills-${filenameDate}.pdf`);
+      toast.success(`${filteredOrders.length} bills generated successfully`);
     } catch (error) {
       console.error('Bulk thermal bill error:', error);
       toast.error('Failed to download bills');
