@@ -220,7 +220,7 @@ const AdminPage = () => {
       doc.setFont('helvetica', 'bold');
       doc.text('Order:', 0.15, y);
       doc.setFont('helvetica', 'normal');
-      doc.text(`#${order._id.toString().slice(-8).toUpperCase()} | Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')} ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`, 0.6, y);
+      doc.text(`#${order.orderId || order._id.toString().slice(-8).toUpperCase()} | Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')} ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`, 0.6, y);
       y += 0.15;
 
       doc.line(0.2, y, 3.8, y);
@@ -293,7 +293,8 @@ const AdminPage = () => {
       doc.setFontSize(8);
       doc.text('If the customer not answer the call, please call this number. Call : 7358422064', 2, y, { align: 'center' });
 
-      doc.save(`bill-${order._id.toString().slice(-8).toUpperCase()}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
+      doc.save(`bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
       console.error('Thermal bill error:', err);
       toast.error('Failed to generate thermal bill');
@@ -336,7 +337,7 @@ const AdminPage = () => {
         d.setFont('helvetica', 'bold');
         d.text('Order:', 0.15, y);
         d.setFont('helvetica', 'normal');
-        d.text(`#${order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : 'N/A'}`, 0.6, y);
+        d.text(`#${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : 'N/A'}`, 0.6, y);
         y += 0.15;
 
         d.line(0.2, y, 3.8, y);
@@ -512,7 +513,7 @@ const AdminPage = () => {
     <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
       <div style="background: #f9fafb; padding: 15px; border-radius: 8px; width: 48%;">
         <h4 style="margin: 0 0 10px; color: #064e3b; font-size: 14px; text-transform: uppercase;">Order Details</h4>
-        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Order ID:</strong> ${order._id.toString().slice(-8).toUpperCase()}</p>
+        <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Order ID:</strong> ${order.orderId || order._id.toString().slice(-8).toUpperCase()}</p>
         <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
         <p style="margin: 5px 0; font-size: 13px; color: #333;"><strong>Status:</strong> <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: ${order.isPaid ? '#dcfce7' : '#fee2e2'}; color: ${order.isPaid ? '#166534' : '#991b1b'};">${order.isPaid ? 'PAID' : 'UNPAID'}</span></p>
       </div>
@@ -623,7 +624,7 @@ const AdminPage = () => {
     const csvContent = [
       ['Order ID', 'Date', 'Time', 'Customer Name', 'Address', 'City', 'State', 'Pincode', 'Phone', 'Alt Phone', 'Email', 'Products', 'Total', 'Payment', 'Delivery Status'],
       ...filteredOrders.map(order => [
-        order._id.toString().slice(-8).toUpperCase(),
+        order.orderId || order._id.toString().slice(-8).toUpperCase(),
         new Date(order.createdAt).toLocaleDateString('en-IN'),
         new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
         order.shippingAddress.fullName,
@@ -1271,7 +1272,7 @@ const AdminPage = () => {
                       </div>
                       <div>
                         <p className="font-bold text-[#064e3b] text-sm sm:text-base">{order.shippingAddress.fullName}</p>
-                        <p className="text-[#064e3b]/40 text-xs sm:text-sm">#{order._id.slice(-8)} • {new Date(order.createdAt).toLocaleDateString()}</p>
+                        <p className="text-[#064e3b]/40 text-xs sm:text-sm">#{order.orderId || order._id.slice(-8)} • {new Date(order.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">

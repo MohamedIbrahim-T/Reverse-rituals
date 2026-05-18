@@ -193,7 +193,7 @@ const OrdersPage = () => {
                 >
                   <div className="bg-[#f8fdf9] px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
                     <div className="flex items-center gap-4">
-                      <span className="text-xs font-semibold text-gray-400 uppercase">Order #{order._id.slice(-8).toUpperCase()}</span>
+                      <span className="text-xs font-semibold text-gray-400 uppercase">Order #{order.orderId || order._id.slice(-8).toUpperCase()}</span>
                       <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     </div>
                     {/* <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(status)}`}>

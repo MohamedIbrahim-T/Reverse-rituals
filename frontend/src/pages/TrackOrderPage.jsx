@@ -143,7 +143,7 @@ const TrackOrderPage = () => {
                   <div className="bg-[#f8fdf9] px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-semibold text-gray-400 uppercase">
-                        Order #{order._id.slice(-8).toUpperCase()}
+                        Order #{order.orderId || order._id.slice(-8).toUpperCase()}
                       </span>
                       <span className="text-xs text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString('en-IN', {

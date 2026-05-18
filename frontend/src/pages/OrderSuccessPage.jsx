@@ -131,7 +131,7 @@ const OrderSuccessPage = () => {
             <div className="bg-[#fdfbf7] rounded-2xl p-6 mb-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-500">Order ID</span>
-                <span className="font-bold text-[#064e3b]">#{latestOrder._id?.slice(-8).toUpperCase()}</span>
+                <span className="font-bold text-[#064e3b]">#{latestOrder.orderId || latestOrder._id?.slice(-8).toUpperCase()}</span>
               </div>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-500">Total Amount</span>
