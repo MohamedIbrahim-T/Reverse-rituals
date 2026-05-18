@@ -327,7 +327,6 @@ const AdminPage = () => {
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
-    toast.info('Generating PDF bill...');
     try {
       const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
       const hasTamilFont = await setupDocFont(doc);
@@ -351,7 +350,6 @@ const AdminPage = () => {
       return;
     }
 
-    toast.info('Generating thermal bills...');
     try {
       const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
       const hasTamilFont = await setupDocFont(doc);
