@@ -35,7 +35,8 @@ const generateOrderId = async () => {
     }
   }
   
-  const nextCount = maxNum + 1;
+  const totalPaidCount = await Order.countDocuments({ isPaid: true });
+  const nextCount = Math.max(maxNum + 1, totalPaidCount + 1);
   return `RR/${String(nextCount).padStart(4, '0')}/${fyString}`;
 };
 

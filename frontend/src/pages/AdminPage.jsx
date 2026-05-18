@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { jsPDF } from 'jspdf';
+import html2pdf from 'html2pdf.js';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import ImageUpload from '../components/ImageUpload';
 import ReviewsSection from './ReviewsSection';
@@ -195,109 +196,94 @@ const AdminPage = () => {
     }
   };
 
+  const generateBillHTML = (order) => {
+    const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
+    const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
+    const orderId = order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A';
+    const fullName = order.shippingAddress?.fullName || 'N/A';
+    const address = order.shippingAddress?.address || '';
+    const cityStateZip = `${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`;
+    const phone = order.shippingAddress?.phone || '';
+    const altPhone = order.shippingAddress?.altPhone ? `Alt: ${order.shippingAddress.altPhone}` : '';
+
+    let itemsHTML = '';
+    order.orderItems?.forEach(item => {
+      itemsHTML += `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px;">
+          <span style="flex: 1; padding-right: 8px; word-break: break-word;">${item.name || 'Item'}</span>
+          <span style="font-weight: 600; white-space: nowrap;">x${item.qty || 0}</span>
+        </div>
+      `;
+    });
+
+    const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+
+    return `
+      <div style="width: 384px; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000; background: #fff; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <h1 style="font-size: 26px; font-weight: 800; margin: 0; color: #000; letter-spacing: -0.5px;">REVERSE RITUALS</h1>
+          <p style="font-size: 13px; margin: 4px 0 0; color: #444; font-weight: 500;">Natural Hair Care Products</p>
+        </div>
+        <div style="border-top: 1.5px solid #000; margin: 14px 0;"></div>
+        <div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5;">
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong style="color: #000;">Order:</strong> #${orderId}</span>
+          </div>
+          <div><strong style="color: #000;">Date:</strong> ${dateStr}</div>
+        </div>
+        <div style="border-top: 1px dashed #888; margin: 14px 0;"></div>
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Deliver To:</div>
+          <div style="font-size: 17px; font-weight: 700; color: #000; margin-bottom: 6px;">${fullName}</div>
+          <div style="font-size: 15px; line-height: 1.5; color: #111; margin-bottom: 6px; word-wrap: break-word;">${address}</div>
+          <div style="font-size: 15px; color: #111; margin-bottom: 8px;">${cityStateZip}</div>
+          <div style="font-size: 14px; color: #000; font-weight: 600;">Phone: ${phone}</div>
+          ${altPhone ? `<div style="font-size: 14px; color: #000; font-weight: 600; margin-top: 2px;">${altPhone}</div>` : ''}
+        </div>
+        <div style="border-top: 1px dashed #888; margin: 14px 0;"></div>
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Items (${order.orderItems?.length || 0}):</div>
+          ${itemsHTML}
+        </div>
+        <div style="border-top: 1.5px solid #000; margin: 14px 0;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; margin-bottom: 24px; color: #000;">
+          <span>Total Items:</span>
+          <span>${totalItems}</span>
+        </div>
+        <div style="text-align: center; font-size: 13px; color: #444; margin-top: 32px; border-top: 1px solid #ddd; padding-top: 16px; line-height: 1.6;">
+          <p style="margin: 0 0 4px; font-weight: 600; color: #000;">Thank you for your order!</p>
+          <p style="margin: 0 0 12px; color: #555;">reverserituals@gmail.com</p>
+          <div style="background: #f8f9fa; border: 1px solid #222; padding: 10px; border-radius: 6px;">
+            <p style="margin: 0; font-size: 12px; font-weight: 700; color: #000;">If customer not answering call,</p>
+            <p style="margin: 2px 0 0; font-size: 13px; font-weight: 800; color: #000;">Please Call: 7358422064</p>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     try {
-      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
-
-      let y = 0.25;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('REVERSE RITUALS', 2, y, { align: 'center' });
-      y += 0.15;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text('Natural Hair Care Products', 2, y, { align: 'center' });
-      y += 0.12;
-
-      doc.setLineWidth(0.01);
-      doc.line(0.2, y, 3.8, y);
-      y += 0.2;
-
-      const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
-      const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Order:', 0.15, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`#${order.orderId || order._id.toString().slice(-8).toUpperCase()} | Date: ${dateStr}`, 0.6, y);
-      y += 0.15;
-
-      doc.line(0.2, y, 3.8, y);
-      y += 0.2;
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('DELIVER TO:', 0.15, y);
-      y += 0.12;
-
-      doc.line(0.2, y, 3.8, y);
-      y += 0.2;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
-      y += 0.18;
-
-      const addr = order.shippingAddress?.address || '';
-      const addrLines = doc.splitTextToSize(addr, 3.5);
-      doc.text(addrLines, 0.15, y);
-      y += addrLines.length * 0.15;
-
-      doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
-      y += 0.18;
-
-      doc.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
-      if (order.shippingAddress?.altPhone) {
-        y += 0.15;
-        doc.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
-      }
-
-      y += 0.15;
-      doc.line(0.2, y, 3.8, y);
-      y += 0.2;
-
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
-      y += 0.2;
-
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      order.orderItems?.forEach(item => {
-        const name = item.name?.length > 30 ? item.name.substring(0, 27) + '...' : item.name || 'Item';
-        doc.text(name, 0.15, y);
-        doc.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
-        y += 0.16;
-      });
-
-      y += 0.05;
-      doc.line(0.2, y, 3.8, y);
-      y += 0.18;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Total Items:', 0.15, y);
-      const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
-      doc.text(`${totalItems}`, 3.7, y, { align: 'right' });
-
-      y += 0.35;
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Thank you for your order! | reverserituals@gmail.com', 2, y, { align: 'center' });
-      y += 0.15;
-
-      doc.line(0.2, y, 3.8, y);
-      y += 0.15;
-
-      doc.setFontSize(8);
-      doc.text('If the customer not answer the call, please call this number. Call : 7358422064', 2, y, { align: 'center' });
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.innerHTML = generateBillHTML(order);
+      document.body.appendChild(container);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
-      doc.save(`bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      const filename = `bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      await html2pdf().from(container).set({
+        margin: [0.2, 0.1, 0.2, 0.1],
+        filename,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
+      }).save();
+
+      document.body.removeChild(container);
     } catch (err) {
       console.error('Thermal bill error:', err);
       toast.error('Failed to generate thermal bill');
@@ -312,114 +298,24 @@ const AdminPage = () => {
       return;
     }
 
+    toast.info('Generating thermal bills...');
     try {
-      const { jsPDF } = await import('jspdf');
-
-      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
-
-      const drawBill = (d, order, isNewPage = false) => {
-        if (isNewPage) d.addPage([4, 6], 'portrait');
-
-        let y = 0.25;
-
-        d.setFont('helvetica', 'bold');
-        d.setFontSize(16);
-        d.text('REVERSE RITUALS', 2, y, { align: 'center' });
-        y += 0.15;
-
-        d.setFont('helvetica', 'normal');
-        d.setFontSize(9);
-        d.text('Natural Hair Care Products', 2, y, { align: 'center' });
-        y += 0.12;
-
-        d.setLineWidth(0.01);
-        d.line(0.2, y, 3.8, y);
-        y += 0.2;
-
-        const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
-        const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
-
-        d.setFontSize(10);
-        d.setFont('helvetica', 'bold');
-        d.text('Order:', 0.15, y);
-        d.setFont('helvetica', 'normal');
-        d.text(`#${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${dateStr}`, 0.6, y);
-        y += 0.15;
-
-        d.line(0.2, y, 3.8, y);
-        y += 0.2;
-
-        d.setFontSize(12);
-        d.setFont('helvetica', 'bold');
-        d.text('DELIVER TO:', 0.15, y);
-        y += 0.12;
-
-        d.line(0.2, y, 3.8, y);
-        y += 0.2;
-
-        d.setFontSize(10);
-        d.setFont('helvetica', 'normal');
-        d.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
-        y += 0.18;
-
-        const addr = order.shippingAddress?.address || '';
-        const addrLines = d.splitTextToSize(addr, 3.5);
-        d.text(addrLines, 0.15, y);
-        y += addrLines.length * 0.15;
-
-        d.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
-        y += 0.18;
-
-        d.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
-        if (order.shippingAddress?.altPhone) {
-          y += 0.15;
-          d.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
-        }
-
-        y += 0.15;
-        d.line(0.2, y, 3.8, y);
-        y += 0.2;
-
-        d.setFontSize(11);
-        d.setFont('helvetica', 'bold');
-        d.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
-        y += 0.2;
-
-        d.setFontSize(9);
-        d.setFont('helvetica', 'normal');
-        order.orderItems?.forEach(item => {
-          const name = item.name?.length > 30 ? item.name.substring(0, 27) + '...' : item.name || 'Item';
-          d.text(name, 0.15, y);
-          d.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
-          y += 0.16;
-        });
-
-        y += 0.05;
-        d.line(0.2, y, 3.8, y);
-        y += 0.18;
-
-        d.setFontSize(10);
-        d.setFont('helvetica', 'bold');
-        d.text('Total Items:', 0.15, y);
-        const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
-        d.text(`${totalItems}`, 3.7, y, { align: 'right' });
-
-        y += 0.35;
-        d.setFontSize(9);
-        d.setFont('helvetica', 'normal');
-        d.text('Thank you! | reverserituals@gmail.com', 2, y, { align: 'center' });
-        y += 0.15;
-
-        d.line(0.2, y, 3.8, y);
-        y += 0.15;
-
-        d.setFontSize(8);
-        d.text('If the customer not answer the call, please call this number. Call : 7358422064', 2, y, { align: 'center' });
-      };
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'absolute';
+      wrapper.style.left = '-9999px';
+      wrapper.style.top = '0';
+      wrapper.style.background = '#fff';
 
       filteredOrders.forEach((order, idx) => {
-        drawBill(doc, order, idx > 0);
+        const orderDiv = document.createElement('div');
+        if (idx > 0) {
+          orderDiv.style.pageBreakBefore = 'always';
+        }
+        orderDiv.innerHTML = generateBillHTML(order);
+        wrapper.appendChild(orderDiv);
       });
+
+      document.body.appendChild(wrapper);
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -428,10 +324,18 @@ const AdminPage = () => {
         filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
       }
 
-      doc.save(`bills-${filenameDate}.pdf`);
-      toast.success(`${filteredOrders.length} bills generated`);
+      await html2pdf().from(wrapper).set({
+        margin: [0.2, 0.1, 0.2, 0.1],
+        filename: `bills-${filenameDate}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
+      }).save();
+
+      document.body.removeChild(wrapper);
+      toast.success(`${filteredOrders.length} bills generated successfully`);
     } catch (error) {
-      console.error(error);
+      console.error('Bulk thermal bill error:', error);
       toast.error('Failed to download bills');
     }
   };
