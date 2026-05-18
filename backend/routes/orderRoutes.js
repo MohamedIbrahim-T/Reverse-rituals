@@ -31,6 +31,10 @@ router.put('/fix-paid/:id', protect, admin, async (req, res) => {
 
     order.isPaid = true;
     order.paidAt = new Date();
+    if (!order.orderId || !order.orderId.startsWith('RR/')) {
+      const { generateOrderId } = require('../controllers/orderController');
+      order.orderId = await generateOrderId();
+    }
     await order.save();
 
     res.json({ message: 'Order marked as paid', order });
@@ -101,6 +105,10 @@ const webhookHandler = async (req, res) => {
       if (order) {
         order.isPaid = true;
         order.paidAt = new Date();
+        if (!order.orderId || !order.orderId.startsWith('RR/')) {
+          const { generateOrderId } = require('../controllers/orderController');
+          order.orderId = await generateOrderId();
+        }
         order.paymentResult = {
           razorpay_order_id: payment.order_id,
           razorpay_payment_id: payment.id,

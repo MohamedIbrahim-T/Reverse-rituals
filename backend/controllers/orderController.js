@@ -23,9 +23,20 @@ const generateOrderId = async () => {
   
   const fyString = `${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`;
   
-  const count = await Order.countDocuments() + 1;
+  const orders = await Order.find({ orderId: { $regex: /^RR\// } }, 'orderId').lean();
+  let maxNum = 0;
+  for (const o of orders) {
+    const parts = o.orderId?.split('/');
+    if (parts && parts[1]) {
+      const num = parseInt(parts[1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
   
-  return `RR/${String(count).padStart(4, '0')}/${fyString}`;
+  const nextCount = maxNum + 1;
+  return `RR/${String(nextCount).padStart(4, '0')}/${fyString}`;
 };
 
 let emailModule = null;
@@ -126,8 +137,9 @@ const addOrderItems = async (req, res) => {
     const hours = now.getHours();
     let estimatedDelivery;
 
-    const customOrderId = await generateOrderId();
-    console.log('Generated order ID:', customOrderId);
+    const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const tempOrderId = `TEMP-${randomHex}`;
+    console.log('Assigned temporary unpaid order ID:', tempOrderId);
 
     if (hours === 0) {
       const nextDay = new Date(now);
@@ -140,7 +152,7 @@ const addOrderItems = async (req, res) => {
     }
 
     const order = new Order({
-      orderId: customOrderId,
+      orderId: tempOrderId,
       orderItems: orderItemsWithPrices,
       user: req.user ? req.user._id : null,
       shippingAddress,
@@ -254,6 +266,10 @@ const verifyPayment = async (req, res) => {
     // ✅ 3. MARK PAID
     order.isPaid = true;
     order.paidAt = new Date();
+    if (!order.orderId || !order.orderId.startsWith('RR/')) {
+      order.orderId = await generateOrderId();
+      console.log('Assigned official paid order ID:', order.orderId);
+    }
     order.paymentResult = {
       id: razorpay_payment_id,
       status: 'PAID',
@@ -501,6 +517,10 @@ const markOrderAsPaid = async (req, res) => {
   if (order) {
     order.isPaid = true;
     order.paidAt = Date.now();
+    if (!order.orderId || !order.orderId.startsWith('RR/')) {
+      order.orderId = await generateOrderId();
+      console.log('Assigned official paid order ID (manual):', order.orderId);
+    }
     order.paymentResult = {
       id: `manual_${Date.now()}`,
       status: 'PAID',
@@ -563,6 +583,7 @@ const getOrdersByPhone = async (req, res) => {
 };
 
 module.exports = {
+  generateOrderId,
   addOrderItems,
   createPayLinkForOrder,
   verifyPayment,
