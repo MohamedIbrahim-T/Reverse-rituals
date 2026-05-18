@@ -26,6 +26,14 @@ const trackVisit = async (req, res) => {
   }
 };
 
+const getLocalISODate = (date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const getStats = async (req, res) => {
   try {
     const { filter } = req.query;
@@ -37,17 +45,29 @@ const getStats = async (req, res) => {
       startDate.setHours(0, 0, 0, 0);
     } else if (filter === 'last7days') {
       startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
     } else if (filter === 'last30days') {
       startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
     }
 
-    const totalVisitors = await Visit.countDocuments({ createdAt: { $gte: startDate } });
-    const loggedInVisitors = await Visit.countDocuments({ createdAt: { $gte: startDate }, isLoggedIn: true });
-    const guestVisitors = totalVisitors - loggedInVisitors;
+    const totalVisitorsList = await Visit.distinct('sessionId', { createdAt: { $gte: startDate } });
+    const totalVisitors = totalVisitorsList.length;
+
+    const loggedInVisitorsList = await Visit.distinct('sessionId', { createdAt: { $gte: startDate }, isLoggedIn: true });
+    const loggedInVisitors = loggedInVisitorsList.length;
+
+    const guestVisitors = Math.max(0, totalVisitors - loggedInVisitors);
     
-    const newSignups = await User.countDocuments({ createdAt: { $gte: startDate } });
+    const newSignups = await User.countDocuments({ createdAt: { $gte: startDate }, isAdmin: false });
     
-    const paidOrders = await Order.countDocuments({ createdAt: { $gte: startDate }, isPaid: true });
+    const paidOrders = await Order.countDocuments({
+      $or: [
+        { paidAt: { $gte: startDate } },
+        { createdAt: { $gte: startDate }, isPaid: true }
+      ],
+      isPaid: true
+    });
 
     let conversionRate = 0;
     if (totalVisitors > 0) {
@@ -74,29 +94,34 @@ const getVisitsGraph = async (req, res) => {
     const { days } = req.query;
     const numDays = parseInt(days) || 30;
     const startDate = new Date(Date.now() - numDays * 24 * 60 * 60 * 1000);
+    startDate.setHours(0, 0, 0, 0);
     
     const allVisits = await Visit.find({
       createdAt: { $gte: startDate },
       action: { $ne: 'cart_abandon' }
     }).lean();
 
-    const dailyData = {};
+    const dailySessions = {};
     allVisits.forEach(v => {
-      const dateKey = v.createdAt.toISOString().slice(0, 10);
-      if (!dailyData[dateKey]) {
-        dailyData[dateKey] = { count: 0, loggedIn: 0, guest: 0 };
+      const dateKey = getLocalISODate(v.createdAt);
+      if (!dailySessions[dateKey]) {
+        dailySessions[dateKey] = { sessions: new Set(), loggedInSessions: new Set(), guestSessions: new Set() };
       }
-      dailyData[dateKey].count++;
-      if (v.isLoggedIn) {
-        dailyData[dateKey].loggedIn++;
-      } else {
-        dailyData[dateKey].guest++;
+      if (v.sessionId) {
+        dailySessions[dateKey].sessions.add(v.sessionId);
+        if (v.isLoggedIn) {
+          dailySessions[dateKey].loggedInSessions.add(v.sessionId);
+        } else {
+          dailySessions[dateKey].guestSessions.add(v.sessionId);
+        }
       }
     });
 
-    const result = Object.keys(dailyData).sort().map(date => ({
+    const result = Object.keys(dailySessions).sort().map(date => ({
       _id: date,
-      ...dailyData[date]
+      count: dailySessions[date].sessions.size,
+      loggedIn: dailySessions[date].loggedInSessions.size,
+      guest: dailySessions[date].guestSessions.size
     }));
 
     res.json(result);
@@ -110,15 +135,20 @@ const getOrdersGraph = async (req, res) => {
     const { days } = req.query;
     const numDays = parseInt(days) || 30;
     const startDate = new Date(Date.now() - numDays * 24 * 60 * 60 * 1000);
+    startDate.setHours(0, 0, 0, 0);
     
     const allOrders = await Order.find({
-      createdAt: { $gte: startDate },
+      $or: [
+        { paidAt: { $gte: startDate } },
+        { createdAt: { $gte: startDate }, isPaid: true }
+      ],
       isPaid: true
     }).lean();
 
     const dailyData = {};
     allOrders.forEach(o => {
-      const dateKey = o.createdAt.toISOString().slice(0, 10);
+      const targetDate = o.paidAt ? new Date(o.paidAt) : new Date(o.createdAt);
+      const dateKey = getLocalISODate(targetDate);
       if (!dailyData[dateKey]) {
         dailyData[dateKey] = { count: 0, totalRevenue: 0 };
       }
