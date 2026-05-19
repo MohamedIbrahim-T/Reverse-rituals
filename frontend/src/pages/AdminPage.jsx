@@ -276,44 +276,26 @@ const AdminPage = () => {
     setThermalGenerating(order._id);
     try {
       const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.top = '0';
-      container.style.left = '0';
-      container.style.zIndex = '-9999';
-      container.style.background = '#ffffff';
-      container.style.color = '#000000';
-      container.style.width = '384px';
-      container.style.boxSizing = 'border-box';
       container.innerHTML = generateBillHTML(order);
-      document.body.appendChild(container);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
       const filename = `bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`;
 
-      html2pdf().from(container).set({
+      const opt = {
         margin: [0.2, 0.1, 0.2, 0.1],
         filename,
         image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 400, backgroundColor: '#ffffff', logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
-      }).save().then(() => {
-        setTimeout(() => {
-          if (document.body.contains(container)) {
-            document.body.removeChild(container);
-          }
-        }, 1000);
-        setThermalGenerating(null);
-        toast.success('Bill downloaded successfully');
-      }).catch(err => {
-        console.error('Thermal bill save error:', err);
-        if (document.body.contains(container)) document.body.removeChild(container);
-        setThermalGenerating(null);
-        toast.error('Failed to generate thermal bill');
-      });
+      };
+
+      await html2pdf().set(opt).from(container).save();
+      toast.success('Bill downloaded successfully');
     } catch (err) {
       console.error('Thermal bill error:', err);
-      setThermalGenerating(null);
       toast.error('Failed to generate thermal bill');
+    } finally {
+      setThermalGenerating(null);
     }
   };
 
@@ -325,14 +307,6 @@ const AdminPage = () => {
 
     try {
       const wrapper = document.createElement('div');
-      wrapper.style.position = 'fixed';
-      wrapper.style.top = '0';
-      wrapper.style.left = '0';
-      wrapper.style.zIndex = '-9999';
-      wrapper.style.background = '#ffffff';
-      wrapper.style.color = '#000000';
-      wrapper.style.width = '384px';
-      wrapper.style.boxSizing = 'border-box';
 
       filteredOrders.forEach((order, idx) => {
         const orderDiv = document.createElement('div');
@@ -343,8 +317,6 @@ const AdminPage = () => {
         wrapper.appendChild(orderDiv);
       });
 
-      document.body.appendChild(wrapper);
-
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
         filenameDate = new Date(exportDate).toISOString().slice(0, 10);
@@ -352,24 +324,16 @@ const AdminPage = () => {
         filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
       }
 
-      html2pdf().from(wrapper).set({
+      const opt = {
         margin: [0.2, 0.1, 0.2, 0.1],
         filename: `bills-${filenameDate}.pdf`,
         image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 400, backgroundColor: '#ffffff', logging: false },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
-      }).save().then(() => {
-        setTimeout(() => {
-          if (document.body.contains(wrapper)) {
-            document.body.removeChild(wrapper);
-          }
-        }, 1000);
-        toast.success(`${filteredOrders.length} bills generated successfully`);
-      }).catch(err => {
-        console.error('Bulk thermal bill save error:', err);
-        if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
-        toast.error('Failed to download bills');
-      });
+      };
+
+      await html2pdf().set(opt).from(wrapper).save();
+      toast.success(`${filteredOrders.length} bills generated successfully`);
     } catch (error) {
       console.error('Bulk thermal bill error:', error);
       toast.error('Failed to download bills');
