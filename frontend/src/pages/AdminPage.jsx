@@ -229,109 +229,316 @@ const AdminPage = () => {
     return fontBase64 !== null;
   };
 
-  const drawVectorBill = (doc, order, hasTamilFont, isNewPage = false) => {
-    if (isNewPage) {
-      doc.addPage([4, 6], 'portrait');
-      if (hasTamilFont) doc.setFont('NotoSansTamil', 'normal');
+  const calculateBillHeight = (order, hasTamilFont) => {
+    const dummy = new jsPDF({ unit: 'in', format: [4, 15] });
+    
+    let y = 0.25; // Top margin
+    
+    // Header: REVERSE RITUALS
+    y += 0.18; // font size 18
+    y += 0.05; // gap
+    
+    // Subtitle: Natural Hair Care Products
+    y += 0.12; // font size 9
+    y += 0.08; // gap
+    
+    // Divider
+    y += 0.05; // line thickness/gap
+    
+    // Order/Date line
+    y += 0.22; // font size 9.5 + spacing
+    y += 0.05; // divider gap
+    
+    // Deliver To Header
+    y += 0.2;  // label size 9.5
+    y += 0.05; // divider gap
+    
+    // Name
+    y += 0.22; // Name size 12.5
+    
+    // Address
+    const addr = order.shippingAddress?.address || '';
+    const cleanAddr = addr.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    if (hasTamilFont && cachedTamilFontBase64) {
+      dummy.addFileToVFS('NotoSansTamil.ttf', cachedTamilFontBase64);
+      dummy.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'normal');
+      dummy.setFont('NotoSansTamil', 'normal');
+    } else {
+      dummy.setFont('helvetica', 'normal');
     }
+    dummy.setFontSize(9.5);
+    
+    const addrLines = dummy.splitTextToSize(cleanAddr, 3.6);
+    y += addrLines.length * 0.16; // 0.16 spacing per line
+    
+    // City, State - Zip
+    y += 0.16;
+    
+    // Phone
+    y += 0.16;
+    
+    // Alt Phone
+    if (order.shippingAddress?.altPhone) {
+      y += 0.16;
+    }
+    
+    // Divider
+    y += 0.12;
+    
+    // Items Header
+    y += 0.22;
+    
+    // Items
+    dummy.setFont('helvetica', 'normal');
+    dummy.setFontSize(9.5);
+    order.orderItems?.forEach((item, idx) => {
+      const nameLines = dummy.splitTextToSize(item.name || 'Item', 2.8);
+      y += nameLines.length * 0.16;
+      if (idx < order.orderItems.length - 1) {
+        y += 0.06; // gap between items
+      }
+    });
+    
+    // Divider
+    y += 0.12;
+    
+    // Total Items
+    y += 0.22;
+    
+    // Footer: Thank you
+    y += 0.28;
+    // Email
+    y += 0.15;
+    
+    // Divider
+    y += 0.12;
+    
+    // Warning Call Box
+    const noteText = 'If customer not answer the call, please call: 7358422064';
+    dummy.setFont('helvetica', 'bold');
+    dummy.setFontSize(8);
+    const noteLines = dummy.splitTextToSize(noteText, 3.4);
+    const boxInnerHeight = noteLines.length * 0.15 + 0.16;
+    y += boxInnerHeight;
+    
+    y += 0.25; // Bottom margin padding
+    
+    return y;
+  };
 
+  const drawVectorBill = (doc, order, hasTamilFont) => {
     let y = 0.25;
 
-    doc.setFontSize(16);
-    if (!hasTamilFont) doc.setFont('helvetica', 'bold');
+    // Header: REVERSE RITUALS
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(0, 0, 0);
     doc.text('REVERSE RITUALS', 2, y, { align: 'center' });
-    y += 0.15;
+    y += 0.18;
 
+    // Subtitle: Natural Hair Care Products
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    if (!hasTamilFont) doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60); // gray #3c3c3c
     doc.text('Natural Hair Care Products', 2, y, { align: 'center' });
-    y += 0.12;
+    y += 0.08;
 
-    doc.setLineWidth(0.01);
+    // Solid Divider
+    doc.setLineWidth(0.015);
+    doc.setDrawColor(0, 0, 0);
     doc.line(0.2, y, 3.8, y);
-    y += 0.2;
+    y += 0.18;
 
+    // Order & Date Block
     const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
     const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
+    const orderId = order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A';
 
-    doc.setFontSize(10);
-    doc.text(`Order: #${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${dateStr}`, 0.15, y);
-    y += 0.15;
+    // Order ID on left
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Order:', 0.2, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`#${orderId}`, 0.6, y);
 
+    // Date on right
+    doc.text(dateStr, 3.8, y, { align: 'right' });
+    y += 0.08;
+
+    // Dashed Divider
+    doc.setLineWidth(0.01);
+    doc.setDrawColor(150, 150, 150);
+    doc.setLineDashPattern([0.04, 0.04], 0);
     doc.line(0.2, y, 3.8, y);
-    y += 0.2;
-
-    doc.setFontSize(12);
-    doc.text('DELIVER TO:', 0.15, y);
-    y += 0.15;
-
-    doc.line(0.2, y, 3.8, y);
-    y += 0.2;
-
-    doc.setFontSize(10);
-    doc.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
+    doc.setLineDashPattern([], 0); // reset to solid
     y += 0.18;
+
+    // Deliver To Header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(100, 100, 100); // #666
+    doc.text('DELIVER TO:', 0.2, y);
+    y += 0.12;
+
+    // Name (can contain Tamil, so use NotoSansTamil if loaded)
+    if (hasTamilFont) {
+      doc.setFont('NotoSansTamil', 'normal');
+    } else {
+      doc.setFont('helvetica', 'bold');
+    }
+    doc.setFontSize(12.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text(order.shippingAddress?.fullName || 'N/A', 0.2, y);
+    y += 0.18;
+
+    // Address lines (can contain Tamil)
+    if (hasTamilFont) {
+      doc.setFont('NotoSansTamil', 'normal');
+    } else {
+      doc.setFont('helvetica', 'normal');
+    }
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 30, 30); // #1e1e1e
 
     const addr = order.shippingAddress?.address || '';
     const cleanAddr = addr.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const addrLines = doc.splitTextToSize(cleanAddr, 3.6);
-    doc.text(addrLines, 0.15, y);
-    y += addrLines.length * 0.18;
-
-    doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
-    y += 0.18;
-
-    doc.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
-    if (order.shippingAddress?.altPhone) {
-      y += 0.18;
-      doc.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
-    }
-
-    y += 0.18;
-    doc.line(0.2, y, 3.8, y);
-    y += 0.2;
-
-    doc.setFontSize(11);
-    doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
-    y += 0.2;
-
-    doc.setFontSize(9);
-    order.orderItems?.forEach(item => {
-      const nameLines = doc.splitTextToSize(item.name || 'Item', 3.0);
-      doc.text(nameLines, 0.15, y);
-      doc.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
-      y += nameLines.length * 0.18;
+    addrLines.forEach(line => {
+      doc.text(line, 0.2, y);
+      y += 0.16;
     });
 
-    y += 0.05;
+    // City, State - Zip
+    const cityStateZip = `${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`;
+    doc.text(cityStateZip, 0.2, y);
+    y += 0.16;
+
+    // Phone (English)
+    doc.setFont('helvetica', 'bold');
+    doc.text('Phone:', 0.2, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.shippingAddress?.phone || 'N/A', 0.7, y);
+    y += 0.16;
+
+    // Alt Phone
+    if (order.shippingAddress?.altPhone) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Alt Phone:', 0.2, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(order.shippingAddress.altPhone, 0.9, y);
+      y += 0.16;
+    }
+
+    // Dashed Divider
+    doc.setLineDashPattern([0.04, 0.04], 0);
+    doc.setDrawColor(150, 150, 150);
     doc.line(0.2, y, 3.8, y);
+    doc.setLineDashPattern([], 0);
     y += 0.18;
 
-    doc.setFontSize(10);
-    doc.text('Total Items:', 0.15, y);
-    const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
-    doc.text(`${totalItems}`, 3.7, y, { align: 'right' });
-
-    y += 0.35;
-    doc.setFontSize(9);
-    doc.text('Thank you for your order! | reverserituals@gmail.com', 2, y, { align: 'center' });
+    // ITEMS Header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.2, y);
     y += 0.15;
 
+    // ITEMS List
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 0, 0);
+
+    order.orderItems?.forEach((item, idx) => {
+      const nameLines = doc.splitTextToSize(item.name || 'Item', 2.8);
+      
+      // Draw first line of name and the qty aligned to the right
+      doc.text(nameLines[0], 0.2, y);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`x${item.qty || 0}`, 3.8, y, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      
+      // Draw subsequent lines of name if any
+      for (let i = 1; i < nameLines.length; i++) {
+        y += 0.16;
+        doc.text(nameLines[i], 0.2, y);
+      }
+      
+      y += 0.16;
+      if (idx < order.orderItems.length - 1) {
+        y += 0.06; // gap between items
+      }
+    });
+
+    // Solid Divider under items
+    doc.setLineWidth(0.015);
+    doc.setDrawColor(0, 0, 0);
     doc.line(0.2, y, 3.8, y);
     y += 0.18;
 
+    // Total Items
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Total Items:', 0.2, y);
+    const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+    doc.text(`${totalItems}`, 3.8, y, { align: 'right' });
+    y += 0.28;
+
+    // Footer: Thank you
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Thank you for your order!', 2, y, { align: 'center' });
+    y += 0.15;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text('reverserituals@gmail.com', 2, y, { align: 'center' });
+    y += 0.08;
+
+    // Dashed Divider
+    doc.setLineDashPattern([0.04, 0.04], 0);
+    doc.setDrawColor(150, 150, 150);
+    doc.line(0.2, y, 3.8, y);
+    doc.setLineDashPattern([], 0);
+    y += 0.18;
+
+    // Call Note Box (rounded rectangle)
+    const noteText = 'If customer not answer the call, please call: 7358422064';
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
-    const noteLines = doc.splitTextToSize('If customer not answer the call, please call: 7358422064', 3.6);
-    doc.text(noteLines, 2, y, { align: 'center' });
+    const noteLines = doc.splitTextToSize(noteText, 3.4);
+    const boxInnerHeight = noteLines.length * 0.15 + 0.16;
+
+    // set background: light gray #f8f9fa
+    doc.setFillColor(248, 249, 250);
+    // set border: dark gray #cccccc
+    doc.setDrawColor(204, 204, 204);
+    doc.setLineWidth(0.01);
+    doc.roundedRect(0.2, y, 3.6, boxInnerHeight, 0.08, 0.08, 'FD');
+
+    // draw text inside box
+    doc.setTextColor(0, 0, 0);
+    y += 0.13;
+    noteLines.forEach(line => {
+      doc.text(line, 2, y, { align: 'center' });
+      y += 0.15;
+    });
   };
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     try {
-      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
-      const hasTamilFont = await setupDocFont(doc);
+      const hasTamilFont = await setupDocFont(new jsPDF());
+      
+      const height = calculateBillHeight(order, hasTamilFont);
+      const doc = new jsPDF({ unit: 'in', format: [4, height], orientation: 'portrait' });
+      await setupDocFont(doc);
 
-      drawVectorBill(doc, order, hasTamilFont, false);
+      drawVectorBill(doc, order, hasTamilFont);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
       doc.save(`bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -351,12 +558,24 @@ const AdminPage = () => {
     }
 
     try {
-      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
-      const hasTamilFont = await setupDocFont(doc);
+      const dummy = new jsPDF();
+      const hasTamilFont = await setupDocFont(dummy);
+      
+      const firstHeight = calculateBillHeight(filteredOrders[0], hasTamilFont);
+      const doc = new jsPDF({ unit: 'in', format: [4, firstHeight], orientation: 'portrait' });
+      await setupDocFont(doc);
 
-      filteredOrders.forEach((order, idx) => {
-        drawVectorBill(doc, order, hasTamilFont, idx > 0);
-      });
+      for (let idx = 0; idx < filteredOrders.length; idx++) {
+        const order = filteredOrders[idx];
+        if (idx > 0) {
+          const height = calculateBillHeight(order, hasTamilFont);
+          doc.addPage([4, height], 'portrait');
+          if (hasTamilFont) {
+            doc.setFont('NotoSansTamil', 'normal');
+          }
+        }
+        drawVectorBill(doc, order, hasTamilFont);
+      }
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -1292,6 +1511,12 @@ const AdminPage = () => {
                       <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="border-t border-[#064e3b]/5">
                         <div className="p-5 lg:p-6 bg-[#fdfbf7]/50">
                           <div className="flex justify-end gap-2 mb-4">
+                            <button
+                              onClick={() => downloadInvoice(order)}
+                              className="flex items-center gap-2 px-4 py-2 bg-[#064e3b] text-white rounded-lg font-bold text-sm hover:bg-[#064e3b]/90 transition-colors"
+                            >
+                              <Download size={16} /> Invoice
+                            </button>
                             <button
                               onClick={() => downloadThermalBill(order)}
                               disabled={thermalGenerating === order._id}
