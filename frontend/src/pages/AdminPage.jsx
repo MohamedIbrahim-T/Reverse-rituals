@@ -229,6 +229,20 @@ const AdminPage = () => {
     return fontBase64 !== null;
   };
 
+  const getAddressLines = (addr, doc) => {
+    if (!addr) return [];
+    const cleaned = addr
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(part => part.trim())
+      .filter(part => part.length > 0)
+      .map(part => part.endsWith(',') ? part.slice(0, -1).trim() : part)
+      .filter(part => part.length > 0)
+      .join(', ');
+    return doc.splitTextToSize(cleaned, 3.6);
+  };
+
   const calculateBillHeight = (order, hasTamilFont) => {
     const dummy = new jsPDF({ unit: 'in', format: [4, 15] });
     
@@ -257,9 +271,6 @@ const AdminPage = () => {
     y += 0.22; // Name size 12.5
     
     // Address
-    const addr = order.shippingAddress?.address || '';
-    const cleanAddr = addr.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
     if (hasTamilFont && cachedTamilFontBase64) {
       dummy.addFileToVFS('NotoSansTamil.ttf', cachedTamilFontBase64);
       dummy.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'normal');
@@ -269,7 +280,8 @@ const AdminPage = () => {
     }
     dummy.setFontSize(9.5);
     
-    const addrLines = dummy.splitTextToSize(cleanAddr, 3.6);
+    const addr = order.shippingAddress?.address || '';
+    const addrLines = getAddressLines(addr, dummy);
     y += addrLines.length * 0.16; // 0.16 spacing per line
     
     // City, State - Zip
@@ -403,8 +415,7 @@ const AdminPage = () => {
     doc.setTextColor(30, 30, 30); // #1e1e1e
 
     const addr = order.shippingAddress?.address || '';
-    const cleanAddr = addr.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    const addrLines = doc.splitTextToSize(cleanAddr, 3.6);
+    const addrLines = getAddressLines(addr, doc);
     addrLines.forEach(line => {
       doc.text(line, 0.2, y);
       y += 0.16;
