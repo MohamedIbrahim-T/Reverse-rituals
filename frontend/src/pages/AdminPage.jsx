@@ -196,369 +196,115 @@ const AdminPage = () => {
     }
   };
 
-  let cachedTamilFontBase64 = null;
-  const getTamilFontBase64 = async () => {
-    if (cachedTamilFontBase64) return cachedTamilFontBase64;
-    try {
-      const res = await axios.get('https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/unhinted/ttf/NotoSansTamil/NotoSansTamil-Regular.ttf', { responseType: 'blob' });
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(res.data);
-        reader.onloadend = () => {
-          cachedTamilFontBase64 = reader.result.split(',')[1];
-          resolve(cachedTamilFontBase64);
-        };
-        reader.onerror = reject;
-      });
-    } catch (err) {
-      console.error('Failed to load Tamil font from CDN, falling back:', err);
-      return null;
-    }
-  };
-
-  const setupDocFont = async (doc) => {
-    const fontBase64 = await getTamilFontBase64();
-    if (fontBase64) {
-      doc.addFileToVFS('NotoSansTamil.ttf', fontBase64);
-      doc.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'normal');
-      doc.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'bold');
-      doc.setFont('NotoSansTamil', 'normal');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
-    return fontBase64 !== null;
-  };
-
-  const getAddressLines = (addr, doc) => {
-    if (!addr) return [];
-    const cleaned = addr
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .split('\n')
-      .map(part => part.trim())
-      .filter(part => part.length > 0)
-      .map(part => part.endsWith(',') ? part.slice(0, -1).trim() : part)
-      .filter(part => part.length > 0)
-      .join(', ');
-    return doc.splitTextToSize(cleaned, 3.6);
-  };
-
-  const calculateBillHeight = (order, hasTamilFont) => {
-    const dummy = new jsPDF({ unit: 'in', format: [4, 15] });
-    
-    let y = 0.25; // Top margin
-    
-    // Header: REVERSE RITUALS
-    y += 0.18; // font size 18
-    y += 0.05; // gap
-    
-    // Subtitle: Natural Hair Care Products
-    y += 0.12; // font size 9
-    y += 0.08; // gap
-    
-    // Divider
-    y += 0.05; // line thickness/gap
-    
-    // Order/Date line
-    y += 0.22; // font size 9.5 + spacing
-    y += 0.05; // divider gap
-    
-    // Deliver To Header
-    y += 0.2;  // label size 9.5
-    y += 0.05; // divider gap
-    
-    // Name
-    y += 0.22; // Name size 12.5
-    
-    // Address
-    if (hasTamilFont && cachedTamilFontBase64) {
-      dummy.addFileToVFS('NotoSansTamil.ttf', cachedTamilFontBase64);
-      dummy.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'normal');
-      dummy.setFont('NotoSansTamil', 'normal');
-    } else {
-      dummy.setFont('helvetica', 'normal');
-    }
-    dummy.setFontSize(9.5);
-    
-    const addr = order.shippingAddress?.address || '';
-    const addrLines = getAddressLines(addr, dummy);
-    y += addrLines.length * 0.16; // 0.16 spacing per line
-    
-    // City, State - Zip
-    y += 0.16;
-    
-    // Phone
-    y += 0.16;
-    
-    // Alt Phone
-    if (order.shippingAddress?.altPhone) {
-      y += 0.16;
-    }
-    
-    // Divider
-    y += 0.12;
-    
-    // Items Header
-    y += 0.22;
-    
-    // Items
-    dummy.setFont('helvetica', 'normal');
-    dummy.setFontSize(9.5);
-    order.orderItems?.forEach((item, idx) => {
-      const nameLines = dummy.splitTextToSize(item.name || 'Item', 2.8);
-      y += nameLines.length * 0.16;
-      if (idx < order.orderItems.length - 1) {
-        y += 0.06; // gap between items
-      }
-    });
-    
-    // Divider
-    y += 0.12;
-    
-    // Total Items
-    y += 0.22;
-    
-    // Footer: Thank you
-    y += 0.28;
-    // Email
-    y += 0.15;
-    
-    // Divider
-    y += 0.12;
-    
-    // Warning Call Box
-    const noteText = 'If customer not answer the call, please call: 7358422064';
-    dummy.setFont('helvetica', 'bold');
-    dummy.setFontSize(8);
-    const noteLines = dummy.splitTextToSize(noteText, 3.4);
-    const boxInnerHeight = noteLines.length * 0.15 + 0.16;
-    y += boxInnerHeight;
-    
-    y += 0.25; // Bottom margin padding
-    
-    return y;
-  };
-
-  const drawVectorBill = (doc, order, hasTamilFont) => {
-    let y = 0.25;
-
-    // Header: REVERSE RITUALS
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(0, 0, 0);
-    doc.text('REVERSE RITUALS', 2, y, { align: 'center' });
-    y += 0.18;
-
-    // Subtitle: Natural Hair Care Products
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60); // gray #3c3c3c
-    doc.text('Natural Hair Care Products', 2, y, { align: 'center' });
-    y += 0.08;
-
-    // Solid Divider
-    doc.setLineWidth(0.015);
-    doc.setDrawColor(0, 0, 0);
-    doc.line(0.2, y, 3.8, y);
-    y += 0.18;
-
-    // Order & Date Block
+  const generateBillHTML = (order) => {
     const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
     const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
     const orderId = order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A';
-
-    // Order ID on left
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Order:', 0.2, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`#${orderId}`, 0.6, y);
-
-    // Date on right
-    doc.text(dateStr, 3.8, y, { align: 'right' });
-    y += 0.08;
-
-    // Dashed Divider
-    doc.setLineWidth(0.01);
-    doc.setDrawColor(150, 150, 150);
-    doc.setLineDashPattern([0.04, 0.04], 0);
-    doc.line(0.2, y, 3.8, y);
-    doc.setLineDashPattern([], 0); // reset to solid
-    y += 0.18;
-
-    // Deliver To Header
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(100, 100, 100); // #666
-    doc.text('DELIVER TO:', 0.2, y);
-    y += 0.12;
-
-    // Name (can contain Tamil, so use NotoSansTamil if loaded)
-    if (hasTamilFont) {
-      doc.setFont('NotoSansTamil', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
-    doc.setFontSize(12.5);
-    doc.setTextColor(0, 0, 0);
-    doc.text(order.shippingAddress?.fullName || 'N/A', 0.2, y);
-    y += 0.18;
-
-    // Address lines (can contain Tamil)
-    if (hasTamilFont) {
-      doc.setFont('NotoSansTamil', 'normal');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
-    doc.setFontSize(9.5);
-    doc.setTextColor(30, 30, 30); // #1e1e1e
-
-    const addr = order.shippingAddress?.address || '';
-    const addrLines = getAddressLines(addr, doc);
-    addrLines.forEach(line => {
-      doc.text(line, 0.2, y);
-      y += 0.16;
-    });
-
-    // City, State - Zip
+    const fullName = order.shippingAddress?.fullName || 'N/A';
+    const address = order.shippingAddress?.address || '';
     const cityStateZip = `${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`;
-    doc.text(cityStateZip, 0.2, y);
-    y += 0.16;
+    const phone = order.shippingAddress?.phone || '';
+    const altPhone = order.shippingAddress?.altPhone ? `Alt: ${order.shippingAddress.altPhone}` : '';
 
-    // Phone (English)
-    doc.setFont('helvetica', 'bold');
-    doc.text('Phone:', 0.2, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(order.shippingAddress?.phone || 'N/A', 0.7, y);
-    y += 0.16;
-
-    // Alt Phone
-    if (order.shippingAddress?.altPhone) {
-      doc.setFont('helvetica', 'bold');
-      doc.text('Alt Phone:', 0.2, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(order.shippingAddress.altPhone, 0.9, y);
-      y += 0.16;
-    }
-
-    // Dashed Divider
-    doc.setLineDashPattern([0.04, 0.04], 0);
-    doc.setDrawColor(150, 150, 150);
-    doc.line(0.2, y, 3.8, y);
-    doc.setLineDashPattern([], 0);
-    y += 0.18;
-
-    // ITEMS Header
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.2, y);
-    y += 0.15;
-
-    // ITEMS List
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9.5);
-    doc.setTextColor(0, 0, 0);
-
-    order.orderItems?.forEach((item, idx) => {
-      const nameLines = doc.splitTextToSize(item.name || 'Item', 2.8);
-      
-      // Draw first line of name and the qty aligned to the right
-      doc.text(nameLines[0], 0.2, y);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`x${item.qty || 0}`, 3.8, y, { align: 'right' });
-      doc.setFont('helvetica', 'normal');
-      
-      // Draw subsequent lines of name if any
-      for (let i = 1; i < nameLines.length; i++) {
-        y += 0.16;
-        doc.text(nameLines[i], 0.2, y);
-      }
-      
-      y += 0.16;
-      if (idx < order.orderItems.length - 1) {
-        y += 0.06; // gap between items
-      }
+    let itemsHTML = '';
+    order.orderItems?.forEach(item => {
+      itemsHTML += `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px;">
+          <span style="flex: 1; padding-right: 8px; word-break: break-word;">${item.name || 'Item'}</span>
+          <span style="font-weight: 600; white-space: nowrap;">x${item.qty || 0}</span>
+        </div>
+      `;
     });
 
-    // Solid Divider under items
-    doc.setLineWidth(0.015);
-    doc.setDrawColor(0, 0, 0);
-    doc.line(0.2, y, 3.8, y);
-    y += 0.18;
-
-    // Total Items
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Total Items:', 0.2, y);
     const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
-    doc.text(`${totalItems}`, 3.8, y, { align: 'right' });
-    y += 0.28;
 
-    // Footer: Thank you
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Thank you for your order!', 2, y, { align: 'center' });
-    y += 0.15;
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    doc.text('reverserituals@gmail.com', 2, y, { align: 'center' });
-    y += 0.08;
-
-    // Dashed Divider
-    doc.setLineDashPattern([0.04, 0.04], 0);
-    doc.setDrawColor(150, 150, 150);
-    doc.line(0.2, y, 3.8, y);
-    doc.setLineDashPattern([], 0);
-    y += 0.18;
-
-    // Call Note Box (rounded rectangle)
-    const noteText = 'If customer not answer the call, please call: 7358422064';
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    const noteLines = doc.splitTextToSize(noteText, 3.4);
-    const boxInnerHeight = noteLines.length * 0.15 + 0.16;
-
-    // set background: light gray #f8f9fa
-    doc.setFillColor(248, 249, 250);
-    // set border: dark gray #cccccc
-    doc.setDrawColor(204, 204, 204);
-    doc.setLineWidth(0.01);
-    doc.roundedRect(0.2, y, 3.6, boxInnerHeight, 0.08, 0.08, 'FD');
-
-    // draw text inside box
-    doc.setTextColor(0, 0, 0);
-    y += 0.13;
-    noteLines.forEach(line => {
-      doc.text(line, 2, y, { align: 'center' });
-      y += 0.15;
-    });
+    return `
+      <div style="width: 384px; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000; background: #fff; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <h1 style="font-size: 26px; font-weight: 800; margin: 0; color: #000; letter-spacing: -0.5px;">REVERSE RITUALS</h1>
+          <p style="font-size: 13px; margin: 4px 0 0; color: #444; font-weight: 500;">Natural Hair Care Products</p>
+        </div>
+        <div style="border-top: 1.5px solid #000; margin: 14px 0;"></div>
+        <div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5;">
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong style="color: #000;">Order:</strong> #${orderId}</span>
+          </div>
+          <div><strong style="color: #000;">Date:</strong> ${dateStr}</div>
+        </div>
+        <div style="border-top: 1px dashed #888; margin: 14px 0;"></div>
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Deliver To:</div>
+          <div style="font-size: 17px; font-weight: 700; color: #000; margin-bottom: 6px;">${fullName}</div>
+          <div style="font-size: 15px; line-height: 1.5; color: #111; margin-bottom: 6px; word-wrap: break-word;">${address}</div>
+          <div style="font-size: 15px; color: #111; margin-bottom: 8px;">${cityStateZip}</div>
+          <div style="font-size: 14px; color: #000; font-weight: 600;">Phone: ${phone}</div>
+          ${altPhone ? `<div style="font-size: 14px; color: #000; font-weight: 600; margin-top: 2px;">${altPhone}</div>` : ''}
+        </div>
+        <div style="border-top: 1px dashed #888; margin: 14px 0;"></div>
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Items (${order.orderItems?.length || 0}):</div>
+          ${itemsHTML}
+        </div>
+        <div style="border-top: 1.5px solid #000; margin: 14px 0;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; margin-bottom: 24px; color: #000;">
+          <span>Total Items:</span>
+          <span>${totalItems}</span>
+        </div>
+        <div style="text-align: center; font-size: 13px; color: #444; margin-top: 32px; border-top: 1px solid #ddd; padding-top: 16px; line-height: 1.6;">
+          <p style="margin: 0 0 4px; font-weight: 600; color: #000;">Thank you for your order!</p>
+          <p style="margin: 0 0 12px; color: #555;">reverserituals@gmail.com</p>
+          <div style="background: #f8f9fa; border: 1px solid #222; padding: 10px; border-radius: 6px;">
+            <p style="margin: 0; font-size: 12px; font-weight: 700; color: #000;">If customer not answering call,</p>
+            <p style="margin: 2px 0 0; font-size: 13px; font-weight: 800; color: #000;">Please Call: 7358422064</p>
+          </div>
+        </div>
+      </div>
+    `;
   };
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
+    toast.info('Generating PDF bill...');
     try {
-      const hasTamilFont = await setupDocFont(new jsPDF());
-      
-      const height = calculateBillHeight(order, hasTamilFont);
-      const doc = new jsPDF({ unit: 'in', format: [4, height], orientation: 'portrait' });
-      await setupDocFont(doc);
-
-      drawVectorBill(doc, order, hasTamilFont);
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.zIndex = '-9999';
+      container.style.background = '#ffffff';
+      container.style.color = '#000000';
+      container.style.width = '384px';
+      container.style.boxSizing = 'border-box';
+      container.innerHTML = generateBillHTML(order);
+      document.body.appendChild(container);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
-      doc.save(`bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`);
-      toast.success('Bill downloaded successfully');
+      const filename = `bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      html2pdf().from(container).set({
+        margin: [0.2, 0.1, 0.2, 0.1],
+        filename,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 400, backgroundColor: '#ffffff', logging: false },
+        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
+      }).save().then(() => {
+        setTimeout(() => {
+          if (document.body.contains(container)) {
+            document.body.removeChild(container);
+          }
+        }, 1000);
+        setThermalGenerating(null);
+        toast.success('Bill downloaded successfully');
+      }).catch(err => {
+        console.error('Thermal bill save error:', err);
+        if (document.body.contains(container)) document.body.removeChild(container);
+        setThermalGenerating(null);
+        toast.error('Failed to generate thermal bill');
+      });
     } catch (err) {
       console.error('Thermal bill error:', err);
-      toast.error('Failed to generate thermal bill');
-    } finally {
       setThermalGenerating(null);
+      toast.error('Failed to generate thermal bill');
     }
   };
 
@@ -568,25 +314,28 @@ const AdminPage = () => {
       return;
     }
 
+    toast.info('Generating thermal bills...');
     try {
-      const dummy = new jsPDF();
-      const hasTamilFont = await setupDocFont(dummy);
-      
-      const firstHeight = calculateBillHeight(filteredOrders[0], hasTamilFont);
-      const doc = new jsPDF({ unit: 'in', format: [4, firstHeight], orientation: 'portrait' });
-      await setupDocFont(doc);
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '0';
+      wrapper.style.left = '0';
+      wrapper.style.zIndex = '-9999';
+      wrapper.style.background = '#ffffff';
+      wrapper.style.color = '#000000';
+      wrapper.style.width = '384px';
+      wrapper.style.boxSizing = 'border-box';
 
-      for (let idx = 0; idx < filteredOrders.length; idx++) {
-        const order = filteredOrders[idx];
+      filteredOrders.forEach((order, idx) => {
+        const orderDiv = document.createElement('div');
         if (idx > 0) {
-          const height = calculateBillHeight(order, hasTamilFont);
-          doc.addPage([4, height], 'portrait');
-          if (hasTamilFont) {
-            doc.setFont('NotoSansTamil', 'normal');
-          }
+          orderDiv.style.pageBreakBefore = 'always';
         }
-        drawVectorBill(doc, order, hasTamilFont);
-      }
+        orderDiv.innerHTML = generateBillHTML(order);
+        wrapper.appendChild(orderDiv);
+      });
+
+      document.body.appendChild(wrapper);
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -595,8 +344,24 @@ const AdminPage = () => {
         filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
       }
 
-      doc.save(`bills-${filenameDate}.pdf`);
-      toast.success(`${filteredOrders.length} bills generated successfully`);
+      html2pdf().from(wrapper).set({
+        margin: [0.2, 0.1, 0.2, 0.1],
+        filename: `bills-${filenameDate}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 400, backgroundColor: '#ffffff', logging: false },
+        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
+      }).save().then(() => {
+        setTimeout(() => {
+          if (document.body.contains(wrapper)) {
+            document.body.removeChild(wrapper);
+          }
+        }, 1000);
+        toast.success(`${filteredOrders.length} bills generated successfully`);
+      }).catch(err => {
+        console.error('Bulk thermal bill save error:', err);
+        if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+        toast.error('Failed to download bills');
+      });
     } catch (error) {
       console.error('Bulk thermal bill error:', error);
       toast.error('Failed to download bills');
