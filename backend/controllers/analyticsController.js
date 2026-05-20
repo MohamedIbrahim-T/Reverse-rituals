@@ -75,7 +75,11 @@ const getStats = async (req, res) => {
     });
 
     const uniqueMembers = await Order.distinct('shippingAddress.phone', {
-      createdAt: { $gte: startDate }
+      $or: [
+        { paidAt: { $gte: startDate } },
+        { createdAt: { $gte: startDate }, isPaid: true }
+      ],
+      isPaid: true
     });
     const membersOrdered = uniqueMembers.length;
 
