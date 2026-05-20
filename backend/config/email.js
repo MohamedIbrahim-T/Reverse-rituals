@@ -1,14 +1,16 @@
 require('dotenv').config();
-const SibApiV3Sdk = require('sib-api-v3-sdk');
+const nodemailer = require('nodemailer');
 
-console.log('=== EMAIL MODULE LOADED (BREVO API) ===');
+console.log('=== EMAIL MODULE LOADED (NODEMAILER) ===');
 
-const defaultClient = SibApiV3Sdk.ApiClient.instance;
-const apiKey = defaultClient.authentications['api-key'];
-apiKey.apiKey = process.env.BREVO_API_KEY;
-
-const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi();
-console.log('✅ Brevo API ready');
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  }
+});
+console.log('✅ NodeMailer ready');
 
 const sendOrderEmail = async (orderDetails) => {
   try {
@@ -153,21 +155,14 @@ const sendOrderEmail = async (orderDetails) => {
 </body>
 </html>`;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.subject = `Order Confirmed - #${orderId}`;
-    sendSmtpEmail.htmlContent = html;
-    sendSmtpEmail.sender = { name: 'Reverse Rituals', email: process.env.MAIL_USER };
-    
-    if (email) {
-      sendSmtpEmail.to = [
-        { email: adminEmail, name: 'Admin' },
-        { email: email, name: customerName }
-      ];
-    } else {
-      sendSmtpEmail.to = [{ email: adminEmail, name: 'Admin' }];
-    }
+    const mailOptions = {
+      from: `"Reverse Rituals" <${process.env.MAIL_USER}>`,
+      to: email ? [adminEmail, email].join(', ') : adminEmail,
+      subject: `Order Confirmed - #${orderId}`,
+      html: html
+    };
 
-    const result = await transactionalApi.sendTransacEmail(sendSmtpEmail);
+    const result = await transporter.sendMail(mailOptions);
     console.log('✅ Order email sent!', result.messageId);
     return true;
   } catch (error) {
@@ -241,13 +236,14 @@ const sendPasswordResetEmail = async (toEmail, name, otp) => {
 </body>
 </html>`;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.subject = 'Reset Your Password - OTP';
-    sendSmtpEmail.htmlContent = html;
-    sendSmtpEmail.sender = { name: 'Reverse Rituals', email: process.env.MAIL_USER };
-    sendSmtpEmail.to = [{ email: toEmail, name: name }];
+    const mailOptions = {
+      from: `"Reverse Rituals" <${process.env.MAIL_USER}>`,
+      to: toEmail,
+      subject: 'Reset Your Password - OTP',
+      html: html
+    };
 
-    const result = await transactionalApi.sendTransacEmail(sendSmtpEmail);
+    const result = await transporter.sendMail(mailOptions);
     console.log('✅ Password reset email sent!', result.messageId);
     return true;
   } catch (error) {
@@ -258,13 +254,14 @@ const sendPasswordResetEmail = async (toEmail, name, otp) => {
 
 const sendEmail = async (toEmail, subject, htmlContent) => {
   try {
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.subject = subject;
-    sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { name: 'Reverse Rituals', email: process.env.MAIL_USER };
-    sendSmtpEmail.to = [{ email: toEmail, name: 'Customer' }];
+    const mailOptions = {
+      from: `"Reverse Rituals" <${process.env.MAIL_USER}>`,
+      to: toEmail,
+      subject: subject,
+      html: htmlContent
+    };
 
-    const result = await transactionalApi.sendTransacEmail(sendSmtpEmail);
+    const result = await transporter.sendMail(mailOptions);
     console.log('✅ Email sent to:', toEmail);
     return true;
   } catch (error) {

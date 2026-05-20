@@ -23,7 +23,7 @@ const generateOrderId = async () => {
   
   const fyString = `${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`;
   
-  const orders = await Order.find({ orderId: { $regex: /^RR\// } }, 'orderId').lean();
+  const orders = await Order.find({ isPaid: true, orderId: { $regex: /^RR\// } }, 'orderId').lean();
   let maxNum = 0;
   for (const o of orders) {
     const parts = o.orderId?.split('/');

@@ -69,6 +69,16 @@ const getStats = async (req, res) => {
       isPaid: true
     });
 
+    const unpaidOrders = await Order.countDocuments({
+      createdAt: { $gte: startDate },
+      isPaid: false
+    });
+
+    const uniqueMembers = await Order.distinct('shippingAddress.phone', {
+      createdAt: { $gte: startDate }
+    });
+    const membersOrdered = uniqueMembers.length;
+
     let conversionRate = 0;
     if (totalVisitors > 0) {
       conversionRate = (paidOrders / totalVisitors) * 100;
@@ -82,6 +92,8 @@ const getStats = async (req, res) => {
       guestVisitors: guestVisitors || 0,
       newSignups: newSignups || 0,
       paidOrders: paidOrders || 0,
+      unpaidOrders: unpaidOrders || 0,
+      membersOrdered: membersOrdered || 0,
       conversionRate: conversionRate || 0
     });
   } catch (error) {
