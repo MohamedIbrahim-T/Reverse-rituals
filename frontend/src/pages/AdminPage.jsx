@@ -198,85 +198,154 @@ const AdminPage = () => {
     }
   };
 
-  const generateThermalHtml = (order, isLast = true) => {
+  let cachedTamilFontBase64 = null;
+  const getTamilFontBase64 = async () => {
+    if (cachedTamilFontBase64) return cachedTamilFontBase64;
+    try {
+      const res = await axios.get('https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/unhinted/ttf/NotoSansTamil/NotoSansTamil-Regular.ttf', { responseType: 'blob' });
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(res.data);
+        reader.onloadend = () => {
+          cachedTamilFontBase64 = reader.result.split(',')[1];
+          resolve(cachedTamilFontBase64);
+        };
+        reader.onerror = reject;
+      });
+    } catch (err) {
+      console.error('Failed to load Tamil font from CDN, falling back:', err);
+      return null;
+    }
+  };
+
+  const setupDocFont = async (doc) => {
+    const fontBase64 = await getTamilFontBase64();
+    if (fontBase64) {
+      doc.addFileToVFS('NotoSansTamil.ttf', fontBase64);
+      doc.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'normal');
+      doc.addFont('NotoSansTamil.ttf', 'NotoSansTamil', 'bold');
+      doc.setFont('NotoSansTamil', 'normal');
+    } else {
+      doc.setFont('helvetica', 'normal');
+    }
+    return fontBase64 !== null;
+  };
+
+  const drawVectorBill = (doc, order, hasTamilFont, isNewPage = false) => {
+    if (isNewPage) {
+      doc.addPage([4, 6], 'portrait');
+      if (hasTamilFont) doc.setFont('NotoSansTamil', 'normal');
+    }
+
+    let y = 0.25;
+
+    doc.setFontSize(16);
+    if (!hasTamilFont) doc.setFont('helvetica', 'bold');
+    doc.text('REVERSE RITUALS', 2, y, { align: 'center' });
+    y += 0.15;
+
+    doc.setFontSize(9);
+    if (!hasTamilFont) doc.setFont('helvetica', 'normal');
+    doc.text('Natural Hair Care Products', 2, y, { align: 'center' });
+    y += 0.12;
+
+    doc.setLineWidth(0.01);
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
     const targetDate = order.paidAt ? new Date(order.paidAt) : new Date(order.createdAt);
     const dateStr = targetDate ? `${targetDate.toLocaleDateString('en-IN')} ${targetDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'N/A';
-    
-    const itemsHtml = (order.orderItems || []).map(item => `
-      <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-        <span style="flex: 1; padding-right: 10px; word-break: break-word;">${item.name || 'Item'}</span>
-        <span style="font-weight: bold;">x${item.qty || 0}</span>
-      </div>
-    `).join('');
 
-    const totalItems = (order.orderItems || []).reduce((sum, item) => sum + (item.qty || 0), 0);
-    const safeOrderId = order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A';
-    
-    const addressHtml = (order.shippingAddress?.address || '').replace(/\r\n|\r|\n/g, '<br>');
-    
-    return `
-      <div style="width: 3.8in; padding: 0.1in; box-sizing: border-box; font-family: sans-serif; font-size: 14px; line-height: 1.4; color: #000; background: #fff; ${!isLast ? 'page-break-after: always;' : ''}">
-        <div style="text-align: center; margin-bottom: 10px;">
-          <h2 style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase;">Reverse Rituals</h2>
-          <p style="margin: 2px 0 0; font-size: 12px;">Natural Hair Care Products</p>
-        </div>
-        <hr style="border-top: 1px dashed #000; border-bottom: none; margin: 10px 0;">
-        <div style="font-size: 13px; margin-bottom: 10px;">
-          <strong>Order:</strong> #${safeOrderId}<br>
-          <strong>Date:</strong> ${dateStr}
-        </div>
-        <hr style="border-top: 1px dashed #000; border-bottom: none; margin: 10px 0;">
-        <div style="margin-bottom: 10px;">
-          <div style="font-weight: bold; font-size: 15px; margin-bottom: 5px;">DELIVER TO:</div>
-          <div style="font-size: 14px; font-weight: bold;">${order.shippingAddress?.fullName || 'N/A'}</div>
-          <div>${addressHtml}</div>
-          <div>${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}</div>
-          <div style="margin-top: 5px;">
-            <strong>Phone:</strong> ${order.shippingAddress?.phone || ''}
-            ${order.shippingAddress?.altPhone ? `<br><strong>Alt:</strong> ${order.shippingAddress.altPhone}` : ''}
-          </div>
-        </div>
-        <hr style="border-top: 1px dashed #000; border-bottom: none; margin: 10px 0;">
-        <div style="margin-bottom: 10px;">
-          <div style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">ITEMS (${order.orderItems?.length || 0}):</div>
-          ${itemsHtml}
-        </div>
-        <hr style="border-top: 1px dashed #000; border-bottom: none; margin: 10px 0;">
-        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 20px;">
-          <span>Total Items:</span>
-          <span>${totalItems}</span>
-        </div>
-        <div style="text-align: center; font-size: 12px; margin-top: 20px;">
-          <p style="margin: 0;">Thank you for your order!</p>
-          <p style="margin: 2px 0;">reverserituals@gmail.com</p>
-        </div>
-        <hr style="border-top: 1px dashed #000; border-bottom: none; margin: 10px 0;">
-        <div style="text-align: center; font-size: 11px; font-weight: bold;">
-          If customer not answer the call, please call: 7358422064
-        </div>
-      </div>
-    `;
+    doc.setFontSize(10);
+    doc.text(`Order: #${order.orderId || order._id?.toString().slice(-8).toUpperCase() || 'N/A'} | Date: ${dateStr}`, 0.15, y);
+    y += 0.15;
+
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
+    doc.setFontSize(12);
+    doc.text('DELIVER TO:', 0.15, y);
+    y += 0.15;
+
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
+    doc.setFontSize(10);
+    doc.text(order.shippingAddress?.fullName || 'N/A', 0.15, y);
+    y += 0.18;
+
+    const addr = order.shippingAddress?.address || '';
+    const cleanedAddress = addr
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(part => part.trim())
+      .filter(part => part.length > 0)
+      .map(part => part.endsWith(',') ? part.slice(0, -1).trim() : part)
+      .filter(part => part.length > 0)
+      .join(', ');
+
+    const addrLines = doc.splitTextToSize(cleanedAddress, 3.6);
+    doc.text(addrLines, 0.15, y);
+    y += addrLines.length * 0.18;
+
+    doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.zipCode || ''}`, 0.15, y);
+    y += 0.18;
+
+    doc.text(`Phone: ${order.shippingAddress?.phone || ''}`, 0.15, y);
+    if (order.shippingAddress?.altPhone) {
+      y += 0.18;
+      doc.text(`Alt: ${order.shippingAddress.altPhone}`, 0.15, y);
+    }
+
+    y += 0.18;
+    doc.line(0.2, y, 3.8, y);
+    y += 0.2;
+
+    doc.setFontSize(11);
+    doc.text(`ITEMS (${order.orderItems?.length || 0}):`, 0.15, y);
+    y += 0.2;
+
+    doc.setFontSize(9);
+    order.orderItems?.forEach(item => {
+      const nameLines = doc.splitTextToSize(item.name || 'Item', 3.0);
+      doc.text(nameLines, 0.15, y);
+      doc.text(`x${item.qty || 0}`, 3.7, y, { align: 'right' });
+      y += nameLines.length * 0.18;
+    });
+
+    y += 0.05;
+    doc.line(0.2, y, 3.8, y);
+    y += 0.18;
+
+    doc.setFontSize(10);
+    doc.text('Total Items:', 0.15, y);
+    const totalItems = order.orderItems?.reduce((sum, item) => sum + (item.qty || 0), 0) || 0;
+    doc.text(`${totalItems}`, 3.7, y, { align: 'right' });
+
+    y += 0.35;
+    doc.setFontSize(9);
+    doc.text('Thank you for your order! | reverserituals@gmail.com', 2, y, { align: 'center' });
+    y += 0.15;
+
+    doc.line(0.2, y, 3.8, y);
+    y += 0.18;
+
+    doc.setFontSize(8);
+    const noteLines = doc.splitTextToSize('If customer not answer the call, please call: 7358422064', 3.6);
+    doc.text(noteLines, 2, y, { align: 'center' });
   };
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      const htmlContent = generateThermalHtml(order, true);
-      
-      const element = document.createElement('div');
-      element.innerHTML = htmlContent;
+      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
+      const hasTamilFont = await setupDocFont(doc);
+
+      drawVectorBill(doc, order, hasTamilFont, false);
 
       const safeBillId = (order.orderId || order._id.toString().slice(-8)).replace(/\//g, '-').toUpperCase();
-      const opt = {
-        margin: 0,
-        filename: `bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
-      };
-
-      html2pdf().set(opt).from(element).save();
+      doc.save(`bill-${safeBillId}-${new Date().toISOString().slice(0, 10)}.pdf`);
       toast.success('Bill downloaded successfully');
     } catch (err) {
       console.error('Thermal bill error:', err);
@@ -293,15 +362,12 @@ const AdminPage = () => {
     }
 
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      let fullHtml = '';
-      
+      const doc = new jsPDF({ unit: 'in', format: [4, 6], orientation: 'portrait' });
+      const hasTamilFont = await setupDocFont(doc);
+
       filteredOrders.forEach((order, idx) => {
-        fullHtml += generateThermalHtml(order, idx === filteredOrders.length - 1);
+        drawVectorBill(doc, order, hasTamilFont, idx > 0);
       });
-      
-      const element = document.createElement('div');
-      element.innerHTML = fullHtml;
 
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
@@ -310,15 +376,7 @@ const AdminPage = () => {
         filenameDate = new Date(exportFromDate).toISOString().slice(0, 10);
       }
 
-      const opt = {
-        margin: 0,
-        filename: `bills-${filenameDate}.pdf`,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
-      };
-
-      html2pdf().set(opt).from(element).save();
+      doc.save(`bills-${filenameDate}.pdf`);
       toast.success(`${filteredOrders.length} bills generated successfully`);
     } catch (error) {
       console.error('Bulk thermal bill error:', error);
@@ -942,26 +1000,11 @@ const AdminPage = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 lg:gap-6 mb-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
                 <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
                   <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Total Visits</p>
                   <p className="text-2xl lg:text-3xl font-black text-[#064e3b]">{analyticsStats.totalVisitors}</p>
                   <p className="text-xs text-[#064e3b]/40 mt-1">All visitors</p>
-                </div>
-                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
-                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Logged In</p>
-                  <p className="text-2xl lg:text-3xl font-black text-purple-600">{analyticsStats.loggedInVisitors}</p>
-                  <p className="text-xs text-[#064e3b]/40 mt-1">Returning users</p>
-                </div>
-                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
-                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Guest</p>
-                  <p className="text-2xl lg:text-3xl font-black text-blue-600">{analyticsStats.guestVisitors}</p>
-                  <p className="text-xs text-[#064e3b]/40 mt-1">New visitors</p>
-                </div>
-                <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
-                  <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Signups</p>
-                  <p className="text-2xl lg:text-3xl font-black text-pink-600">{analyticsStats.newSignups}</p>
-                  <p className="text-xs text-[#064e3b]/40 mt-1">Registered users</p>
                 </div>
                 <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-[#064e3b]/5 shadow-sm">
                   <p className="text-[#064e3b]/40 text-xs font-bold uppercase tracking-wider mb-2">Paid</p>
